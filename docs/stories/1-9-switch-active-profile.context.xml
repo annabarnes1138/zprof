@@ -1,0 +1,210 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>9</storyId>
+    <title>Switch Active Profile</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-31</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-9-switch-active-profile.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to switch between my profiles quickly</iWant>
+    <soThat>I can change my shell environment for different contexts</soThat>
+    <tasks>
+- Implement profile validation (AC: #6)
+  - Create function to check if profile exists in profiles directory
+  - Verify profile directory contains required files (profile.toml, .zshrc)
+  - Return user-friendly error if profile not found
+  - List available profiles in error message for discoverability
+  - Handle case-sensitive profile name matching
+- Implement ZDOTDIR update (AC: #1)
+  - Create `shell/zdotdir.rs` module
+  - Implement function to get profile directory path
+  - Update ZDOTDIR environment variable to profile directory
+  - Verify ZDOTDIR is exported correctly for child shell
+  - Log ZDOTDIR change with env_logger
+- Update active profile configuration (AC: #5)
+  - Update config.toml with new active_profile
+  - Load existing config.toml if present
+  - Create config.toml if it doesn't exist (first profile switch)
+  - Write updated config with new active_profile value
+  - Use serde + toml for config read/write per architecture
+  - Handle config read/write errors gracefully
+- Launch new shell instance (AC: #2, #3)
+  - Use std::process::Command to execute 'zsh'
+  - Use .exec() to replace current process (not spawn child) per ADR-004
+  - Set ZDOTDIR in environment before exec
+  - Ensure exec() meets &lt; 500ms requirement (AC: #3)
+  - Handle exec failure (shouldn't happen, but error gracefully)
+  - Note: exec() never returns on success (replaces process)
+- Verify shared history integration (AC: #4)
+  - Ensure HISTFILE in .zshenv points to shared/.zsh_history
+  - Verify generated .zshenv from Story 1.8 sets correct HISTFILE
+  - Test history is accessible across profile switches
+  - Document shared history in user-facing messages/docs
+- Implement CLI command (AC: All)
+  - Create `cli/use_cmd.rs` module (use is Rust keyword)
+  - Define UseCmdArgs struct with profile_name parameter
+  - Implement execute() function following Pattern 1
+  - Validate profile exists (AC: #6)
+  - Update config.toml active_profile
+  - Display confirmation before exec (AC: #5)
+  - Set ZDOTDIR and exec new shell
+- Handle edge cases and errors (AC: #6)
+  - Profile doesn't exist: show error + list available profiles
+  - Profile directory exists but missing .zshrc: show error + suggest repair
+  - config.toml is corrupted: show error, offer to recreate
+  - No profiles exist: show error, suggest creating first profile
+  - Already using requested profile: show warning but allow switch
+  - Use anyhow::Context for all error messages per Pattern 2
+- Write comprehensive tests (AC: All)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. `zprof use &lt;profile-name&gt;` updates ZDOTDIR to point to selected profile
+2. New shell instance is launched with selected profile active
+3. Switching completes in under 500ms
+4. Shared command history is accessible in new profile
+5. Clear confirmation message shows which profile is now active
+6. Handles invalid profile names with helpful error message
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/architecture.md" title="Architecture Document" section="ADR-004: exec() for Profile Switching">
+        Mandates use of exec() to replace current process instead of spawning child shell. Prevents shell nesting and matches industry standard behavior (nvm, pyenv, rbenv).
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Pattern 5: Shell Integration">
+        Defines profile switching mechanism using ZDOTDIR environment variable and exec() to replace current process with new zsh shell.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Pattern 2: Error Handling">
+        All fallible operations must use anyhow::Result with .context() for user-friendly error messages. Never show raw Rust errors to users.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Pattern 4: TOML Config Schema">
+        config.toml structure with active_profile and optional default_framework fields. Must use serde/toml for serialization.
+      </doc>
+      <doc path="docs/PRD.md" title="Product Requirements Document" section="FR003: Switch Active Profile">
+        Users must be able to quickly switch between profiles. Command: `zprof use &lt;profile-name&gt;`. Must launch new shell with selected profile.
+      </doc>
+      <doc path="docs/PRD.md" title="Product Requirements Document" section="NFR001: Sub-500ms Switching">
+        Profile switching must complete in under 500ms. This measures zprof overhead only, not shell/framework startup time.
+      </doc>
+      <doc path="docs/PRD.md" title="Product Requirements Document" section="FR018: Shared Command History">
+        All profiles share a single command history file. Users can access their full history regardless of active profile.
+      </doc>
+      <doc path="docs/stories/1-1-initialize-zprof-directory-structure.md" title="Story 1.1: Directory Structure" section="Directory Layout">
+        Establishes ~/.zsh-profiles/ structure with profiles/, shared/, and config.toml. Shared history at shared/.zsh_history.
+      </doc>
+      <doc path="docs/stories/1-8-tui-wizard-theme-selection-and-profile-generation.md" title="Story 1.8: Profile Generation" section="zshenv Generation">
+        Story 1.8 generates .zshenv that sets HISTFILE to shared/.zsh_history. Story 1.9 relies on this for shared history (AC #4).
+      </doc>
+      <doc path="docs/stories/1-2-list-available-profiles.md" title="Story 1.2: List Profiles" section="Profile Enumeration">
+        Shares profile enumeration logic. Use same pattern to list available profiles in error messages.
+      </doc>
+    </docs>
+    <code>
+      <note>No existing Rust code found. This is a greenfield implementation. Follow architecture patterns and create new modules as specified.</note>
+    </code>
+    <dependencies>
+      <rust>
+        <required>
+          <dep name="anyhow" version="latest" purpose="Error handling with context messages" />
+          <dep name="clap" version="latest" features='["derive"]' purpose="CLI argument parsing for use subcommand" />
+          <dep name="serde" version="1.0" features='["derive"]' purpose="Serialize/deserialize config.toml" />
+          <dep name="toml" version="0.9" purpose="TOML serialization for config.toml" />
+          <dep name="log" version="latest" purpose="Debug logging for ZDOTDIR changes" />
+          <dep name="env_logger" version="latest" purpose="Logging implementation" />
+        </required>
+        <existing>
+          <note>No Cargo.toml found yet - project needs initial Rust setup</note>
+        </existing>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- MUST use exec() to replace current process, NOT spawn() - per ADR-004
+- MUST complete switching in &lt; 500ms (NFR001) - measures zprof overhead only
+- MUST update config.toml active_profile before launching new shell
+- MUST validate profile exists and has required files (.zshrc, profile.toml) before switching
+- MUST provide helpful error messages listing available profiles when profile not found (AC #6)
+- MUST use Pattern 2 (Error Handling) with anyhow::Result and .context()
+- MUST use Pattern 5 (Shell Integration) for ZDOTDIR and exec()
+- MUST use serde + toml for config.toml read/write operations
+- MUST verify shared history works across profile switches (AC #4)
+- MUST display clear confirmation message before exec (AC #5)
+- MUST handle edge cases: invalid profiles, corrupted config, no profiles exist
+- MUST NOT create nested shells - exec() replaces process, no return to previous shell
+- Process tree must stay clean (no shell nesting)
+- "use" is a Rust keyword - module must be named use_cmd.rs
+  </constraints>
+
+  <interfaces>
+    <interface name="execute" kind="function signature" signature="pub fn execute(args: UseCmdArgs) -&gt; Result&lt;()&gt;" path="src/cli/use_cmd.rs">
+      Main entry point for profile switching. Validates profile, updates config, displays confirmation, and execs new shell.
+    </interface>
+    <interface name="UseCmdArgs" kind="struct" signature="pub struct UseCmdArgs { pub profile_name: String }" path="src/cli/use_cmd.rs">
+      CLI arguments for the use subcommand. Contains the target profile name.
+    </interface>
+    <interface name="get_profile_path" kind="function signature" signature="pub fn get_profile_path(profile_name: &amp;str) -&gt; Result&lt;PathBuf&gt;" path="src/core/profile.rs">
+      Returns path to profile directory. Fails with helpful error if profile doesn't exist, listing available profiles.
+    </interface>
+    <interface name="validate_profile" kind="function signature" signature="pub fn validate_profile(profile_path: &amp;Path) -&gt; Result&lt;()&gt;" path="src/core/profile.rs">
+      Validates profile has required files (.zshrc, profile.toml). Returns error with repair instructions if incomplete.
+    </interface>
+    <interface name="update_active_profile" kind="function signature" signature="pub fn update_active_profile(profile_name: &amp;str) -&gt; Result&lt;()&gt;" path="src/core/config.rs">
+      Updates config.toml with new active_profile. Creates config file if doesn't exist.
+    </interface>
+    <interface name="load_config" kind="function signature" signature="pub fn load_config() -&gt; Result&lt;ZprofConfig&gt;" path="src/core/config.rs">
+      Loads config.toml. Returns default config if file doesn't exist. Fails if file is corrupted.
+    </interface>
+    <interface name="save_config" kind="function signature" signature="pub fn save_config(config: &amp;ZprofConfig) -&gt; Result&lt;()&gt;" path="src/core/config.rs">
+      Saves config to config.toml using TOML serialization.
+    </interface>
+    <interface name="switch_to_profile" kind="function signature" signature="pub fn switch_to_profile(profile_path: &amp;Path) -&gt; Result&lt;()&gt;" path="src/shell/zdotdir.rs">
+      Sets ZDOTDIR and execs new zsh shell. Never returns on success. Only returns if exec() fails.
+    </interface>
+    <interface name="ZprofConfig" kind="struct" signature="pub struct ZprofConfig { pub active_profile: String, pub default_framework: Option&lt;String&gt; }" path="src/core/config.rs">
+      Configuration structure matching config.toml schema. Serializes/deserializes with serde.
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Use Rust standard testing framework with #[cfg(test)] modules. Unit tests co-located with implementation. Integration tests in tests/ directory. Mock filesystem operations for unit tests. Manual testing required for actual shell switching and history verification.
+    </standards>
+    <locations>
+      - Unit tests: Co-located with source in src/*/mod.rs or src/*/*.rs files
+      - Integration tests: tests/ directory for full switching flow
+      - Performance tests: Measure zprof overhead (validation + config update + exec setup) must be &lt; 500ms
+      - Manual tests: Actual shell switching with multiple profiles, history sharing verification
+    </locations>
+    <ideas>
+      <test id="AC1" description="Verify ZDOTDIR is set correctly">
+        Unit test that profile path is correctly converted to ZDOTDIR. Integration test that ZDOTDIR env var is passed to exec().
+      </test>
+      <test id="AC2" description="Verify new shell is launched with correct profile">
+        Integration test (may require mocking exec()) that zsh is executed with ZDOTDIR set. Manual test for actual shell launch.
+      </test>
+      <test id="AC3" description="Verify switching completes in under 500ms">
+        Performance test measuring: profile validation (~1-5ms) + config update (~5-10ms) + exec setup (~10-50ms) = total &lt; 500ms.
+      </test>
+      <test id="AC4" description="Verify shared command history works">
+        Manual test: create profiles, run commands in profile A, switch to profile B, verify history from A is accessible in B.
+      </test>
+      <test id="AC5" description="Verify clear confirmation message">
+        Test that confirmation message displays profile name, location, and shared history status before exec.
+      </test>
+      <test id="AC6" description="Verify helpful error for invalid profiles">
+        Test error message includes list of available profiles. Test various error cases: nonexistent profile, incomplete profile, no profiles exist.
+      </test>
+      <test id="edge-cases" description="Verify edge case handling">
+        Test: missing .zshrc, missing profile.toml, corrupted config.toml, empty profiles directory, already active profile.
+      </test>
+    </ideas>
+  </tests>
+</story-context>

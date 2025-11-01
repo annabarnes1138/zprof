@@ -1,0 +1,177 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>3</storyId>
+    <title>Manual TOML Editing with Live Validation</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-31</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>/Users/anna/code/annabarnes1138/zprof/docs/stories/2-3-manual-toml-editing-with-live-validation.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>power user</asA>
+    <iWant>to manually edit my profile TOML and receive validation feedback</iWant>
+    <soThat>I can quickly customize profiles without using the TUI wizard</soThat>
+    <tasks>
+      <task id="1" ac="1">Create edit command CLI interface (cli/edit.rs with EditArgs)</task>
+      <task id="2" ac="1">Implement $EDITOR detection and invocation (check $EDITOR, $VISUAL, fallback to vim/notepad)</task>
+      <task id="3" ac="4,5">Create backup before validation using Pattern 3 (Safe File Operations)</task>
+      <task id="4" ac="2,4,5">Implement post-edit validation loop with retry/restore/cancel options</task>
+      <task id="5" ac="3">Implement shell configuration regeneration calling generator::write_generated_files()</task>
+      <task id="6" ac="6">Display success message and remind user to run zprof use</task>
+      <task id="7" ac="All">Handle edge cases (missing profile, editor failures, permission errors, concurrent edits)</task>
+      <task id="8" ac="All">Write comprehensive tests (unit tests for editor detection, integration tests for edit flow with mocked editor)</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">zprof edit &lt;profile-name&gt; opens profile.toml in user's $EDITOR</criterion>
+    <criterion id="2">After saving, system validates TOML and reports any errors</criterion>
+    <criterion id="3">If valid, regenerates .zshrc and .zshenv from updated manifest</criterion>
+    <criterion id="4">If invalid, preserves old configuration and shows validation errors</criterion>
+    <criterion id="5">User can retry edit or cancel without breaking profile</criterion>
+    <criterion id="6">Changes take effect on next zprof use &lt;profile-name&gt;</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR014 - Manual TOML Editing</section>
+        <snippet>System shall support manual TOML editing with validation and error reporting</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>NFR002 - Non-Destructive Operations</section>
+        <snippet>System shall not modify or corrupt user's existing dotfiles; all operations must be non-destructive with automatic backups</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Pattern 3 - Safe File Operations</section>
+        <snippet>Always create timestamped backups before modifications. Use cache/backups/ directory. Atomic operations with rollback capability</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Pattern 1 - CLI Command Structure</section>
+        <snippet>Use Clap derive API for argument parsing. Follow subcommand pattern: zprof &lt;verb&gt; &lt;noun&gt;</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Epic 2 Story 2.3 Mapping</section>
+        <snippet>Primary modules: cli/edit.rs. Secondary modules: core/manifest.rs (validation), shell/generator.rs (regeneration), core/filesystem.rs (backups)</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-1-parse-and-validate-yaml-manifests.md</path>
+        <title>Story 2.1 - Parse and Validate TOML Manifests</title>
+        <section>Validation</section>
+        <snippet>Use manifest::load_and_validate() to validate edited TOML. Returns detailed error messages for syntax and semantic errors</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-2-generate-shell-configuration-from-yaml.md</path>
+        <title>Story 2.2 - Generate Shell Configuration from TOML</title>
+        <section>Regeneration</section>
+        <snippet>Use generator::write_generated_files() to regenerate .zshrc and .zshenv from validated manifest. Completes in under 1 second</snippet>
+      </doc>
+    </docs>
+    <code>
+      <note>No existing code - greenfield implementation. Depends on Story 2.1 (manifest validation) and Story 2.2 (regeneration)</note>
+    </code>
+    <dependencies>
+      <rust>
+        <crate name="anyhow" version="2.0" purpose="Error handling with context"/>
+        <crate name="clap" version="4.5.51" purpose="CLI argument parsing"/>
+        <crate name="chrono" version="latest" purpose="Timestamps for backup filenames"/>
+        <crate name="dirs" version="latest" purpose="Locate home directory"/>
+        <crate name="log" version="latest" purpose="Logging"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="module_structure">Primary module: cli/edit.rs. Secondary: core/manifest.rs, shell/generator.rs, core/filesystem.rs</constraint>
+    <constraint type="editor_detection">Check $EDITOR, fallback to $VISUAL, then vim (Unix) or notepad (Windows)</constraint>
+    <constraint type="backup_safety">MUST create timestamped backup before editing (NFR002). Backup naming: profile.toml.backup.YYYYMMDD-HHMMSS</constraint>
+    <constraint type="validation_gate">NEVER regenerate shell files from invalid manifest. Validation must pass first</constraint>
+    <constraint type="user_prompts">On validation failure: offer Retry/Restore/Cancel. Loop until user chooses</constraint>
+    <constraint type="atomic_operations">Either full success (validate + regenerate + cleanup) or full rollback (restore backup)</constraint>
+    <constraint type="error_messages">Display clear, actionable error messages with line numbers for TOML errors</constraint>
+    <constraint type="manifest_source">Implements ADR-002: TOML manifest is source of truth. Edits flow through manifest, not direct shell file edits</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>execute (EditArgs)</name>
+      <kind>function</kind>
+      <signature>pub fn execute(args: EditArgs) -> Result&lt;()&gt;</signature>
+      <path>src/cli/edit.rs</path>
+      <description>Main edit command orchestration: validate profile exists, detect editor, create backup, open editor, validate loop, regenerate, cleanup</description>
+    </interface>
+    <interface>
+      <name>detect_editor</name>
+      <kind>function</kind>
+      <signature>fn detect_editor() -> Result&lt;String&gt;</signature>
+      <path>src/cli/edit.rs</path>
+      <description>Detects user's preferred editor from $EDITOR, $VISUAL env vars with platform-specific fallbacks</description>
+    </interface>
+    <interface>
+      <name>open_editor</name>
+      <kind>function</kind>
+      <signature>fn open_editor(editor: &str, file_path: &Path) -> Result&lt;()&gt;</signature>
+      <path>src/cli/edit.rs</path>
+      <description>Launches editor as child process and waits for completion</description>
+    </interface>
+    <interface>
+      <name>create_backup</name>
+      <kind>function</kind>
+      <signature>fn create_backup(file_path: &Path) -> Result&lt;PathBuf&gt;</signature>
+      <path>src/cli/edit.rs</path>
+      <description>Creates timestamped backup of manifest in cache/backups/ directory</description>
+    </interface>
+    <interface>
+      <name>restore_backup</name>
+      <kind>function</kind>
+      <signature>fn restore_backup(backup_path: &Path, dest_path: &Path) -> Result&lt;()&gt;</signature>
+      <path>src/cli/edit.rs</path>
+      <description>Restores backup to original location and cleans up backup file</description>
+    </interface>
+    <interface>
+      <name>manifest::load_and_validate (from Story 2.1)</name>
+      <kind>function</kind>
+      <signature>pub fn load_and_validate(profile_name: &str) -> Result&lt;ProfileManifest&gt;</signature>
+      <path>src/core/manifest.rs</path>
+      <description>Loads and validates TOML manifest, returns detailed errors on failure</description>
+    </interface>
+    <interface>
+      <name>generator::write_generated_files (from Story 2.2)</name>
+      <kind>function</kind>
+      <signature>pub fn write_generated_files(profile_name: &str, manifest: &ProfileManifest) -> Result&lt;()&gt;</signature>
+      <path>src/shell/generator.rs</path>
+      <description>Regenerates .zshrc and .zshenv from validated manifest</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Use Rust's built-in testing framework for unit tests. Integration tests with mocked editor execution. Manual testing with real editors required for full validation</standards>
+    <locations>
+      <location>src/cli/edit.rs - Unit tests under #[cfg(test)] module</location>
+      <location>tests/edit_test.rs - Integration tests for edit workflow</location>
+      <location>Manual testing - Test with various editors (vim, nano, code, notepad)</location>
+    </locations>
+    <ideas>
+      <test_idea ac="1">Unit test detect_editor() with various env var combinations ($EDITOR set, $VISUAL set, neither set)</test_idea>
+      <test_idea ac="4">Unit test create_backup() and restore_backup() functions for correct file operations</test_idea>
+      <test_idea ac="2,3">Integration test successful edit flow: mock editor, verify validation called, verify regeneration called</test_idea>
+      <test_idea ac="4,5">Integration test validation failure with retry: mock invalid edit, verify prompt, mock retry with valid edit</test_idea>
+      <test_idea ac="4">Integration test restore backup: mock invalid edit, user chooses restore, verify backup restored</test_idea>
+      <test_idea ac="5">Integration test cancel: mock invalid edit, user chooses cancel, verify invalid file preserved but not regenerated</test_idea>
+      <test_idea ac="1">Manual test with vim: edit real profile, verify editor opens, make changes, verify regeneration</test_idea>
+      <test_idea ac="1">Manual test with VS Code ($EDITOR=code): verify code --wait behavior works correctly</test_idea>
+    </ideas>
+  </tests>
+</story-context>

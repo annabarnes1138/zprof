@@ -1,0 +1,197 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>6</storyId>
+    <title>TUI Wizard Framework Selection</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-31</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-6-tui-wizard-framework-selection.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>an interactive menu to select a zsh framework</iWant>
+    <soThat>I can easily choose the framework for my new profile</soThat>
+    <tasks>- Set up Ratatui TUI infrastructure (AC: #3, #4, #5, #6)
+- Define framework selection data model (AC: #1, #2)
+- Implement framework selection TUI screen (AC: #1, #2, #3, #4)
+- Integrate TUI into create command (AC: All)
+- Implement responsive layout (AC: #5, #6)
+- Handle edge cases and errors (AC: All)
+- Write comprehensive tests (AC: All)</tasks>
+  </story>
+
+  <acceptanceCriteria>1. TUI displays list of supported frameworks (oh-my-zsh, zimfw, prezto, zinit, zap)
+2. Each framework shows brief description and key characteristics
+3. Keyboard navigation with arrow keys and enter to select
+4. Selected framework is highlighted visually
+5. TUI is responsive and works in 80x24 terminal minimum
+6. Supports both light and dark terminal themes</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <artifact>
+        <path>docs/PRD.md</path>
+        <title>zprof Product Requirements Document</title>
+        <section>FR007: Interactive TUI Wizard</section>
+        <snippet>System shall provide interactive TUI wizard for profile creation with framework selection (oh-my-zsh, zimfw, prezto, zinit, zap)</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Ratatui 0.29.0 + Crossterm 0.29.0</section>
+        <snippet>TUI framework for interactive wizards. Multi-select lists (plugin browser), single-select lists (framework/theme selection). Keyboard-only navigation, works on all platforms</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>NFR003: TUI Responsive</section>
+        <snippet>TUI shall be responsive and navigable via keyboard on machines with 2GB RAM and standard terminal emulators (iTerm2, Terminal.app, Alacritty)</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Pattern 2: Error Handling</section>
+        <snippet>ALL fallible operations MUST use anyhow::Result with context. Terminal cleanup must happen even on errors or panics</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Epic 1 Story 1.6 Mapping</section>
+        <snippet>Primary modules: tui/framework_select.rs, tui/wizard.rs. Secondary: frameworks/mod.rs. Integration point with cli/create.rs</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/stories/1-5-profile-creation-with-import-current-setup.context.xml</path>
+        <title>Story 1.5 Context</title>
+        <section>Integration Point</section>
+        <snippet>TUI wizard launched when no framework detected or user declines import. Must use same FrameworkType enum and converge to same profile creation logic</snippet>
+      </artifact>
+    </docs>
+    <code>
+      <!-- No existing code - greenfield implementation -->
+      <!-- Expected integration: Called from cli/create.rs when framework not detected or import declined -->
+    </code>
+    <dependencies>
+      <rust>
+        <package name="anyhow" version="2.0" purpose="Error handling with context" />
+        <package name="ratatui" version="0.29.0" purpose="TUI framework for interactive wizards" />
+        <package name="crossterm" version="0.29.0" purpose="Cross-platform terminal manipulation for Ratatui backend" />
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Follow Pattern 2 (Error Handling) with anyhow::Result and context
+    - TUI MUST work on minimum 80x24 terminal size (NFR003 requirement)
+    - MUST restore terminal state on exit, errors, and panics (use panic hook)
+    - Use Ratatui List widget for framework selection display
+    - Keyboard-only navigation (arrow keys, enter, escape)
+    - Visual highlight for selected framework
+    - Support both light and dark terminal themes (test on both)
+    - Handle terminal resize events gracefully
+    - Use FrameworkType enum from frameworks/mod.rs (Story 1.4)
+    - Return FrameworkType compatible with Story 1.5 create command flow
+    - Always disable raw mode and leave alternate screen on cleanup
+    - Test on iTerm2, Terminal.app, and Alacritty emulators
+    - Log TUI events with env_logger for debugging
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>run_framework_selection</name>
+      <kind>function</kind>
+      <signature>pub fn run_framework_selection(profile_name: &amp;str) -> Result&lt;FrameworkType&gt;</signature>
+      <path>src/tui/framework_select.rs</path>
+    </interface>
+    <interface>
+      <name>FrameworkOption</name>
+      <kind>struct</kind>
+      <signature>struct FrameworkOption {
+    framework_type: FrameworkType,
+    name: &amp;'static str,
+    description: &amp;'static str,
+    characteristics: &amp;'static str,
+}</signature>
+      <path>src/tui/framework_select.rs</path>
+    </interface>
+    <interface>
+      <name>setup_terminal</name>
+      <kind>function</kind>
+      <signature>fn setup_terminal() -> Result&lt;Terminal&lt;CrosstermBackend&lt;io::Stdout&gt;&gt;&gt;</signature>
+      <path>src/tui/mod.rs</path>
+    </interface>
+    <interface>
+      <name>restore_terminal</name>
+      <kind>function</kind>
+      <signature>fn restore_terminal() -> Result&lt;()&gt;</signature>
+      <path>src/tui/mod.rs</path>
+    </interface>
+    <interface>
+      <name>install_panic_hook</name>
+      <kind>function</kind>
+      <signature>fn install_panic_hook()</signature>
+      <path>src/tui/mod.rs</path>
+    </interface>
+    <interface>
+      <name>FrameworkType</name>
+      <kind>enum (from Story 1.4)</kind>
+      <signature>pub enum FrameworkType {
+    OhMyZsh,
+    Zimfw,
+    Prezto,
+    Zinit,
+    Zap,
+}</signature>
+      <path>src/frameworks/mod.rs</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Use insta for snapshot testing if applicable to TUI output. Unit tests for keyboard event handling and state management. Integration tests for TUI initialization, cleanup, and selection flow. Manual testing required for visual appearance in 80x24 terminal and light/dark themes. Test on macOS Terminal, iTerm2, and Alacritty.</standards>
+    <locations>
+      - tests/tui_framework_select_test.rs (integration tests)
+      - src/tui/framework_select.rs (unit tests via #[cfg(test)])
+      - src/tui/mod.rs (unit tests via #[cfg(test)])
+    </locations>
+    <ideas>
+      <test id="AC1-AC2" description="Framework list display and descriptions">
+        - Verify all 5 frameworks appear in list
+        - Test framework descriptions match specifications
+        - Verify characteristics text displayed correctly
+      </test>
+      <test id="AC3-AC4" description="Keyboard navigation and highlighting">
+        - Test Up arrow moves selection up
+        - Test Down arrow moves selection down
+        - Test wrapping behavior at top/bottom of list
+        - Test Enter key returns selected FrameworkType
+        - Test Esc key cancels and returns error
+        - Verify visual highlighting updates on selection change
+      </test>
+      <test id="AC5" description="Terminal size responsiveness">
+        - Test TUI renders correctly in 80x24 terminal
+        - Test error message if terminal too small
+        - Test terminal resize handling during selection
+      </test>
+      <test id="AC6" description="Theme compatibility">
+        - Manual test in light theme terminal
+        - Manual test in dark theme terminal
+        - Verify readability in both environments
+      </test>
+      <test id="Integration" description="Terminal state management">
+        - Test terminal state restored after normal selection
+        - Test terminal state restored after Esc cancellation
+        - Test terminal state restored after error
+        - Test panic hook restores terminal on crash
+        - Verify raw mode disabled on all exit paths
+        - Verify alternate screen exited on all exit paths
+      </test>
+      <test id="Cross-platform" description="Terminal emulator compatibility">
+        - Manual test on macOS Terminal.app
+        - Manual test on iTerm2
+        - Manual test on Alacritty
+        - Verify keyboard input works on all emulators
+      </test>
+    </ideas>
+  </tests>
+</story-context>

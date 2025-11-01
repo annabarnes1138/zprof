@@ -1,0 +1,202 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>10</storyId>
+    <title>Delete Profile</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-31</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-10-delete-profile.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to delete profiles I no longer need</iWant>
+    <soThat>I can keep my profile collection clean and manageable</soThat>
+    <tasks>
+- Implement profile deletion validation (AC: #4, #6)
+  - Check if profile exists using core/profile.rs::get_profile_path()
+  - Load current active profile from config.toml
+  - Compare requested profile with active profile
+  - Return error if trying to delete active profile
+  - Suggest switching to different profile first in error message
+  - List available profiles to switch to
+  - Handle case where profile doesn't exist with helpful error
+- Implement confirmation prompt (AC: #1, #2)
+  - Display profile name being deleted
+  - Show full profile path for transparency
+  - Display irreversibility warning
+  - Prompt "Delete profile 'X'? (y/n): " and wait for input
+  - Accept y/yes (case insensitive) for confirmation
+  - Accept n/no (case insensitive) or any other input for cancellation
+  - Allow Ctrl+C to cancel without error
+  - Display cancellation message if user declines
+- Implement safe directory deletion (AC: #3, #6)
+  - Use Pattern 3 (Safe File Operations) from architecture
+  - Create backup of profile directory before deletion
+  - Store backup in cache/backups with timestamp
+  - Remove entire profile directory recursively
+  - Use std::fs::remove_dir_all() for recursive deletion
+  - Verify deletion completed successfully
+  - Log deletion with env_logger
+  - Clean up backup after successful deletion (optional, keep for safety)
+  - Restore from backup if deletion fails mid-operation
+- Verify isolation from shared resources (AC: #6)
+  - Confirm shared history file is NOT deleted
+  - Verify other profile directories remain untouched
+  - Ensure config.toml is not corrupted
+  - Only delete files within the specific profile directory
+  - Use path validation to prevent directory traversal issues
+- Implement CLI command (AC: All)
+  - Create `cli/delete.rs` module
+  - Define DeleteArgs struct with profile_name parameter
+  - Implement execute() function following Pattern 1
+  - Validate profile exists
+  - Check profile is not active (AC: #4)
+  - Display confirmation prompt (AC: #1, #2)
+  - Delete profile directory on confirmation (AC: #3)
+  - Display success message (AC: #5)
+  - Handle all error cases gracefully
+  - Use anyhow::Context for error messages per Pattern 2
+- Write comprehensive tests (AC: All)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. `zprof delete &lt;profile-name&gt;` prompts for confirmation before deletion
+2. Confirmation shows profile name and warns action is irreversible
+3. On confirmation, removes profile directory and all contents
+4. Cannot delete currently active profile (requires switching first)
+5. Success message confirms deletion
+6. Shared history and other profiles remain unaffected
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Pattern 3: Safe File Operations">
+        ALL agents MUST follow this pattern for destructive operations: Check → Backup → Operate → Verify → Cleanup. Required for NFR002 compliance.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Pattern 2: Error Handling">
+        All fallible operations must use anyhow::Result with .context() for user-friendly error messages. Never show raw Rust errors to users.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="ADR-004: Active Profile Protection">
+        Cannot delete active profile because shell process is using it (ZDOTDIR points to profile directory). Must switch first.
+      </doc>
+      <doc path="docs/PRD.md" title="Product Requirements Document" section="FR005: Delete Profiles">
+        Users can delete profiles they no longer need. System must prevent accidental deletion of active profile and require confirmation.
+      </doc>
+      <doc path="docs/PRD.md" title="Product Requirements Document" section="NFR002: Non-destructive Operations">
+        All destructive operations must create backups before executing. Users should be able to recover from mistakes.
+      </doc>
+      <doc path="docs/stories/1-9-switch-active-profile.md" title="Story 1.9: Switch Active Profile" section="Config.toml Pattern">
+        Story 1.9 establishes config.toml with active_profile tracking. Use load_config() to read current active profile.
+      </doc>
+      <doc path="docs/stories/1-1-initialize-zprof-directory-structure.md" title="Story 1.1: Directory Structure" section="Directory Layout">
+        Profiles at profiles/, shared resources at shared/, backups at cache/backups/. Shared history must not be deleted.
+      </doc>
+      <doc path="docs/stories/1-2-list-available-profiles.md" title="Story 1.2: List Profiles" section="Profile Enumeration">
+        Reuse profile listing logic to suggest alternatives when active profile cannot be deleted.
+      </doc>
+    </docs>
+    <code>
+      <note>No existing Rust code found. This is a greenfield implementation. Follow architecture patterns and create new modules as specified.</note>
+    </code>
+    <dependencies>
+      <rust>
+        <required>
+          <dep name="anyhow" version="latest" purpose="Error handling with context messages" />
+          <dep name="clap" version="latest" features='["derive"]' purpose="CLI argument parsing for delete subcommand" />
+          <dep name="log" version="latest" purpose="Debug logging for deletion operations" />
+          <dep name="env_logger" version="latest" purpose="Logging implementation" />
+          <dep name="chrono" version="0.4" purpose="Timestamp generation for backup directories" />
+        </required>
+        <existing>
+          <note>No Cargo.toml found yet - project needs initial Rust setup</note>
+        </existing>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- MUST use Pattern 3 (Safe File Operations) for deletion: Check → Backup → Operate → Verify → Cleanup
+- MUST create backup before deletion (NFR002) in cache/backups/ with timestamp
+- MUST prevent deletion of currently active profile (AC #4) - shell process is using it
+- MUST prompt for confirmation before deletion (AC #1) - cannot be skipped
+- MUST show irreversibility warning in confirmation prompt (AC #2)
+- MUST use Pattern 2 (Error Handling) with anyhow::Result and .context()
+- MUST NOT delete shared history file (AC #6) - only delete specific profile directory
+- MUST NOT affect other profile directories (AC #6) - validate path boundaries
+- MUST provide helpful error when active profile deletion attempted - suggest switching first
+- MUST list available profiles to switch to in error message
+- MUST accept y/yes (case insensitive) for confirmation
+- MUST cancel on n/no or any other input
+- MUST display success message after deletion (AC #5)
+- MUST log all deletion operations with env_logger
+- MUST handle non-existent profiles with helpful error
+- Backup should be retained even after successful deletion for safety
+  </constraints>
+
+  <interfaces>
+    <interface name="execute" kind="function signature" signature="pub fn execute(args: DeleteArgs) -&gt; Result&lt;()&gt;" path="src/cli/delete.rs">
+      Main entry point for profile deletion. Validates profile, checks not active, prompts confirmation, and deletes.
+    </interface>
+    <interface name="DeleteArgs" kind="struct" signature="pub struct DeleteArgs { pub profile_name: String }" path="src/cli/delete.rs">
+      CLI arguments for the delete subcommand. Contains the target profile name to delete.
+    </interface>
+    <interface name="validate_not_active" kind="function signature" signature="pub fn validate_not_active(profile_name: &amp;str) -&gt; Result&lt;()&gt;" path="src/core/profile.rs">
+      Checks if profile is currently active. Fails with helpful error listing alternatives if active.
+    </interface>
+    <interface name="confirm_deletion" kind="function signature" signature="fn confirm_deletion(profile_name: &amp;str, profile_path: &amp;Path) -&gt; Result&lt;bool&gt;" path="src/cli/delete.rs">
+      Displays confirmation prompt with warning. Returns true if user confirms (y/yes), false otherwise.
+    </interface>
+    <interface name="safe_delete_directory" kind="function signature" signature="pub fn safe_delete_directory(dir_path: &amp;Path, reason: &amp;str) -&gt; Result&lt;()&gt;" path="src/core/filesystem.rs">
+      Safely deletes directory following Pattern 3. Creates backup, deletes, verifies. Restores on failure.
+    </interface>
+    <interface name="copy_dir_recursive" kind="function signature" signature="fn copy_dir_recursive(src: &amp;Path, dst: &amp;Path) -&gt; Result&lt;()&gt;" path="src/core/filesystem.rs">
+      Recursively copies directory for backup creation. Used by safe_delete_directory.
+    </interface>
+    <interface name="create_backup_directory" kind="function signature" signature="fn create_backup_directory() -&gt; Result&lt;PathBuf&gt;" path="src/core/filesystem.rs">
+      Creates and returns path to cache/backups/ directory for storing deletion backups.
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Use Rust standard testing framework with #[cfg(test)] modules. Unit tests co-located with implementation. Integration tests in tests/ directory. Mock filesystem operations for unit tests. Manual testing required for full deletion workflow verification.
+    </standards>
+    <locations>
+      - Unit tests: Co-located with source in src/*/mod.rs or src/*/*.rs files
+      - Integration tests: tests/ directory for full deletion flow
+      - Manual tests: Real profiles deletion, backup verification, shared resource protection
+    </locations>
+    <ideas>
+      <test id="AC1" description="Verify confirmation prompt required">
+        Test that deletion cannot proceed without confirmation. Test prompt displays profile name and path.
+      </test>
+      <test id="AC2" description="Verify irreversibility warning shown">
+        Test confirmation prompt includes warning text. Test transparency with full path display.
+      </test>
+      <test id="AC3" description="Verify directory removal on confirmation">
+        Integration test with temp directories that directory and all contents are removed after confirmation.
+      </test>
+      <test id="AC4" description="Verify active profile protection">
+        Test that attempting to delete active profile fails with error. Test error message suggests switching first.
+      </test>
+      <test id="AC5" description="Verify success message">
+        Test success message displays profile name and mentions backup retention.
+      </test>
+      <test id="AC6" description="Verify shared resources unaffected">
+        Test shared history file remains after deletion. Test other profiles remain intact. Test config.toml not corrupted.
+      </test>
+      <test id="backup" description="Verify backup creation">
+        Test backup is created before deletion. Test backup contains all profile files. Test backup retained after successful deletion.
+      </test>
+      <test id="confirmation" description="Verify confirmation logic">
+        Test y/yes (case insensitive) confirms deletion. Test n/no/other input cancels. Test cancellation message shown.
+      </test>
+      <test id="error-handling" description="Verify error cases">
+        Test non-existent profile error. Test active profile error with suggestions. Test corrupted paths.
+      </test>
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,215 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>1</storyId>
+    <title>Parse and Validate TOML Manifests</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-31</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/2-1-parse-and-validate-yaml-manifests.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>zprof to parse and validate my profile TOML manifests</iWant>
+    <soThat>I can ensure my profile configuration is correct before applying it</soThat>
+    <tasks>
+- Define TOML manifest schema (AC: #1)
+  - Create `core/manifest.rs` module
+  - Define ProfileManifest struct with serde Deserialize
+  - Define nested structs: ProfileMeta, PluginsConfig, EnvVars
+  - Follow Pattern 4 (TOML Manifest Schema) from architecture
+  - Use serde attributes for validation
+  - Add required field markers
+  - Include chrono DateTime fields for created/modified timestamps
+  - Support all 5 frameworks: oh-my-zsh, zimfw, prezto, zinit, zap
+- Implement TOML parsing (AC: #1, #2)
+  - Add toml 0.9 and serde 1.0 dependencies to Cargo.toml
+  - Implement parse_manifest(path) function
+  - Use toml::from_str() with error context
+  - Catch deserialization errors with anyhow::Context
+  - Map TOML syntax errors to user-friendly messages
+  - Extract line numbers from parse errors when available
+  - Return parsed ProfileManifest struct on success
+- Implement schema validation (AC: #2, #3)
+  - Create validate_manifest(manifest) function
+  - Check required fields: profile.name, profile.framework
+  - Validate framework is one of 5 supported values
+  - Validate plugins.enabled is array of strings
+  - Validate env variables are string key-value pairs
+  - Check theme field is non-empty string if present
+  - Verify timestamps are valid ISO 8601 format
+  - Return Vec with field path + message for errors
+  - Include line number hints in error messages
+- Implement user-friendly error reporting (AC: #3, #5)
+  - Create custom error types for validation failures
+  - Format errors with field path, expected type, actual value
+  - Include suggestions for fixing common mistakes
+  - Show example of correct TOML syntax
+  - Use anyhow for error context chaining
+  - Log detailed errors with env_logger (debug level)
+  - Display simplified errors to users (info level)
+- Implement load and validate workflow (AC: #4, #5)
+  - Create load_and_validate(profile_name) convenience function
+  - Construct path to profile.toml
+  - Check file exists with helpful error if missing
+  - Parse TOML file
+  - Run validation on parsed manifest
+  - Return Ok(ProfileManifest) if all validations pass
+  - Return detailed error if parsing or validation fails
+  - Mark manifest as "validated" in logs
+- Add helper functions for common operations (AC: All)
+  - get_manifest_path(profile_name) function
+  - manifest_exists(profile_name) function
+  - get_supported_frameworks() function
+  - validate_framework(framework) function
+  - save_manifest(manifest, profile_name) function (for future use)
+- Write comprehensive tests (AC: All)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. System reads profile.toml files and validates schema (name, framework, plugins, theme, environment variables)
+2. Validation checks for required fields and correct data types
+3. Clear error messages identify specific validation failures with line numbers
+4. Successfully validated manifests are marked as ready for use
+5. Invalid manifests prevent profile activation with helpful guidance
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Pattern 4: TOML Manifest Schema">
+        Defines canonical profile.toml schema with [profile], [plugins], and [env] sections. All manifest parsing must follow this exact schema.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="ADR-002: TOML not YAML">
+        Decision to use TOML instead of YAML for manifests. Rationale: better error messages, no indentation sensitivity, explicit typing, Rust ecosystem fit.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Pattern 2: Error Handling">
+        All fallible operations must use anyhow::Result with .context() for user-friendly error messages. Never show raw Rust errors to users.
+      </doc>
+      <doc path="docs/PRD.md" title="Product Requirements Document" section="FR012: Parse and Validate Manifests">
+        System must parse profile.toml files, validate schema, check required fields, and provide clear error messages with line numbers.
+      </doc>
+      <doc path="docs/stories/1-9-switch-active-profile.md" title="Story 1.9: Switch Active Profile" section="Config Pattern">
+        Establishes TOML config reading pattern. Story 2.1 extends this to full manifest parsing and validation.
+      </doc>
+      <doc path="docs/stories/1-10-delete-profile.md" title="Story 1.10: Delete Profile" section="Profile Path Pattern">
+        Profiles at ~/.zsh-profiles/profiles/. Each profile has profile.toml in its directory. Use consistent path patterns.
+      </doc>
+    </docs>
+    <code>
+      <note>No existing Rust code found. This is a greenfield implementation. Follow architecture patterns and create new modules as specified.</note>
+    </code>
+    <dependencies>
+      <rust>
+        <required>
+          <dep name="serde" version="1.0" features='["derive"]' purpose="Serialize/deserialize TOML manifest" />
+          <dep name="toml" version="0.9" purpose="TOML parsing and serialization" />
+          <dep name="chrono" version="0.4" features='["serde"]' purpose="DateTime fields for created/modified timestamps" />
+          <dep name="anyhow" version="2.0" purpose="Error handling with context messages" />
+          <dep name="log" version="0.4" purpose="Debug logging for validation operations" />
+          <dep name="env_logger" version="0.11" purpose="Logging implementation" />
+          <dep name="dirs" version="5.0" purpose="Home directory resolution for paths" />
+        </required>
+        <existing>
+          <note>No Cargo.toml found yet - project needs initial Rust setup</note>
+        </existing>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- MUST follow Pattern 4 (TOML Manifest Schema) exactly as defined in architecture
+- MUST use ADR-002 decision: TOML not YAML for manifests
+- MUST use Pattern 2 (Error Handling) with anyhow::Result and .context()
+- MUST validate all required fields: profile.name, profile.framework
+- MUST support exactly 5 frameworks: oh-my-zsh, zimfw, prezto, zinit, zap
+- MUST extract and display line numbers in parse error messages
+- MUST provide helpful suggestions for common mistakes in error messages
+- MUST use serde attributes for schema validation (#[serde(default, rename)])
+- MUST validate plugins.enabled is array of non-empty strings
+- MUST validate env variable keys are valid shell identifiers (alphanumeric + underscore)
+- MUST use chrono for timestamp fields (created, modified)
+- MUST mark successfully validated manifests in logs (AC #4)
+- MUST prevent profile activation if validation fails (AC #5)
+- Error messages MUST include field path, expected type, actual value
+- Parse errors MUST include line/column information when available
+- Validation MUST be strict - fail on any schema violation
+  </constraints>
+
+  <interfaces>
+    <interface name="ProfileManifest" kind="struct" signature="pub struct ProfileManifest { pub profile: ProfileMeta, pub plugins: PluginsConfig, pub env: HashMap&lt;String, String&gt; }" path="src/core/manifest.rs">
+      Root manifest structure matching Pattern 4 TOML schema. Deserializes from profile.toml.
+    </interface>
+    <interface name="ProfileMeta" kind="struct" signature="pub struct ProfileMeta { pub name: String, pub framework: String, pub theme: String, pub created: DateTime&lt;Utc&gt;, pub modified: DateTime&lt;Utc&gt; }" path="src/core/manifest.rs">
+      Profile metadata section containing name, framework, theme, timestamps.
+    </interface>
+    <interface name="PluginsConfig" kind="struct" signature="pub struct PluginsConfig { pub enabled: Vec&lt;String&gt; }" path="src/core/manifest.rs">
+      Plugins configuration section containing list of enabled plugins.
+    </interface>
+    <interface name="validate" kind="method" signature="pub fn validate(&amp;self) -&gt; Result&lt;()&gt;" path="src/core/manifest.rs">
+      Validates manifest schema and values. Checks required fields, framework validity, plugin/env format.
+    </interface>
+    <interface name="parse_manifest" kind="function signature" signature="pub fn parse_manifest(toml_content: &amp;str) -&gt; Result&lt;ProfileManifest&gt;" path="src/core/manifest.rs">
+      Parses TOML string into ProfileManifest. Extracts line numbers from parse errors.
+    </interface>
+    <interface name="load_and_validate" kind="function signature" signature="pub fn load_and_validate(profile_name: &amp;str) -&gt; Result&lt;ProfileManifest&gt;" path="src/core/manifest.rs">
+      Convenience function: loads manifest file, parses, validates. Returns validated manifest or error.
+    </interface>
+    <interface name="get_manifest_path" kind="function signature" signature="pub fn get_manifest_path(profile_name: &amp;str) -&gt; PathBuf" path="src/core/manifest.rs">
+      Returns path to profile's manifest file at profiles/&lt;name&gt;/profile.toml.
+    </interface>
+    <interface name="manifest_exists" kind="function signature" signature="pub fn manifest_exists(profile_name: &amp;str) -&gt; bool" path="src/core/manifest.rs">
+      Checks if profile has a manifest file.
+    </interface>
+    <interface name="save_manifest" kind="function signature" signature="pub fn save_manifest(manifest: &amp;ProfileManifest, profile_name: &amp;str) -&gt; Result&lt;()&gt;" path="src/core/manifest.rs">
+      Serializes and saves manifest to profile.toml. Used by future stories.
+    </interface>
+    <interface name="get_supported_frameworks" kind="function signature" signature="pub fn get_supported_frameworks() -&gt; Vec&lt;&amp;'static str&gt;" path="src/core/manifest.rs">
+      Returns list of 5 supported framework names.
+    </interface>
+    <interface name="validate_framework" kind="function signature" signature="pub fn validate_framework(framework: &amp;str) -&gt; Result&lt;()&gt;" path="src/core/manifest.rs">
+      Validates framework name is one of 5 supported values.
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Use Rust standard testing framework with #[cfg(test)] modules. Unit tests co-located with implementation in src/core/manifest.rs. Create test fixtures for valid and invalid TOML manifests. Test all 5 frameworks. Test all error conditions.
+    </standards>
+    <locations>
+      - Unit tests: Co-located in src/core/manifest.rs
+      - Test fixtures: tests/fixtures/ directory with sample manifests
+      - Integration tests: tests/ directory for load_and_validate() full workflow
+    </locations>
+    <ideas>
+      <test id="AC1" description="Verify TOML parsing reads all schema fields">
+        Test parsing valid manifest extracts name, framework, plugins, theme, env vars. Test all 5 frameworks parse correctly.
+      </test>
+      <test id="AC2" description="Verify validation checks required fields and types">
+        Test missing profile.name fails. Test missing profile.framework fails. Test invalid framework name fails. Test empty plugin strings fail.
+      </test>
+      <test id="AC3" description="Verify error messages include line numbers">
+        Test TOML syntax errors extract line/column. Test error messages are user-friendly with suggestions.
+      </test>
+      <test id="AC4" description="Verify successful validation">
+        Test load_and_validate() returns Ok for valid manifests. Test validation logged appropriately.
+      </test>
+      <test id="AC5" description="Verify invalid manifests fail with guidance">
+        Test load_and_validate() returns error for invalid manifests. Test error messages suggest fixes.
+      </test>
+      <test id="frameworks" description="Verify all 5 frameworks validate">
+        Test each framework (oh-my-zsh, zimfw, prezto, zinit, zap) validates successfully. Test invalid framework names fail.
+      </test>
+      <test id="plugins" description="Verify plugin validation">
+        Test empty plugin list allowed. Test empty plugin strings rejected. Test non-string plugins rejected.
+      </test>
+      <test id="env-vars" description="Verify environment variable validation">
+        Test valid env vars pass. Test invalid characters in keys fail. Test empty keys fail. Test empty values allowed with warning.
+      </test>
+      <test id="error-messages" description="Verify error message quality">
+        Test errors include field path. Test errors include expected vs actual. Test errors include fix suggestions.
+      </test>
+    </ideas>
+  </tests>
+</story-context>

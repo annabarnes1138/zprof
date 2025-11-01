@@ -1,0 +1,182 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>3</storyId>
+    <title>Display Current Active Profile</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-31</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>/Users/anna/code/annabarnes1138/zprof/docs/stories/1-3-display-current-active-profile.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to quickly check which profile is currently active</iWant>
+    <soThat>I can confirm my shell environment context</soThat>
+    <tasks>- [ ] Implement `current` CLI command (AC: #1, #2, #3)
+  - [ ] Create `cli/current.rs` with Clap Args struct for current command
+  - [ ] Implement execute function following CLI command pattern from architecture
+  - [ ] Add current subcommand to main CLI structure in `main.rs`
+- [ ] Implement active profile retrieval (AC: #1)
+  - [ ] Extend `core/config.rs` module to read `~/.zsh-profiles/config.toml`
+  - [ ] Implement function to get active_profile value from config
+  - [ ] Handle missing config file gracefully
+- [ ] Load and display profile metadata (AC: #2)
+  - [ ] Use `core/profile.rs` to load profile's `profile.toml` manifest
+  - [ ] Extract profile name, framework, and creation date from manifest
+  - [ ] Format metadata for display
+- [ ] Handle no active profile case (AC: #3)
+  - [ ] Detect when `active_profile` field is missing or empty in config.toml
+  - [ ] Display clear message: "No active profile. Use 'zprof use &lt;name&gt;' to activate a profile."
+  - [ ] Exit with success status (not an error condition)
+- [ ] Format and display output (AC: #2)
+  - [ ] Display profile name prominently
+  - [ ] Show framework type
+  - [ ] Show creation date in human-readable format
+  - [ ] Use consistent formatting with other commands (following architecture)
+- [ ] Add user-friendly error handling (AC: All)
+  - [ ] Use anyhow::Context for all file operations following Pattern 2
+  - [ ] Handle missing `~/.zsh-profiles/` directory with suggestion to run `zprof init`
+  - [ ] Handle malformed `config.toml` with clear error message
+  - [ ] Handle case where active profile no longer exists (deleted)
+- [ ] Write integration tests (AC: All)
+  - [ ] Test displaying current active profile with all metadata
+  - [ ] Test no active profile message displays correctly
+  - [ ] Test missing config.toml handled gracefully
+  - [ ] Test deleted active profile handled gracefully
+  - [ ] Test performance meets &lt; 100ms requirement
+  - [ ] Add snapshot test for current profile output
+  - [ ] Add snapshot test for no active profile message</tasks>
+  </story>
+
+  <acceptanceCriteria>1. `zprof current` command displays the currently active profile name
+2. Output includes profile metadata (framework, creation date)
+3. If no profile is active, displays clear message
+4. Command executes in under 100ms for quick reference</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/PRD.md" title="Product Requirements Document" section="FR004: Display Current Profile">
+        <snippet>System shall display currently active profile name and metadata</snippet>
+      </doc>
+      <doc path="docs/architecture.md" title="Decision Architecture" section="Pattern 1: CLI Command Structure">
+        <snippet>Every command in src/cli/ follows Args struct with execute() function returning anyhow::Result. Commands validate inputs, load configuration, perform operation, and display user-friendly output.</snippet>
+      </doc>
+      <doc path="docs/architecture.md" title="Decision Architecture" section="Pattern 2: Error Handling">
+        <snippet>ALL fallible operations MUST use anyhow::Result with context. Never show raw Rust errors to users. Always provide what failed, why it might have failed, and how to fix it.</snippet>
+      </doc>
+      <doc path="docs/architecture.md" title="Decision Architecture" section="Pattern 4: TOML Manifest Schema">
+        <snippet>config.toml contains active_profile and optional default_framework. profile.toml includes name, framework, theme, created, modified fields.</snippet>
+      </doc>
+      <doc path="docs/architecture.md" title="Decision Architecture" section="Error Message Format">
+        <snippet>Use symbols: ✓ for success, ✗ for error, → for active/selected item. Format errors with context and actionable suggestions.</snippet>
+      </doc>
+      <doc path="docs/architecture.md" title="Decision Architecture" section="Epic 1 Story 1.3 Mapping">
+        <snippet>Primary modules: cli/current.rs, core/config.rs. No secondary modules needed.</snippet>
+      </doc>
+      <doc path="docs/architecture.md" title="Decision Architecture" section="Performance Considerations NFR001">
+        <snippet>zprof current: &lt; 10ms (read config.toml) - fastest command in zprof</snippet>
+      </doc>
+    </docs>
+    <code>
+      <note>No existing Rust code - this is a greenfield project. Project must be initialized using rust-starter template first (Story 1.1).</note>
+      <artifact path="src/cli/current.rs" kind="cli-command" symbol="execute" reason="Primary implementation file for current command - to be created">
+        <description>Implements the current command following Pattern 1: CLI Command Structure</description>
+      </artifact>
+      <artifact path="src/core/config.rs" kind="core-module" symbol="Config struct, read_config function" reason="Reads config.toml to get active profile - may exist from Story 1.1">
+        <description>Contains Config struct and logic to read ~/.zsh-profiles/config.toml</description>
+      </artifact>
+      <artifact path="src/core/profile.rs" kind="core-module" symbol="ProfileMetadata struct, load_profile_metadata function" reason="Loads profile metadata from profile.toml - extended from Story 1.2">
+        <description>Contains ProfileMetadata struct and logic to read profile manifest</description>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="clap" version="4.5.51" features="derive">CLI argument parsing with derive macros</package>
+        <package name="anyhow" version="2.0">Error handling with context</package>
+        <package name="serde" version="1.0" features="derive">Serialization/deserialization for TOML</package>
+        <package name="toml" version="0.9">TOML parsing for profile.toml and config.toml</package>
+        <package name="chrono" version="latest">Parse ISO 8601 timestamps and format as human-readable dates</package>
+      </rust>
+      <dev>
+        <package name="insta">Snapshot testing for CLI output validation</package>
+      </dev>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="architecture">Must follow Pattern 1: CLI Command Structure - Args struct with execute() function</constraint>
+    <constraint type="architecture">Must follow Pattern 2: Error Handling - anyhow::Result with context, user-friendly error messages</constraint>
+    <constraint type="architecture">Must follow Pattern 4: TOML Manifest Schema for reading config.toml and profile.toml</constraint>
+    <constraint type="file-operations">Read-only command - no backup operations needed (Pattern 3 not required)</constraint>
+    <constraint type="error-messages">Use Error Message Format: ✗ for errors, → for suggestions</constraint>
+    <constraint type="module-structure">Primary modules: cli/current.rs, core/config.rs as per Epic 1 Story 1.3 Mapping</constraint>
+    <constraint type="performance">AC #4 and NFR001: Expected execution time &lt; 10ms (fastest command - just read two TOML files)</constraint>
+    <constraint type="output">Display profile name prominently with framework and creation date in human-readable format</constraint>
+    <constraint type="no-active-profile">Handle no active profile as success case (not error) with helpful message</constraint>
+    <constraint type="deleted-profile">Handle case where active profile was deleted - show error with suggestion to run 'zprof list' and 'zprof use'</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="Config struct" kind="data-structure" path="src/core/config.rs">
+      <signature>pub struct Config {
+    pub active_profile: Option&lt;String&gt;,
+    pub default_framework: Option&lt;String&gt;,
+}</signature>
+      <description>Represents zprof's config.toml configuration</description>
+    </interface>
+    <interface name="read_config function" kind="function" path="src/core/config.rs">
+      <signature>pub fn read_config() -&gt; Result&lt;Config&gt;</signature>
+      <description>Reads ~/.zsh-profiles/config.toml and parses into Config struct</description>
+    </interface>
+    <interface name="ProfileMetadata struct" kind="data-structure" path="src/core/profile.rs">
+      <signature>pub struct ProfileMetadata {
+    pub name: String,
+    pub framework: String,
+    pub theme: String,
+    pub created: String,  // ISO 8601 timestamp
+    pub modified: String, // ISO 8601 timestamp
+}</signature>
+      <description>Represents profile metadata from profile.toml manifest</description>
+    </interface>
+    <interface name="load_profile_metadata function" kind="function" path="src/core/profile.rs">
+      <signature>pub fn load_profile_metadata(profile_name: &amp;str) -&gt; Result&lt;ProfileMetadata&gt;</signature>
+      <description>Loads profile.toml for specified profile and parses metadata</description>
+    </interface>
+    <interface name="current command" kind="cli-command" path="src/cli/current.rs">
+      <signature>pub fn execute(args: CurrentArgs) -&gt; Result&lt;()&gt;</signature>
+      <description>Executes the current command - main entry point from CLI</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Use insta crate for snapshot testing of CLI output. Integration tests in tests/ directory. Unit tests in same file as code using #[cfg(test)] mod tests. Test both success cases and edge cases (no active profile, deleted profile, missing files). All tests must use anyhow::Result for error handling consistency. Performance test to verify &lt; 100ms execution time.</standards>
+    <locations>tests/current_test.rs (integration tests), tests/snapshots/ (insta snapshot files), src/cli/current.rs (unit tests), src/core/config.rs (unit tests), src/core/profile.rs (unit tests)</locations>
+    <ideas>
+      <test id="AC-1" criteria="zprof current displays active profile name">
+        <idea>Integration test: Set active_profile in config.toml, verify profile name appears in output</idea>
+        <idea>Snapshot test: Capture output format with profile name</idea>
+      </test>
+      <test id="AC-2" criteria="Output includes profile metadata">
+        <idea>Integration test: Verify output includes framework type and creation date</idea>
+        <idea>Test date formatting - ISO 8601 timestamp should be formatted as human-readable (e.g., "Oct 31, 2025")</idea>
+        <idea>Snapshot test for complete metadata display format</idea>
+      </test>
+      <test id="AC-3" criteria="No active profile displays clear message">
+        <idea>Integration test: Empty or missing active_profile in config.toml should show helpful message</idea>
+        <idea>Verify exit status is success (not error) when no active profile</idea>
+        <idea>Snapshot test for no active profile message</idea>
+      </test>
+      <test id="AC-4" criteria="Command executes under 100ms">
+        <idea>Performance test: Measure execution time, should be &lt; 100ms (target &lt; 10ms)</idea>
+        <idea>Benchmark reading config.toml and profile.toml</idea>
+      </test>
+      <test id="edge-cases" criteria="Error handling">
+        <idea>Test missing ~/.zsh-profiles/ directory - should suggest running 'zprof init'</idea>
+        <idea>Test malformed config.toml - should show clear error message</idea>
+        <idea>Test active profile was deleted - should show error with suggestion to run 'zprof list' then 'zprof use'</idea>
+        <idea>Test permission denied on config.toml - should show actionable error message</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

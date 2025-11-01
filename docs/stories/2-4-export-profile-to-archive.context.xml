@@ -1,0 +1,195 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>4</storyId>
+    <title>Export Profile to Archive</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-31</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>/Users/anna/code/annabarnes1138/zprof/docs/stories/2-4-export-profile-to-archive.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to export my profile to a portable .zprof archive</iWant>
+    <soThat>I can share it with teammates or use it on other machines</soThat>
+    <tasks>
+      <task id="1" ac="1">Create export command CLI interface (cli/export.rs with ExportArgs)</task>
+      <task id="2" ac="All">Create archive module structure (archive/mod.rs and archive/export.rs)</task>
+      <task id="3" ac="3">Define ArchiveMetadata struct with export date, zprof version, framework version, exported_by</task>
+      <task id="4" ac="2,4">Implement profile file collection (include manifest, shell files, custom configs; exclude frameworks and cache)</task>
+      <task id="5" ac="1,5">Implement tar.gz archive creation using tar 0.4 + flate2 1.0</task>
+      <task id="6" ac="2,3,4">Validate archive integrity (readable, contains required files, reasonable size)</task>
+      <task id="7" ac="6">Display export success message with archive path and size in human-readable format</task>
+      <task id="8" ac="All">Handle edge cases (profile not found, output file exists, disk space, permissions, large files)</task>
+      <task id="9" ac="All">Write comprehensive tests (unit tests for metadata, file collection; integration tests for archive creation)</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">zprof export &lt;profile-name&gt; creates .zprof archive file (tar.gz)</criterion>
+    <criterion id="2">Archive contains profile.toml manifest and any custom configuration files</criterion>
+    <criterion id="3">Archive includes metadata (export date, zprof version, framework version)</criterion>
+    <criterion id="4">Archive excludes cache files and installed framework binaries (manifest describes installation)</criterion>
+    <criterion id="5">Archive saved to current directory with filename &lt;profile-name&gt;.zprof</criterion>
+    <criterion id="6">Success message displays archive path and size</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR015 - Export to Archive</section>
+        <snippet>System shall export profiles to portable .zprof archives for sharing and backup</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Epic 2 - TOML Manifests Export Import</section>
+        <snippet>Enable shareable profile ecosystem via export/import functionality with manifest as source of truth</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Archive Format tar.gz</section>
+        <snippet>Use standard tar.gz format for portability. Archives contain metadata.json and profile.toml at minimum. Exclude framework binaries for size efficiency</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Pattern 1 - CLI Command Structure</section>
+        <snippet>Use Clap derive API for argument parsing. Follow subcommand pattern: zprof &lt;verb&gt; &lt;noun&gt;</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Pattern 2 - Error Handling</section>
+        <snippet>Use anyhow for error propagation with context. Provide clear, actionable error messages</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Epic 2 Story 2.4 Mapping</section>
+        <snippet>Primary modules: cli/export.rs, archive/export.rs. Uses tar 0.4 + flate2 1.0 per architecture decision</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-1-parse-and-validate-yaml-manifests.md</path>
+        <title>Story 2.1 - Parse and Validate TOML Manifests</title>
+        <section>Validation</section>
+        <snippet>Use manifest::load_and_validate() to ensure exported profiles have valid manifests. Metadata extraction from validated manifest</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-2-generate-shell-configuration-from-yaml.md</path>
+        <title>Story 2.2 - Generate Shell Configuration from TOML</title>
+        <section>Generated Files</section>
+        <snippet>Export includes generated .zshrc and .zshenv for reference, but import process will regenerate them</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-5-import-profile-from-local-archive.md</path>
+        <title>Story 2.5 - Import Profile from Local Archive</title>
+        <section>Complement</section>
+        <snippet>Import is complement to export. Must agree on archive format (ArchiveMetadata struct, file exclusions, manifest as source)</snippet>
+      </doc>
+    </docs>
+    <code>
+      <note>No existing code - greenfield implementation. Depends on Story 2.1 (manifest validation). Creates foundation for Story 2.5 (import)</note>
+    </code>
+    <dependencies>
+      <rust>
+        <crate name="tar" version="0.4" purpose="Tar archive creation"/>
+        <crate name="flate2" version="1.0" purpose="Gzip compression"/>
+        <crate name="anyhow" version="2.0" purpose="Error handling with context"/>
+        <crate name="clap" version="4.5.51" purpose="CLI argument parsing"/>
+        <crate name="serde" version="latest" purpose="Serialization for metadata"/>
+        <crate name="serde_json" version="1.0" purpose="JSON metadata serialization"/>
+        <crate name="chrono" version="latest" purpose="ISO 8601 timestamps"/>
+        <crate name="dirs" version="latest" purpose="Locate home directory"/>
+        <crate name="log" version="latest" purpose="Logging"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="module_structure">Primary modules: cli/export.rs, archive/export.rs. Secondary: core/manifest.rs (read manifest)</constraint>
+    <constraint type="archive_format">Standard tar.gz format with metadata.json and profile.toml at minimum. Use tar 0.4 + flate2 1.0 crates</constraint>
+    <constraint type="file_exclusions">MUST exclude framework binaries (.oh-my-zsh/, .zimfw/, .zprezto/, .zinit/, .zap/) and cache files for size efficiency</constraint>
+    <constraint type="metadata">Include export_date (ISO 8601), zprof_version (from CARGO_PKG_VERSION), framework_version, exported_by ($USER)</constraint>
+    <constraint type="output_filename">Archive saved as &lt;profile-name&gt;.zprof in current working directory (or user-specified path)</constraint>
+    <constraint type="overwrite_check">Check if output file exists and handle appropriately (prompt or --force flag)</constraint>
+    <constraint type="validation_gate">Only export profiles with valid manifests. Use manifest::load_and_validate() as gate</constraint>
+    <constraint type="manifest_source">Implements ADR-002: Manifest is source of truth. Framework installations excluded because manifest describes what to install</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>execute (ExportArgs)</name>
+      <kind>function</kind>
+      <signature>pub fn execute(args: ExportArgs) -> Result&lt;()&gt;</signature>
+      <path>src/cli/export.rs</path>
+      <description>Main export command orchestration: call export_profile(), get metadata, display success message</description>
+    </interface>
+    <interface>
+      <name>export_profile</name>
+      <kind>function</kind>
+      <signature>pub fn export_profile(profile_name: &str, output_path: Option&lt;PathBuf&gt;) -> Result&lt;PathBuf&gt;</signature>
+      <path>src/archive/export.rs</path>
+      <description>Main export logic: validate profile exists, load manifest, collect files, create metadata, create archive, validate integrity</description>
+    </interface>
+    <interface>
+      <name>ArchiveMetadata</name>
+      <kind>struct</kind>
+      <signature>pub struct ArchiveMetadata { profile_name, framework, export_date, zprof_version, framework_version, exported_by }</signature>
+      <path>src/archive/export.rs</path>
+      <description>Metadata structure serialized to metadata.json in archive root</description>
+    </interface>
+    <interface>
+      <name>collect_files</name>
+      <kind>function</kind>
+      <signature>fn collect_files(profile_dir: &Path) -> Result&lt;Vec&lt;PathBuf&gt;&gt;</signature>
+      <path>src/archive/export.rs</path>
+      <description>Collects files to include in archive: profile.toml (required), .zshrc, .zshenv, custom files. Excludes framework dirs and cache</description>
+    </interface>
+    <interface>
+      <name>create_archive</name>
+      <kind>function</kind>
+      <signature>fn create_archive(archive_path: &Path, profile_dir: &Path, files: &[PathBuf], metadata: &ArchiveMetadata) -> Result&lt;()&gt;</signature>
+      <path>src/archive/export.rs</path>
+      <description>Creates tar.gz archive with metadata.json and profile files. Uses tar::Builder with gzip compression</description>
+    </interface>
+    <interface>
+      <name>format_file_size</name>
+      <kind>function</kind>
+      <signature>pub fn format_file_size(bytes: u64) -> String</signature>
+      <path>src/archive/export.rs</path>
+      <description>Formats file size in human-readable format (bytes, KB, MB)</description>
+    </interface>
+    <interface>
+      <name>manifest::load_and_validate (from Story 2.1)</name>
+      <kind>function</kind>
+      <signature>pub fn load_and_validate(profile_name: &str) -> Result&lt;ProfileManifest&gt;</signature>
+      <path>src/core/manifest.rs</path>
+      <description>Loads and validates TOML manifest. Used to extract metadata and ensure only valid profiles are exported</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Use Rust's built-in testing framework for unit tests. Integration tests should create actual archives and verify with standard tar command. Manual testing with exported archives required</standards>
+    <locations>
+      <location>src/archive/export.rs - Unit tests under #[cfg(test)] module</location>
+      <location>tests/export_test.rs - Integration tests for export workflow</location>
+      <location>Manual testing - Export → extract with tar command → inspect contents</location>
+    </locations>
+    <ideas>
+      <test_idea ac="3">Unit test metadata generation: verify all fields populated correctly (export_date ISO 8601, zprof_version from env, exported_by from $USER)</test_idea>
+      <test_idea ac="2,4">Unit test file collection: verify profile.toml included, framework dirs excluded, cache files excluded</test_idea>
+      <test_idea ac="1,5">Integration test export creates valid tar.gz that can be extracted with standard tar command</test_idea>
+      <test_idea ac="2">Integration test archive contains expected files (metadata.json, profile.toml, .zshrc, .zshenv)</test_idea>
+      <test_idea ac="4">Integration test archive excludes framework binaries (no .oh-my-zsh/ directory in archive)</test_idea>
+      <test_idea ac="3">Integration test metadata.json is valid JSON and contains required fields</test_idea>
+      <test_idea ac="5">Integration test output filename format (&lt;profile-name&gt;.zprof)</test_idea>
+      <test_idea ac="6">Integration test format_file_size() produces human-readable output (KB, MB)</test_idea>
+      <test_idea ac="All">Manual test: export profile → tar -tzf to list contents → tar -xOf to view metadata.json → verify correctness</test_idea>
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,178 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>4</storyId>
+    <title>Framework Detection for Smart Profile Creation</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-31</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-4-framework-detection-for-smart-profile-creation.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>zprof to detect my existing zsh framework configuration</iWant>
+    <soThat>I can preserve my current setup when creating my first profile</soThat>
+    <tasks>- Implement framework detection infrastructure (AC: #1)
+  - Create `frameworks/mod.rs` with Framework trait definition per architecture Pattern 6
+  - Create `frameworks/detector.rs` for main detection orchestration
+  - Define FrameworkInfo struct to hold detection results (type, plugins, theme, config_path)
+- Implement oh-my-zsh detection (AC: #1, #2, #3)
+- Implement zimfw detection (AC: #1, #2, #3)
+- Implement prezto detection (AC: #1, #2, #3)
+- Implement zinit detection (AC: #1, #2, #3)
+- Implement zap detection (AC: #1, #2, #3)
+- Implement detection orchestration (AC: #1, #4, #5)
+- Handle edge cases gracefully (AC: #5)
+- Add user-friendly error handling (AC: All)
+- Write unit and integration tests (AC: All)</tasks>
+  </story>
+
+  <acceptanceCriteria>1. System scans for oh-my-zsh, zimfw, prezto, zinit, and zap installations
+2. Detection identifies framework type, installed plugins, and active theme
+3. If framework detected, system captures configuration details for import
+4. Detection completes in under 2 seconds
+5. Gracefully handles multiple frameworks or corrupted installations</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <artifact>
+        <path>docs/PRD.md</path>
+        <title>zprof Product Requirements Document</title>
+        <section>FR006: Framework Detection</section>
+        <snippet>System shall detect existing zsh framework configuration and prompt user to "Import current setup" or "Start fresh" when creating first profile</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Pattern 6: Framework Trait</section>
+        <snippet>All framework implementations implement Framework trait with detect() -> Option&lt;FrameworkInfo&gt;, defining standard interface for framework detection logic</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Pattern 2: Error Handling</section>
+        <snippet>ALL fallible operations MUST use anyhow::Result with context. Detection failures should warn but not error (return None instead)</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Epic 1 Story 1.4 Mapping</section>
+        <snippet>Primary modules: frameworks/detector.rs. Secondary: All frameworks/*.rs (oh_my_zsh, zimfw, prezto, zinit, zap)</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Project Structure</section>
+        <snippet>frameworks/ directory contains mod.rs (trait), detector.rs (orchestration), and framework-specific files for oh-my-zsh, zimfw, prezto, zinit, zap</snippet>
+      </artifact>
+    </docs>
+    <code>
+      <!-- No existing code - greenfield implementation -->
+    </code>
+    <dependencies>
+      <rust>
+        <package name="anyhow" version="2.0" purpose="Error handling with context" />
+        <package name="regex" version="1.10" purpose="Parsing .zshrc plugin/theme declarations" />
+        <package name="log" version="latest" purpose="Logging warnings for detection issues" />
+        <package name="serde" version="1.0" purpose="Data structure serialization" />
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - All modules must implement Pattern 6 (Framework Trait) from architecture.md
+    - Use anyhow::Result with context for all file operations (Pattern 2)
+    - Detection failures should warn but not crash (return None instead of error)
+    - No file modifications - detection is read-only
+    - Complete all framework checks in under 2 seconds (AC: #4)
+    - Use parallel scanning if possible to improve performance
+    - Log warnings with log::warn! for troubleshooting
+    - Never crash on malformed config files
+    - Handle symlinked framework directories
+    - If multiple frameworks detected, return most recently modified
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>Framework</name>
+      <kind>trait</kind>
+      <signature>pub trait Framework {
+    fn name(&amp;self) -> &amp;str;
+    fn detect() -> Option&lt;FrameworkInfo&gt;;
+    fn install(profile_path: &amp;Path) -> Result&lt;()&gt;;
+    fn get_plugins() -> Vec&lt;Plugin&gt;;
+    fn get_themes() -> Vec&lt;Theme&gt;;
+}</signature>
+      <path>src/frameworks/mod.rs</path>
+    </interface>
+    <interface>
+      <name>FrameworkInfo</name>
+      <kind>struct</kind>
+      <signature>pub struct FrameworkInfo {
+    pub framework_type: FrameworkType,
+    pub plugins: Vec&lt;String&gt;,
+    pub theme: String,
+    pub config_path: PathBuf,
+    pub install_path: PathBuf,
+}</signature>
+      <path>src/frameworks/mod.rs</path>
+    </interface>
+    <interface>
+      <name>FrameworkType</name>
+      <kind>enum</kind>
+      <signature>pub enum FrameworkType {
+    OhMyZsh,
+    Zimfw,
+    Prezto,
+    Zinit,
+    Zap,
+}</signature>
+      <path>src/frameworks/mod.rs</path>
+    </interface>
+    <interface>
+      <name>detect_existing_framework</name>
+      <kind>function</kind>
+      <signature>pub fn detect_existing_framework() -> Option&lt;FrameworkInfo&gt;</signature>
+      <path>src/frameworks/detector.rs</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Use insta for snapshot testing (provided by rust-starter template). Unit tests in each framework module file (oh_my_zsh.rs, zimfw.rs, etc.) for individual detection logic. Integration tests in tests/framework_detection_test.rs for end-to-end detection scenarios. Create temporary test .zshrc files with known configurations using tempfile crate.</standards>
+    <locations>
+      - tests/framework_detection_test.rs (integration tests)
+      - src/frameworks/oh_my_zsh.rs (unit tests via #[cfg(test)])
+      - src/frameworks/zimfw.rs (unit tests via #[cfg(test)])
+      - src/frameworks/prezto.rs (unit tests via #[cfg(test)])
+      - src/frameworks/zinit.rs (unit tests via #[cfg(test)])
+      - src/frameworks/zap.rs (unit tests via #[cfg(test)])
+      - src/frameworks/detector.rs (unit tests via #[cfg(test)])
+    </locations>
+    <ideas>
+      <test id="AC1" description="Test each framework detection in isolation with mock file systems">
+        - oh-my-zsh detection with sample .zshrc containing plugins array and ZSH_THEME
+        - zimfw detection with sample .zimrc containing zmodule declarations
+        - prezto detection with sample .zpreztorc with zstyle commands
+        - zinit detection with sample .zshrc containing zinit load/light commands
+        - zap detection with sample .zshrc containing plug commands
+      </test>
+      <test id="AC2" description="Verify detection identifies framework type, plugins, and theme">
+        - Parse plugins array from oh-my-zsh .zshrc
+        - Extract zmodule plugins from zimfw .zimrc
+        - Parse prezto modules from .zpreztorc
+        - Identify zinit plugins from .zshrc
+        - Extract zap plugins from .zshrc
+      </test>
+      <test id="AC4" description="Performance test - detection completes under 2 seconds">
+        - Benchmark all five framework checks together
+        - Verify parallel scanning works correctly
+      </test>
+      <test id="AC5" description="Edge cases and error handling">
+        - Multiple frameworks installed (returns most recent)
+        - No framework detected (returns None)
+        - Corrupted .zshrc with invalid syntax
+        - Missing plugin/theme declarations
+        - Symlinked framework directories
+      </test>
+    </ideas>
+  </tests>
+</story-context>

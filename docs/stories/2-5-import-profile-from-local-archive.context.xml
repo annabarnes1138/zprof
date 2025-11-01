@@ -1,0 +1,234 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>5</storyId>
+    <title>Import Profile from Local Archive</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-31</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>/Users/anna/code/annabarnes1138/zprof/docs/stories/2-5-import-profile-from-local-archive.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to import a profile from a local .zprof archive</iWant>
+    <soThat>I can use shared profiles on my machine</soThat>
+    <tasks>
+      <task id="1" ac="1">Create import command CLI interface (cli/import.rs with ImportArgs for archive_path, --name, --force)</task>
+      <task id="2" ac="All">Create import module structure (archive/import.rs with import_profile function)</task>
+      <task id="3" ac="1,7">Implement archive extraction to temp directory with error handling for corrupted archives</task>
+      <task id="4" ac="1,2,7">Validate archive contents (metadata.json exists, profile.toml exists, manifest validation)</task>
+      <task id="5" ac="3">Handle name conflicts with interactive prompt (Rename/Overwrite/Cancel) and --force flag support</task>
+      <task id="6" ac="5">Create profile directory and copy files (profile.toml + custom files, skip .zshrc/.zshenv)</task>
+      <task id="7" ac="4">Install framework and plugins per manifest (integration point for framework installation)</task>
+      <task id="8" ac="4">Regenerate shell configuration using generator::write_generated_files()</task>
+      <task id="9" ac="6">Display import success message with profile details and metadata attribution</task>
+      <task id="10" ac="7">Handle edge cases (archive not found, corrupted, missing files, invalid manifest, installation failures)</task>
+      <task id="11" ac="All">Write comprehensive tests (unit tests for extraction, validation; integration tests for import flow with mocked framework install)</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">zprof import &lt;file.zprof&gt; extracts archive and validates contents</criterion>
+    <criterion id="2">Validates profile.toml manifest within archive</criterion>
+    <criterion id="3">Checks for name conflicts and prompts for resolution (rename/overwrite/cancel)</criterion>
+    <criterion id="4">Installs specified framework and plugins per manifest</criterion>
+    <criterion id="5">Creates new profile in ~/.zsh-profiles/profiles/</criterion>
+    <criterion id="6">Success message confirms import and lists profile details</criterion>
+    <criterion id="7">Handles corrupted archives gracefully with clear error messages</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR016 - Import from Archive</section>
+        <snippet>System shall import profiles from .zprof archives with validation and framework installation</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Epic 2 - TOML Manifests Export Import</section>
+        <snippet>Enable shareable profile ecosystem. Import consumes archives created by export</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Archive Format tar.gz</section>
+        <snippet>Import understands .zprof format: metadata.json + profile.toml + custom files. Framework binaries excluded, must install per manifest</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Pattern 1 - CLI Command Structure</section>
+        <snippet>Use Clap derive API for argument parsing. Follow subcommand pattern: zprof &lt;verb&gt; &lt;noun&gt;</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Pattern 2 - Error Handling</section>
+        <snippet>Use anyhow for error propagation with context. Provide clear, actionable error messages</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Pattern 3 - Safe File Operations</section>
+        <snippet>Cleanup temp directory on failure. Extract to temp first, validate before committing. Rollback capability</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Epic 2 Story 2.5 Mapping</section>
+        <snippet>Primary modules: cli/import.rs, archive/import.rs. Secondary: core/manifest.rs, shell/generator.rs, frameworks/mod.rs</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-4-export-profile-to-archive.md</path>
+        <title>Story 2.4 - Export Profile to Archive</title>
+        <section>Complement</section>
+        <snippet>Import is complement to export. Must understand archive structure (ArchiveMetadata, file exclusions). Frameworks excluded from archive, must install on import</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-2-generate-shell-configuration-from-yaml.md</path>
+        <title>Story 2.2 - Generate Shell Configuration from TOML</title>
+        <section>Regeneration</section>
+        <snippet>Use generator::write_generated_files() to regenerate .zshrc and .zshenv from imported manifest. Fresh generation ensures version consistency</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-1-parse-and-validate-yaml-manifests.md</path>
+        <title>Story 2.1 - Parse and Validate TOML Manifests</title>
+        <section>Validation</section>
+        <snippet>Use manifest::load_and_validate() on extracted manifest. Won't create profile from invalid manifest. Show specific validation errors</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-6-import-profile-from-github-repository.md</path>
+        <title>Story 2.6 - Import Profile from GitHub Repository</title>
+        <section>Shared Logic</section>
+        <snippet>Stories 2.5 and 2.6 share import logic. Only source extraction differs (tar.gz vs git clone). Reuse name conflict, framework installation, regeneration</snippet>
+      </doc>
+    </docs>
+    <code>
+      <note>No existing code - greenfield implementation. Depends on Story 2.1 (manifest validation), Story 2.2 (regeneration), Story 2.4 (archive format). Creates shared logic for Story 2.6 (GitHub import)</note>
+    </code>
+    <dependencies>
+      <rust>
+        <crate name="tar" version="0.4" purpose="Tar archive extraction"/>
+        <crate name="flate2" version="1.0" purpose="Gzip decompression"/>
+        <crate name="anyhow" version="2.0" purpose="Error handling with context"/>
+        <crate name="clap" version="4.5.51" purpose="CLI argument parsing"/>
+        <crate name="serde" version="latest" purpose="Deserialization for metadata"/>
+        <crate name="serde_json" version="1.0" purpose="JSON metadata parsing"/>
+        <crate name="chrono" version="latest" purpose="Timestamp handling for temp dirs"/>
+        <crate name="dirs" version="latest" purpose="Locate home directory"/>
+        <crate name="log" version="latest" purpose="Logging"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="module_structure">Primary modules: cli/import.rs, archive/import.rs. Secondary: core/manifest.rs, shell/generator.rs, frameworks/mod.rs</constraint>
+    <constraint type="extraction_safety">Extract to temp directory first. Validate before committing. Clean up temp on success or failure per Pattern 3</constraint>
+    <constraint type="validation_gate">Validate archive contents (metadata.json, profile.toml). Validate manifest schema. Gate before profile creation</constraint>
+    <constraint type="name_conflicts">Check for existing profile. If exists and not --force: prompt [R]ename/[O]verwrite/[C]ancel. Handle recursively</constraint>
+    <constraint type="file_operations">Copy profile.toml + custom files. Skip .zshrc and .zshenv (will be regenerated). Preserve permissions</constraint>
+    <constraint type="regeneration">MUST regenerate .zshrc and .zshenv from manifest. Never copy from archive. Ensures version consistency</constraint>
+    <constraint type="framework_installation">Create integration point for framework installation. Stub for MVP, will call frameworks module when available</constraint>
+    <constraint type="rollback">On any failure: clean up temp dir, remove partial profile, restore previous state</constraint>
+    <constraint type="manifest_source">Implements ADR-002: Manifest is source of truth. Import rebuilds profile from manifest, not archive binaries</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>execute (ImportArgs)</name>
+      <kind>function</kind>
+      <signature>pub fn execute(args: ImportArgs) -> Result&lt;()&gt;</signature>
+      <path>src/cli/import.rs</path>
+      <description>Main import command orchestration. Routes to local import or GitHub import based on source format</description>
+    </interface>
+    <interface>
+      <name>import_profile</name>
+      <kind>function</kind>
+      <signature>pub fn import_profile(options: ImportOptions) -> Result&lt;String&gt;</signature>
+      <path>src/archive/import.rs</path>
+      <description>Main import logic: extract to temp, validate contents, handle name conflict, create profile, install framework, regenerate, cleanup. Returns profile name</description>
+    </interface>
+    <interface>
+      <name>ImportOptions</name>
+      <kind>struct</kind>
+      <signature>pub struct ImportOptions { archive_path, profile_name_override, force_overwrite }</signature>
+      <path>src/archive/import.rs</path>
+      <description>Import configuration options</description>
+    </interface>
+    <interface>
+      <name>extract_archive</name>
+      <kind>function</kind>
+      <signature>fn extract_archive(archive_path: &Path, dest_dir: &Path) -> Result&lt;()&gt;</signature>
+      <path>src/archive/import.rs</path>
+      <description>Extracts tar.gz archive to destination directory using tar::Archive and GzDecoder</description>
+    </interface>
+    <interface>
+      <name>validate_archive_contents</name>
+      <kind>function</kind>
+      <signature>fn validate_archive_contents(temp_dir: &Path) -> Result&lt;ArchiveMetadata&gt;</signature>
+      <path>src/archive/import.rs</path>
+      <description>Validates archive contains metadata.json and profile.toml. Parses and returns metadata</description>
+    </interface>
+    <interface>
+      <name>handle_name_conflict</name>
+      <kind>function</kind>
+      <signature>pub fn handle_name_conflict(profile_name: &str, force: bool) -> Result&lt;String&gt;</signature>
+      <path>src/archive/import.rs</path>
+      <description>Checks for existing profile. Prompts user for resolution if conflict. Returns final profile name (possibly renamed). Reusable by Story 2.6</description>
+    </interface>
+    <interface>
+      <name>install_framework</name>
+      <kind>function</kind>
+      <signature>pub fn install_framework(profile_dir: &Path, manifest: &ProfileManifest) -> Result&lt;()&gt;</signature>
+      <path>src/archive/import.rs</path>
+      <description>Integration point for framework installation. Calls framework-specific logic. Stubbed for MVP. Reusable by Story 2.6</description>
+    </interface>
+    <interface>
+      <name>ArchiveMetadata (from Story 2.4)</name>
+      <kind>struct</kind>
+      <signature>pub struct ArchiveMetadata { profile_name, framework, export_date, zprof_version, framework_version, exported_by }</signature>
+      <path>src/archive/export.rs</path>
+      <description>Metadata structure deserialized from metadata.json. Shared with export</description>
+    </interface>
+    <interface>
+      <name>manifest::load_manifest_from_path (from Story 2.1)</name>
+      <kind>function</kind>
+      <signature>pub fn load_manifest_from_path(path: &Path) -> Result&lt;ProfileManifest&gt;</signature>
+      <path>src/core/manifest.rs</path>
+      <description>Loads and validates manifest from arbitrary path (temp directory). Returns detailed errors on failure</description>
+    </interface>
+    <interface>
+      <name>generator::write_generated_files (from Story 2.2)</name>
+      <kind>function</kind>
+      <signature>pub fn write_generated_files(profile_name: &str, manifest: &ProfileManifest) -> Result&lt;()&gt;</signature>
+      <path>src/shell/generator.rs</path>
+      <description>Regenerates .zshrc and .zshenv from validated manifest</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Use Rust's built-in testing framework for unit tests. Integration tests should mock framework installation. Manual testing with real exported archives required</standards>
+    <locations>
+      <location>src/archive/import.rs - Unit tests under #[cfg(test)] module</location>
+      <location>tests/import_test.rs - Integration tests for import workflow</location>
+      <location>Manual testing - Export from one profile → import to another machine → verify functionality</location>
+    </locations>
+    <ideas>
+      <test_idea ac="1,7">Unit test archive extraction with valid and corrupted archives (gzip errors, tar errors)</test_idea>
+      <test_idea ac="1,2">Unit test validate_archive_contents: metadata.json missing, profile.toml missing, malformed JSON</test_idea>
+      <test_idea ac="2">Unit test manifest validation from extracted archive (invalid TOML, schema violations)</test_idea>
+      <test_idea ac="3">Unit test name conflict detection: profile exists, profile doesn't exist</test_idea>
+      <test_idea ac="All">Integration test successful import with mocked framework install: verify profile created, files copied, regeneration called</test_idea>
+      <test_idea ac="3">Integration test import with --name override: verify profile name changed</test_idea>
+      <test_idea ac="3">Integration test import with --force overwrite: verify existing profile replaced without prompt</test_idea>
+      <test_idea ac="7">Integration test corrupted archive handling: tar extraction fails, clear error message shown</test_idea>
+      <test_idea ac="7">Integration test missing metadata.json: validation fails with specific error</test_idea>
+      <test_idea ac="2,7">Integration test invalid manifest in archive: manifest validation fails with detailed errors</test_idea>
+      <test_idea ac="All">Manual test: export actual profile → import on different machine → verify framework installation and usability</test_idea>
+    </ideas>
+  </tests>
+</story-context>

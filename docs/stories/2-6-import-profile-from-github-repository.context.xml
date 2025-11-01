@@ -1,0 +1,243 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>6</storyId>
+    <title>Import Profile from GitHub Repository</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-31</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>/Users/anna/code/annabarnes1138/zprof/docs/stories/2-6-import-profile-from-github-repository.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to import profiles directly from GitHub repositories</iWant>
+    <soThat>I can easily adopt shared team configurations or community profiles</soThat>
+    <tasks>
+      <task id="1" ac="1">Extend import CLI to support github:user/repo syntax and parse format</task>
+      <task id="2" ac="All">Create GitHub import module (archive/github.rs with import_from_github function)</task>
+      <task id="3" ac="1,6,8">Implement repository cloning using git2 0.20 with authentication and progress callbacks</task>
+      <task id="4" ac="2,8">Search for profile manifest in repo (root, .zprof/, zprof/ subdirectories)</task>
+      <task id="5" ac="3">Validate manifest from repository and display profile details</task>
+      <task id="6" ac="3">Handle name conflicts (reuse logic from Story 2.5 with --name and --force flags)</task>
+      <task id="7" ac="5">Create profile from GitHub source (copy profile.toml + custom files, skip .git and GitHub-specific files)</task>
+      <task id="8" ac="4">Install framework and regenerate shell configuration (reuse from Story 2.5)</task>
+      <task id="9" ac="7">Store GitHub source metadata (.zprof-source file with repo URL, commit hash, import date)</task>
+      <task id="10" ac="7">Display success message with source attribution (repo URL and commit hash)</task>
+      <task id="11" ac="8">Handle edge cases (invalid URL, repo not found, auth failures, network offline, manifest not found, git not installed)</task>
+      <task id="12" ac="All">Write comprehensive tests (unit tests for URL parsing, integration tests for clone and import with public/private repos)</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">zprof import github:&lt;user&gt;/&lt;repo&gt; clones or downloads repository</criterion>
+    <criterion id="2">Searches repo root for profile.toml manifest</criterion>
+    <criterion id="3">Validates manifest and prompts for name conflicts</criterion>
+    <criterion id="4">Installs framework and plugins per manifest</criterion>
+    <criterion id="5">Creates new profile from GitHub source</criterion>
+    <criterion id="6">Supports both public and private repos (uses git credentials)</criterion>
+    <criterion id="7">Success message includes source repo URL for reference</criterion>
+    <criterion id="8">Handles network errors and missing manifests gracefully</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR017 - Import from GitHub</section>
+        <snippet>System shall import profiles directly from GitHub repositories for easy distribution</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Epic 2 - TOML Manifests Export Import</section>
+        <snippet>Enable shareable profile ecosystem. GitHub import enables version control and community distribution</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Git Operations git2</section>
+        <snippet>Use git2 0.20 crate for repository cloning. Support authentication via git credential helpers. Show progress for large repos</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Pattern 1 - CLI Command Structure</section>
+        <snippet>Use Clap derive API. Import command extended to accept github:user/repo format in addition to file paths</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Pattern 2 - Error Handling</section>
+        <snippet>Use anyhow for error propagation with context. Provide clear, actionable error messages for network and auth failures</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Epic 2 Story 2.6 Mapping</section>
+        <snippet>Primary modules: cli/import.rs (extended), archive/github.rs. Secondary: archive/import.rs (shared logic), core/manifest.rs, shell/generator.rs</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-5-import-profile-from-local-archive.md</path>
+        <title>Story 2.5 - Import Profile from Local Archive</title>
+        <section>Shared Logic</section>
+        <snippet>Stories 2.5 and 2.6 share most import logic. GitHub import reuses handle_name_conflict(), install_framework(), regeneration. Only source extraction differs</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-4-export-profile-to-archive.md</path>
+        <title>Story 2.4 - Export Profile to Archive</title>
+        <section>Distribution Methods</section>
+        <snippet>Export creates archives for offline distribution. GitHub provides version control and discoverability. Both enable sharing, different mechanisms</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-2-generate-shell-configuration-from-yaml.md</path>
+        <title>Story 2.2 - Generate Shell Configuration from TOML</title>
+        <section>Regeneration</section>
+        <snippet>Use generator::write_generated_files() to regenerate .zshrc and .zshenv from imported manifest. Fresh generation ensures version consistency</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-1-parse-and-validate-yaml-manifests.md</path>
+        <title>Story 2.1 - Parse and Validate TOML Manifests</title>
+        <section>Validation</section>
+        <snippet>Use manifest::load_manifest_from_path() on manifest from repo. Won't import repos with invalid manifests. Show specific validation errors</snippet>
+      </doc>
+    </docs>
+    <code>
+      <note>No existing code - greenfield implementation. Heavily reuses Story 2.5 import logic. Depends on Story 2.1 (validation), Story 2.2 (regeneration). Only GitHub-specific parts are new: cloning, manifest search, metadata storage</note>
+    </code>
+    <dependencies>
+      <rust>
+        <crate name="git2" version="0.20" purpose="GitHub repository cloning"/>
+        <crate name="anyhow" version="2.0" purpose="Error handling with context"/>
+        <crate name="clap" version="4.5.51" purpose="CLI argument parsing"/>
+        <crate name="chrono" version="latest" purpose="Timestamps for temp dirs and metadata"/>
+        <crate name="dirs" version="latest" purpose="Locate home directory"/>
+        <crate name="log" version="latest" purpose="Logging"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="module_structure">Primary modules: cli/import.rs (extended), archive/github.rs. Secondary: archive/import.rs (shared logic)</constraint>
+    <constraint type="url_format">Accept github:user/repo format. Parse to extract username and repo name. Construct https://github.com/user/repo URL</constraint>
+    <constraint type="cloning">Use git2 crate for cloning. Clone to temp directory. Support authentication via git credential helpers. Show progress for large repos</constraint>
+    <constraint type="manifest_search">Search in order: profile.toml (root), .zprof/profile.toml, zprof/profile.toml. Clear error if not found with search paths listed</constraint>
+    <constraint type="file_operations">Copy profile.toml + custom files. Skip .git directory, .github/, README.md, LICENSE. Preserve permissions</constraint>
+    <constraint type="source_metadata">Store GitHub metadata in .zprof-source file: source_url, commit_hash (HEAD), imported_date. Enables future update feature</constraint>
+    <constraint type="code_reuse">MUST reuse Story 2.5 logic: handle_name_conflict(), install_framework(), file copying patterns, regeneration</constraint>
+    <constraint type="authentication">Support both public and private repos. Use git credential helpers. Prompt user if auth required. Clear error on auth failure</constraint>
+    <constraint type="network_handling">Handle network offline gracefully. Detect and show helpful message. Handle timeout on large repos</constraint>
+    <constraint type="manifest_source">Implements ADR-002: Manifest is source of truth. Import rebuilds profile from manifest in repo</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>execute (ImportArgs) - Extended</name>
+      <kind>function</kind>
+      <signature>pub fn execute(args: ImportArgs) -> Result&lt;()&gt;</signature>
+      <path>src/cli/import.rs</path>
+      <description>Main import command. Detects github: prefix and routes to execute_github_import() or execute_local_import()</description>
+    </interface>
+    <interface>
+      <name>import_from_github</name>
+      <kind>function</kind>
+      <signature>pub fn import_from_github(options: GitHubImportOptions) -> Result&lt;String&gt;</signature>
+      <path>src/archive/github.rs</path>
+      <description>Main GitHub import logic: clone repo, search manifest, validate, handle conflicts, create profile, install framework, regenerate, store metadata, cleanup. Returns profile name</description>
+    </interface>
+    <interface>
+      <name>GitHubImportOptions</name>
+      <kind>struct</kind>
+      <signature>pub struct GitHubImportOptions { username, repo_name, profile_name_override, force_overwrite }</signature>
+      <path>src/archive/github.rs</path>
+      <description>GitHub import configuration options</description>
+    </interface>
+    <interface>
+      <name>parse_github_url</name>
+      <kind>function</kind>
+      <signature>pub fn parse_github_url(input: &str) -> Result&lt;(String, String)&gt;</signature>
+      <path>src/archive/github.rs</path>
+      <description>Parses github:user/repo format. Validates format. Returns (username, repo_name)</description>
+    </interface>
+    <interface>
+      <name>clone_repository</name>
+      <kind>function</kind>
+      <signature>fn clone_repository(url: &str, dest: &Path) -> Result&lt;()&gt;</signature>
+      <path>src/archive/github.rs</path>
+      <description>Clones GitHub repository using git2. Shows progress. Handles authentication via git credential helpers</description>
+    </interface>
+    <interface>
+      <name>find_manifest_in_repo</name>
+      <kind>function</kind>
+      <signature>fn find_manifest_in_repo(repo_dir: &Path) -> Result&lt;PathBuf&gt;</signature>
+      <path>src/archive/github.rs</path>
+      <description>Searches for profile.toml in repo (root, .zprof/, zprof/). Returns path to manifest or error with search locations</description>
+    </interface>
+    <interface>
+      <name>copy_repo_files</name>
+      <kind>function</kind>
+      <signature>fn copy_repo_files(repo_dir: &Path, profile_dir: &Path) -> Result&lt;()&gt;</signature>
+      <path>src/archive/github.rs</path>
+      <description>Copies profile.toml and custom config files. Skips .git, .github/, README.md, LICENSE, hidden files</description>
+    </interface>
+    <interface>
+      <name>store_github_metadata</name>
+      <kind>function</kind>
+      <signature>fn store_github_metadata(profile_dir: &Path, repo_url: &str, repo_dir: &Path) -> Result&lt;()&gt;</signature>
+      <path>src/archive/github.rs</path>
+      <description>Stores GitHub source metadata in .zprof-source file: source_url, commit_hash (HEAD), imported_date</description>
+    </interface>
+    <interface>
+      <name>handle_name_conflict (from Story 2.5)</name>
+      <kind>function</kind>
+      <signature>pub fn handle_name_conflict(profile_name: &str, force: bool) -> Result&lt;String&gt;</signature>
+      <path>src/archive/import.rs</path>
+      <description>Checks for existing profile. Prompts user for resolution. Reused by GitHub import</description>
+    </interface>
+    <interface>
+      <name>install_framework (from Story 2.5)</name>
+      <kind>function</kind>
+      <signature>pub fn install_framework(profile_dir: &Path, manifest: &ProfileManifest) -> Result&lt;()&gt;</signature>
+      <path>src/archive/import.rs</path>
+      <description>Integration point for framework installation. Reused by GitHub import</description>
+    </interface>
+    <interface>
+      <name>manifest::load_manifest_from_path (from Story 2.1)</name>
+      <kind>function</kind>
+      <signature>pub fn load_manifest_from_path(path: &Path) -> Result&lt;ProfileManifest&gt;</signature>
+      <path>src/core/manifest.rs</path>
+      <description>Loads and validates manifest from repo. Returns detailed errors on failure</description>
+    </interface>
+    <interface>
+      <name>generator::write_generated_files (from Story 2.2)</name>
+      <kind>function</kind>
+      <signature>pub fn write_generated_files(profile_name: &str, manifest: &ProfileManifest) -> Result&lt;()&gt;</signature>
+      <path>src/shell/generator.rs</path>
+      <description>Regenerates .zshrc and .zshenv from validated manifest</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Use Rust's built-in testing framework for unit tests. Integration tests should test with real public repos (or mocked git operations). Manual testing with private repos required for full validation</standards>
+    <locations>
+      <location>src/archive/github.rs - Unit tests under #[cfg(test)] module</location>
+      <location>tests/github_import_test.rs - Integration tests for GitHub import workflow</location>
+      <location>Manual testing - Import from real public GitHub repo, import from private repo with auth</location>
+    </locations>
+    <ideas>
+      <test_idea ac="1">Unit test parse_github_url(): valid format github:user/repo, invalid formats (no prefix, missing repo, extra slashes)</test_idea>
+      <test_idea ac="2">Unit test find_manifest_in_repo(): manifest in root, in .zprof/, in zprof/, not found</test_idea>
+      <test_idea ac="1,6">Integration test clone public repository: verify clone succeeds, temp directory created</test_idea>
+      <test_idea ac="3">Integration test manifest validation from repo: valid manifest, invalid manifest with errors shown</test_idea>
+      <test_idea ac="5">Integration test profile creation from GitHub source: verify files copied, .git excluded, custom files included</test_idea>
+      <test_idea ac="3">Integration test name conflict handling: existing profile triggers prompt or --force override</test_idea>
+      <test_idea ac="8">Integration test network error handling: invalid repo URL, 404 not found, network offline simulation</test_idea>
+      <test_idea ac="1">Integration test --name flag: verify profile name override works</test_idea>
+      <test_idea ac="3">Integration test --force flag: verify overwrite without prompt</test_idea>
+      <test_idea ac="7">Integration test GitHub metadata storage: verify .zprof-source file created with correct fields</test_idea>
+      <test_idea ac="All">Manual test: import from real public GitHub repo (e.g., create test repo), verify full workflow</test_idea>
+      <test_idea ac="6">Manual test: import from private repo, verify git credential helper prompts for auth</test_idea>
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,217 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>7</storyId>
+    <title>TUI Wizard Plugin Browser</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-31</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-7-tui-wizard-plugin-browser.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to browse and select plugins for my profile</iWant>
+    <soThat>I can customize my shell with useful tools</soThat>
+    <tasks>- Define plugin data model for all frameworks (AC: #1, #3)
+- Implement multi-select TUI screen (AC: #2, #5, #6)
+- Implement search/filter functionality (AC: #4)
+- Design responsive layout (AC: #1, #2, #5)
+- Integrate with wizard flow (AC: All)
+- Handle edge cases and errors (AC: All)
+- Write comprehensive tests (AC: All)</tasks>
+  </story>
+
+  <acceptanceCriteria>1. TUI displays popular plugins with descriptions for selected framework
+2. Multi-select interface allows checking/unchecking plugins
+3. At least 10-15 popular plugins per framework with recommendations
+4. Search/filter capability for finding specific plugins
+5. Selected plugins are highlighted and counted
+6. Can proceed with no plugins selected (minimal setup)</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <artifact>
+        <path>docs/PRD.md</path>
+        <title>zprof Product Requirements Document</title>
+        <section>FR008: Plugin Browser</section>
+        <snippet>System shall allow users to browse and select plugins during profile creation with popular recommendations</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Ratatui TUI Framework</section>
+        <snippet>Multi-select lists (plugin browser), single-select lists (framework/theme selection). Keyboard-only navigation (no mouse required)</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>NFR003: TUI Responsive</section>
+        <snippet>TUI shall be responsive and navigable via keyboard on machines with 2GB RAM and standard terminal emulators. Minimum 80x24 terminal size</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Pattern 2: Error Handling</section>
+        <snippet>Use anyhow::Result with context. Terminal cleanup must happen on all exit paths including errors and panics</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/stories/1-6-tui-wizard-framework-selection.context.xml</path>
+        <title>Story 1.6 Context</title>
+        <section>TUI Infrastructure</section>
+        <snippet>Reuse setup_terminal() and restore_terminal() from tui/mod.rs. Panic handler already installed for terminal restoration. Follow same layout patterns</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/stories/1-4-framework-detection-for-smart-profile-creation.context.xml</path>
+        <title>Story 1.4 Context</title>
+        <section>Framework Trait</section>
+        <snippet>Framework trait includes get_plugins() -> Vec&lt;Plugin&gt; method. Each framework implementation must provide plugin list</snippet>
+      </artifact>
+    </docs>
+    <code>
+      <!-- No existing code - greenfield implementation -->
+      <!-- Expected integration: Receives FrameworkType from Story 1.6, returns Vec<String> for Story 1.8 -->
+    </code>
+    <dependencies>
+      <rust>
+        <package name="anyhow" version="2.0" purpose="Error handling with context" />
+        <package name="ratatui" version="0.29.0" purpose="TUI framework for multi-select plugin browser" />
+        <package name="crossterm" version="0.29.0" purpose="Terminal manipulation for Ratatui backend" />
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Reuse terminal setup/cleanup from Story 1.6 tui/mod.rs (don't reimplement)
+    - Follow Pattern 2 (Error Handling) with anyhow::Result and context
+    - TUI MUST work on minimum 80x24 terminal size (NFR003)
+    - Multi-select interface with Space key to toggle checkbox [x] / [ ]
+    - Search mode triggered with '/' key (vim-style)
+    - Must define 10-15 popular plugins per framework (AC: #3)
+    - Plugin categories: Git, Docker, Kubernetes, Language, Utility
+    - Allow proceeding with empty selection (AC: #6)
+    - Maintain selection state when filtering/unfiltering
+    - Show selection count in header (AC: #5)
+    - Handle long descriptions gracefully (truncate or wrap)
+    - Return Vec<String> of selected plugin names for wizard state
+    - Integrate into multi-step wizard flow (1.6 → 1.7 → 1.8)
+    - Log plugin selection events with env_logger
+    - Terminal state restored on all exit paths
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>run_plugin_selection</name>
+      <kind>function</kind>
+      <signature>pub fn run_plugin_selection(framework: FrameworkType) -> Result&lt;Vec&lt;String&gt;&gt;</signature>
+      <path>src/tui/plugin_browser.rs</path>
+    </interface>
+    <interface>
+      <name>Plugin</name>
+      <kind>struct</kind>
+      <signature>#[derive(Debug, Clone)]
+pub struct Plugin {
+    pub name: String,
+    pub description: String,
+    pub category: PluginCategory,
+}</signature>
+      <path>src/frameworks/mod.rs</path>
+    </interface>
+    <interface>
+      <name>PluginCategory</name>
+      <kind>enum</kind>
+      <signature>#[derive(Debug, Clone)]
+pub enum PluginCategory {
+    Git,
+    Docker,
+    Kubernetes,
+    Language,
+    Utility,
+}</signature>
+      <path>src/frameworks/mod.rs</path>
+    </interface>
+    <interface>
+      <name>get_plugins</name>
+      <kind>trait method</kind>
+      <signature>fn get_plugins(&amp;self) -> Vec&lt;Plugin&gt;</signature>
+      <path>src/frameworks/mod.rs (Framework trait)</path>
+    </interface>
+    <interface>
+      <name>WizardState</name>
+      <kind>struct (optional)</kind>
+      <signature>pub struct WizardState {
+    pub profile_name: String,
+    pub framework: FrameworkType,
+    pub plugins: Vec&lt;String&gt;,
+    pub theme: String,
+}</signature>
+      <path>src/tui/wizard.rs or src/cli/create.rs</path>
+    </interface>
+    <interface>
+      <name>FrameworkType</name>
+      <kind>enum (from Story 1.4)</kind>
+      <signature>pub enum FrameworkType {
+    OhMyZsh,
+    Zimfw,
+    Prezto,
+    Zinit,
+    Zap,
+}</signature>
+      <path>src/frameworks/mod.rs</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Use insta for snapshot testing if applicable. Unit tests for keyboard event handling (space toggle, search mode, navigation). Unit tests for search/filter logic. Integration tests for multi-select state management and selection return. Manual testing for visual layout in 80x24 terminal. Test all 5 frameworks' plugin lists.</standards>
+    <locations>
+      - tests/tui_plugin_browser_test.rs (integration tests)
+      - src/tui/plugin_browser.rs (unit tests via #[cfg(test)])
+      - src/frameworks/oh_my_zsh.rs (unit tests for get_plugins())
+      - src/frameworks/zimfw.rs (unit tests for get_plugins())
+      - src/frameworks/prezto.rs (unit tests for get_plugins())
+      - src/frameworks/zinit.rs (unit tests for get_plugins())
+      - src/frameworks/zap.rs (unit tests for get_plugins())
+    </locations>
+    <ideas>
+      <test id="AC1-AC3" description="Plugin data and display">
+        - Test each framework returns 10-15 plugins minimum
+        - Verify plugin descriptions are informative
+        - Test plugin categories are correctly assigned
+        - Verify TUI displays all plugins with descriptions
+      </test>
+      <test id="AC2-AC5" description="Multi-select interface">
+        - Test Space key toggles checkbox on/off
+        - Test selection state tracked in Vec&lt;bool&gt;
+        - Test multiple plugins can be selected
+        - Test selection count updates in header
+        - Test visual highlighting shows checked [x] vs unchecked [ ]
+      </test>
+      <test id="AC4" description="Search and filter">
+        - Test '/' key enters search mode
+        - Test character input builds search query
+        - Test Backspace deletes from query
+        - Test Esc exits search mode and clears filter
+        - Test filtering by name matches correctly
+        - Test filtering by description matches correctly
+        - Test selection state preserved when filter applied/removed
+      </test>
+      <test id="AC6" description="Empty selection allowed">
+        - Test Enter with no selections returns empty Vec
+        - Verify wizard can proceed with no plugins
+      </test>
+      <test id="Integration" description="Wizard flow integration">
+        - Test receives FrameworkType from Story 1.6
+        - Test loads correct plugin list per framework
+        - Test returns Vec&lt;String&gt; of selected plugin names
+        - Test cancellation (Esc) returns error
+        - Test terminal state restored on all exit paths
+      </test>
+      <test id="Edge Cases" description="Error handling and edge cases">
+        - Test framework with no plugins (empty list)
+        - Test long plugin descriptions truncation
+        - Test terminal resize during browsing
+        - Test all 5 frameworks' plugin lists
+      </test>
+    </ideas>
+  </tests>
+</story-context>

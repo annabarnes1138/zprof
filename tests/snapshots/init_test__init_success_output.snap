@@ -1,0 +1,13 @@
+---
+source: tests/init_test.rs
+expression: normalized
+---
+✓ Created directory structure at $HOME/.zsh-profiles
+  ├── profiles/
+  ├── shared/
+  └── cache/
+✓ Created shared history file: $HOME/.zsh-profiles/shared/.zsh_history
+✓ Created configuration file: $HOME/.zsh-profiles/config.toml
+
+zprof initialized successfully!
+Run 'zprof --help' to see available commands

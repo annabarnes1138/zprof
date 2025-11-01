@@ -1,0 +1,133 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.1</storyId>
+    <title>Initialize zprof Directory Structure</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-31</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-1-initialize-zprof-directory-structure.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to initialize zprof's directory structure in my home directory</iWant>
+    <soThat>I have a clean foundation for managing multiple zsh profiles</soThat>
+    <tasks>
+      - Implement `init` CLI command (AC: #1, #4, #5)
+      - Implement directory structure creation logic (AC: #1)
+      - Initialize shared history file (AC: #2)
+      - Generate default config.toml (AC: #3)
+      - Handle re-initialization gracefully (AC: #5)
+      - Add user-friendly output messages (AC: #4)
+      - Write integration tests (AC: All)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. `zprof init` command creates `~/.zsh-profiles/` directory structure with `profiles/`, `shared/`, and `cache/` subdirectories
+    2. Shared command history file `.zsh_history` is created in `shared/` directory
+    3. Global configuration file `config.toml` is created with sensible defaults
+    4. Command outputs success message confirming initialization
+    5. Running `zprof init` when already initialized warns user but does not corrupt existing data
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/PRD.md" title="zprof Product Requirements Document">
+        <section name="Functional Requirements">
+          FR001: System shall initialize zsh-profiles directory structure in user's home directory with profiles, shared, and cache subdirectories. FR018: System shall maintain shared command history across all profiles stored in ~/.zsh-profiles/shared/.zsh_history
+        </section>
+      </doc>
+      <doc path="docs/architecture.md" title="Decision Architecture">
+        <section name="User Data Directory Structure">
+          ~/.zsh-profiles/ with config.toml at root, profiles/ for user profiles, shared/ for .zsh_history cross-profile data, cache/ for backups and downloads
+        </section>
+        <section name="Pattern 1: CLI Command Structure">
+          Every CLI command follows: struct CommandArgs with clap::Args derive, execute(args) -> Result<()> with validate inputs, load config, perform operation, display output, return Result
+        </section>
+        <section name="Pattern 2: Error Handling">
+          ALL fallible operations use anyhow::Result with .context() providing what failed, why, and how to fix. Never show raw Rust errors to users.
+        </section>
+        <section name="Pattern 3: Safe File Operations">
+          Check -> Backup -> Operate -> Verify -> Cleanup pattern for all destructive operations to comply with NFR002 non-destructive requirement
+        </section>
+        <section name="Pattern 4: TOML Manifest Schema">
+          config.toml format with active_profile and optional default_framework fields
+        </section>
+      </doc>
+      <doc path="docs/epics.md" title="zprof - Epic Breakdown">
+        <section name="Story 1.1">
+          First story in Epic 1. Creates foundation for all subsequent stories. No prerequisites.
+        </section>
+      </doc>
+    </docs>
+    <code>
+      <!-- No existing code - this is the first story in a greenfield project -->
+    </code>
+    <dependencies>
+      <rust>
+        <!-- Dependencies to add per story Dev Notes -->
+        <package name="clap" version="4.5.51" features="derive" reason="CLI argument parsing with derive API"/>
+        <package name="anyhow" version="2.0" reason="Application-level error handling with context"/>
+        <package name="serde" version="1.0" features="derive" reason="Serialize/deserialize for config"/>
+        <package name="toml" version="0.9" reason="TOML parsing and generation for config.toml"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Must follow CLI Command Structure pattern from architecture (Pattern 1)
+    - Must use anyhow::Result with context for all error handling (Pattern 2)
+    - Must implement Safe File Operations pattern (Pattern 3) even though this story only creates new directories
+    - Module locations must match architecture: src/cli/init.rs, src/core/filesystem.rs, src/core/config.rs
+    - Must use std::fs::create_dir_all for atomic directory creation
+    - File permissions: .zsh_history must be user read/write only (0600)
+    - config.toml starts empty/minimal (no active_profile until first profile created)
+    - Re-initialization must warn user and exit without modifying existing data (idempotent)
+    - Output messages must use ✓ for success, ✗ for errors, → for suggestions
+    - This is a Rust project - use cargo, not npm/pip/go
+    - Project is greenfield - no existing code to integrate with
+  </constraints>
+
+  <interfaces>
+    <!-- No existing interfaces to integrate with - this story creates the foundation -->
+    <interface name="cli/init.rs::execute" kind="function signature">
+      <signature>pub fn execute(args: InitArgs) -> anyhow::Result&lt;()&gt;</signature>
+      <path>src/cli/init.rs</path>
+      <description>Main entry point for `zprof init` command</description>
+    </interface>
+    <interface name="core/config.rs::Config" kind="struct">
+      <signature>
+        #[derive(Debug, Serialize, Deserialize)]
+        pub struct Config {
+            pub active_profile: Option&lt;String&gt;,
+            pub default_framework: Option&lt;String&gt;,
+        }
+      </signature>
+      <path>src/core/config.rs</path>
+      <description>Configuration structure for config.toml</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Use insta for snapshot testing CLI output. Integration tests in tests/init_test.rs. Test both success paths and edge cases (re-initialization, permission errors). Follow Rust testing conventions with #[cfg(test)] mod tests for unit tests.
+    </standards>
+    <locations>
+      - tests/init_test.rs (integration tests)
+      - tests/snapshots/ (insta snapshot files)
+      - src/*/mod.rs (unit tests in #[cfg(test)] modules)
+    </locations>
+    <ideas>
+      - AC#1: Test fresh init creates all directories (profiles/, shared/, cache/)
+      - AC#2: Test .zsh_history file created in shared/ with 0600 permissions
+      - AC#3: Test config.toml created with valid TOML structure and empty/default values
+      - AC#4: Snapshot test for success message output
+      - AC#5: Test re-init shows warning and doesn't corrupt existing files
+      - AC#5: Snapshot test for warning message output
+      - Edge case: Test behavior when home directory is not writable (permission denied)
+      - Edge case: Test handling of partial initialization (e.g., directory exists but files missing)
+    </ideas>
+  </tests>
+</story-context>

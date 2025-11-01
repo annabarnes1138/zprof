@@ -1,0 +1,6 @@
+---
+source: tests/init_test.rs
+expression: stderr.to_string()
+---
+→ Warning: zprof directory already exists at ~/.zsh-profiles/
+→ Skipping initialization to preserve existing data

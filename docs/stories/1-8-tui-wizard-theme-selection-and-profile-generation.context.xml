@@ -1,0 +1,230 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>8</storyId>
+    <title>TUI Wizard Theme Selection and Profile Generation</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-31</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-8-tui-wizard-theme-selection-and-profile-generation.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to select a theme and finalize my profile creation</iWant>
+    <soThat>I have a complete, working zsh profile</soThat>
+    <tasks>
+- Define theme data model for all frameworks (AC: #1)
+  - Create Theme struct with name, description, preview_example (color scheme info)
+  - Define 10-15 popular themes per framework
+  - Store theme definitions in `frameworks/*.rs` per framework
+  - Create get_themes() method for each framework returning Vec&lt;Theme&gt;
+  - Include default/minimal themes for each framework
+- Implement theme selection TUI screen (AC: #1, #2)
+  - Create `tui/theme_select.rs` module
+  - Implement `run_theme_selection(framework: FrameworkType, plugins: &amp;[String]) -&gt; Result&lt;String&gt;` function
+  - Use Ratatui List widget for single-select (similar to Story 1.6)
+  - Display theme name and description for each theme (AC: #1)
+  - Show visual indicator for selected theme (AC: #2)
+  - Arrow key navigation (up/down)
+  - Return selected theme name on Enter key press
+  - Support Esc to cancel and abort wizard
+- Implement confirmation screen (AC: #3)
+  - Create summary view showing all wizard selections
+  - Display confirmation prompt: "Create profile with these settings? (y/n)"
+  - Allow editing by returning to previous steps (optional for MVP - can defer)
+  - Proceed to installation on 'y', abort on 'n' or Esc
+- Implement framework and plugin installation (AC: #4, #7)
+  - Create `frameworks/installer.rs` module for installation orchestration
+  - Implement install_framework() function per framework type
+  - Download and install framework to profile directory
+  - Install selected plugins for the framework
+  - Use indicatif progress bars for installation steps (AC: #7)
+  - Show clear status messages
+  - Handle installation failures gracefully (cleanup, error messages)
+  - Log installation steps with env_logger
+- Generate TOML manifest (AC: #5)
+  - Create `core/manifest.rs` module
+  - Define ProfileManifest struct matching TOML schema from architecture
+  - Implement generate_manifest() function taking WizardState
+  - Populate manifest with framework, plugins, theme, timestamps
+  - Write manifest to &lt;profile_dir&gt;/profile.toml
+  - Use serde + toml crate for serialization
+  - Validate generated TOML is well-formed
+- Generate shell configuration files (AC: #6)
+  - Create `shell/generator.rs` module
+  - Implement generate_zshrc() function using manifest data
+  - Generate .zshrc with framework initialization, plugin loading, theme activation
+  - Implement generate_zshenv() function for environment variables
+  - Include header comments indicating auto-generated from manifest
+  - Write files to profile directory
+  - Ensure generated files are syntactically valid zsh
+  - Handle framework-specific configuration differences
+- Complete wizard integration and success messaging (AC: #8)
+  - Update `cli/create.rs` to orchestrate full wizard flow (Stories 1.6, 1.7, 1.8)
+  - Handle wizard completion and profile directory creation
+  - Display success message with profile details (AC: #8)
+  - Update active profile in `config.toml` if this is first profile
+  - Provide next steps to user
+- Handle edge cases and errors (AC: All)
+  - Handle framework with no themes defined (use default theme)
+  - Restore terminal state on errors/cancellation
+  - Cleanup partial installations on failure (use Pattern 3 - Safe File Operations)
+  - Handle network failures during framework downloads
+  - Handle disk space issues
+  - Use anyhow::Context for user-friendly error messages
+  - Log all operations for troubleshooting
+- Write comprehensive tests (AC: All)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. TUI displays available themes for selected framework with previews/descriptions
+2. Single-select interface for choosing one theme
+3. Final confirmation screen shows all selections (framework, plugins, theme)
+4. On confirmation, system installs selected framework and plugins
+5. Generates profile.toml manifest with all selections
+6. Creates functional .zshrc and .zshenv in profile directory
+7. Installation progress is displayed with clear status messages
+8. Success message confirms profile is ready to use
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Pattern 4: TOML Manifest Schema">
+        Defines the canonical profile.toml schema with [profile], [plugins], and [env] sections. All profile manifests must follow this exact schema.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Pattern 2: Error Handling">
+        All fallible operations must use anyhow::Result with .context() for user-friendly error messages. Never show raw Rust errors to users.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Pattern 3: Safe File Operations">
+        Mandatory pattern for destructive operations: Check → Backup → Operate → Verify → Cleanup. Required for profile creation and file modification.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Pattern 6: Framework Trait">
+        All framework implementations must implement the Framework trait with methods: name(), detect(), install(), get_plugins(), get_themes().
+      </doc>
+      <doc path="docs/PRD.md" title="Product Requirements Document" section="FR009: Theme Selection">
+        Users select a theme from framework-specific options. Themes should include popular options with descriptions to help users choose.
+      </doc>
+      <doc path="docs/PRD.md" title="Product Requirements Document" section="FR010: Generate Manifest">
+        System generates profile.toml manifest containing all configuration decisions. Manifest serves as single source of truth for the profile.
+      </doc>
+      <doc path="docs/PRD.md" title="Product Requirements Document" section="FR011: Install Framework">
+        System downloads and installs selected framework and plugins. Progress must be clearly communicated to users during installation.
+      </doc>
+      <doc path="docs/stories/1-6-tui-wizard-framework-selection.md" title="Story 1.6: Framework Selection" section="TUI Patterns">
+        Establishes terminal setup/cleanup utilities, TUI layout patterns, keyboard navigation (arrows, Enter, Esc), and error handling patterns to reuse.
+      </doc>
+      <doc path="docs/stories/1-7-tui-wizard-plugin-browser.md" title="Story 1.7: Plugin Browser" section="Wizard Flow">
+        Plugin selection is step 2 of wizard. Story 1.8 follows as step 3, receiving framework and plugins as input, completing the creation flow.
+      </doc>
+      <doc path="docs/technical-decisions.md" title="Technical Decisions" section="Dependencies">
+        Documents chosen crates and versions: ratatui for TUI, crossterm for terminal control, anyhow for errors, indicatif for progress bars, serde/toml for manifest serialization.
+      </doc>
+    </docs>
+    <code>
+      <!-- No existing code yet - greenfield implementation -->
+      <note>No existing Rust code found. This is a greenfield implementation. Follow architecture patterns and create new modules as specified in tasks.</note>
+    </code>
+    <dependencies>
+      <rust>
+        <required>
+          <dep name="ratatui" version="latest" purpose="TUI framework for theme selection screen" />
+          <dep name="crossterm" version="latest" purpose="Terminal control and keyboard events" />
+          <dep name="anyhow" version="latest" purpose="Error handling with context" />
+          <dep name="serde" version="1.0" features='["derive"]' purpose="Serialize/deserialize manifest data" />
+          <dep name="toml" version="0.9" purpose="TOML serialization for profile.toml" />
+          <dep name="chrono" version="0.4" purpose="Timestamp generation for manifest" />
+          <dep name="indicatif" version="0.18" purpose="Progress bars for installation" />
+        </required>
+        <existing>
+          <note>No Cargo.toml found yet - project needs initial Rust setup</note>
+        </existing>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- MUST follow Pattern 4 (TOML Manifest Schema) exactly as defined in architecture.md
+- MUST use Pattern 2 (Error Handling) with anyhow::Result and .context() for all fallible operations
+- MUST use Pattern 3 (Safe File Operations) for profile creation: Check → Backup → Operate → Verify → Cleanup
+- MUST implement Framework trait get_themes() method for all 5 frameworks (oh-my-zsh, zimfw, prezto, zinit, zap)
+- Theme selection TUI MUST reuse patterns from Story 1.6 (terminal setup, List widget, keyboard navigation)
+- Wizard flow MUST integrate Stories 1.6 (framework) → 1.7 (plugins) → 1.8 (theme + generation)
+- Installation progress MUST use indicatif progress bars with clear status messages (AC #7)
+- Generated .zshrc and .zshenv MUST be syntactically valid zsh scripts
+- Generated profile.toml MUST be valid TOML and match schema exactly
+- Success message MUST include profile details and next steps (AC #8)
+- MUST handle cancellation gracefully (Esc key) and restore terminal state
+- MUST cleanup partial installations on failure
+- MUST log all operations with env_logger for troubleshooting
+- Each framework needs 10-15 theme definitions with name, description, preview
+  </constraints>
+
+  <interfaces>
+    <interface name="run_theme_selection" kind="function signature" signature="pub fn run_theme_selection(framework: FrameworkType, plugins: &amp;[String]) -&gt; Result&lt;String&gt;" path="src/tui/theme_select.rs">
+      Main entry point for theme selection TUI. Takes selected framework and plugins, returns chosen theme name.
+    </interface>
+    <interface name="show_confirmation_screen" kind="function signature" signature="pub fn show_confirmation_screen(state: &amp;WizardState) -&gt; Result&lt;bool&gt;" path="src/tui/theme_select.rs">
+      Displays confirmation screen with all wizard selections. Returns true if user confirms, false if cancelled.
+    </interface>
+    <interface name="install_profile" kind="function signature" signature="pub fn install_profile(wizard_state: &amp;WizardState, profile_path: &amp;Path) -&gt; Result&lt;()&gt;" path="src/frameworks/installer.rs">
+      Orchestrates framework and plugin installation with progress indicators. Handles all installation steps.
+    </interface>
+    <interface name="generate_manifest" kind="function signature" signature="pub fn generate_manifest(wizard_state: &amp;WizardState, profile_path: &amp;Path) -&gt; Result&lt;()&gt;" path="src/core/manifest.rs">
+      Generates profile.toml manifest from wizard state. Must follow Pattern 4 TOML schema exactly.
+    </interface>
+    <interface name="generate_shell_configs" kind="function signature" signature="pub fn generate_shell_configs(wizard_state: &amp;WizardState, profile_path: &amp;Path) -&gt; Result&lt;()&gt;" path="src/shell/generator.rs">
+      Generates .zshrc and .zshenv from manifest data. Handles framework-specific configuration.
+    </interface>
+    <interface name="Framework::get_themes" kind="trait method" signature="fn get_themes(&amp;self) -&gt; Vec&lt;Theme&gt;" path="src/frameworks/mod.rs">
+      Returns list of themes for the framework. Must be implemented by all framework types.
+    </interface>
+    <interface name="Theme" kind="struct" signature="pub struct Theme { pub name: String, pub description: String, pub preview: String }" path="src/frameworks/mod.rs">
+      Data structure for theme information including name, description, and visual preview text.
+    </interface>
+    <interface name="ProfileManifest" kind="struct" signature="pub struct ProfileManifest { pub profile: ProfileInfo, pub plugins: PluginsConfig, pub env: HashMap&lt;String, String&gt; }" path="src/core/manifest.rs">
+      Root manifest structure matching Pattern 4 TOML schema. Serializes to profile.toml.
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Use Rust standard testing framework with #[cfg(test)] modules. Unit tests co-located with implementation in same files. Integration tests in tests/ directory. Use assert_eq!, assert! for assertions. Mock external dependencies (downloads, filesystem) where appropriate. Manual TUI testing required for visual verification.
+    </standards>
+    <locations>
+      - Unit tests: Co-located with source in src/*/mod.rs or src/*/*.rs files
+      - Integration tests: tests/ directory
+      - Manual tests: Document test scenarios in docs/testing/ or story completion notes
+    </locations>
+    <ideas>
+      <test id="AC1" description="Verify theme selection TUI displays themes with previews">
+        Unit test that theme data includes name, description, preview fields. Integration test for TUI rendering (may need manual verification).
+      </test>
+      <test id="AC2" description="Verify single-select interface for theme choice">
+        Test keyboard navigation (up/down arrows), selection highlighting, Enter key returns selected theme.
+      </test>
+      <test id="AC3" description="Verify confirmation screen shows all selections">
+        Test confirmation screen displays framework, plugins count/list, theme. Test y/n/Esc handling.
+      </test>
+      <test id="AC4" description="Verify framework and plugin installation">
+        Integration test (with mocking) for install_profile() function. Verify correct installation sequence.
+      </test>
+      <test id="AC5" description="Verify manifest generation">
+        Unit test generate_manifest() produces valid TOML matching Pattern 4 schema. Test all required fields present.
+      </test>
+      <test id="AC6" description="Verify .zshrc and .zshenv generation">
+        Unit test shell config generation for each framework type. Verify syntax validity, framework-specific content.
+      </test>
+      <test id="AC7" description="Verify installation progress display">
+        Test that indicatif progress bars are created and updated correctly. Manual verification of display.
+      </test>
+      <test id="AC8" description="Verify success message">
+        Test success output includes profile name, framework, plugin count, theme, location, next steps.
+      </test>
+      <test id="edge-cases" description="Verify error handling and edge cases">
+        Test cancellation (Esc), network failures, disk space issues, partial installation cleanup, framework with no themes.
+      </test>
+    </ideas>
+  </tests>
+</story-context>

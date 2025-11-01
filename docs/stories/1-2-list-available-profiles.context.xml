@@ -1,0 +1,169 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>2</storyId>
+    <title>List Available Profiles</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-31</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>/Users/anna/code/annabarnes1138/zprof/docs/stories/1-2-list-available-profiles.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to see all my available profiles with a visual indicator for the active one</iWant>
+    <soThat>I know what profiles exist and which one I'm currently using</soThat>
+    <tasks>- [ ] Implement `list` CLI command (AC: #1, #2, #4)
+  - [ ] Create `cli/list.rs` with Clap Args struct for list command
+  - [ ] Implement execute function following CLI command pattern from architecture
+  - [ ] Add list subcommand to main CLI structure in `main.rs`
+- [ ] Implement profile discovery logic (AC: #1, #3)
+  - [ ] Create or extend `core/profile.rs` module for profile operations
+  - [ ] Implement function to scan `~/.zsh-profiles/profiles/` directory
+  - [ ] Read each profile's `profile.toml` manifest to extract metadata (name, framework)
+  - [ ] Return list of ProfileInfo structs with name and framework type
+- [ ] Implement active profile detection (AC: #2)
+  - [ ] Read `~/.zsh-profiles/config.toml` to get active_profile value
+  - [ ] Compare active_profile with discovered profiles
+  - [ ] Mark active profile for visual indication
+- [ ] Format and display output (AC: #2, #4)
+  - [ ] Display each profile with name and framework type
+  - [ ] Use `→` symbol to indicate active profile (following architecture error message format)
+  - [ ] Ensure output is clean and human-readable
+  - [ ] Sort profiles alphabetically for consistent display
+- [ ] Handle edge cases gracefully (AC: #5)
+  - [ ] Detect when `~/.zsh-profiles/profiles/` is empty
+  - [ ] Display helpful message: "No profiles found. Create your first profile with 'zprof create <name>'"
+  - [ ] Handle missing or malformed `profile.toml` files with warnings
+  - [ ] Handle case where no active profile is set (all profiles unmarked)
+- [ ] Add user-friendly error handling (AC: All)
+  - [ ] Use anyhow::Context for all file operations following Pattern 2
+  - [ ] Provide actionable error messages for permission issues
+  - [ ] Handle missing `~/.zsh-profiles/` directory with suggestion to run `zprof init`
+- [ ] Write integration tests (AC: All)
+  - [ ] Test listing multiple profiles with correct formatting
+  - [ ] Test active profile indicator appears correctly
+  - [ ] Test empty profile directory shows helpful message
+  - [ ] Test profiles sorted alphabetically
+  - [ ] Test missing profile.toml handled gracefully
+  - [ ] Add snapshot test for list output with multiple profiles
+  - [ ] Add snapshot test for empty profile directory message</tasks>
+  </story>
+
+  <acceptanceCriteria>1. `zprof list` command displays all profiles in `~/.zsh-profiles/profiles/`
+2. Active profile is visually indicated (e.g., with `*` or arrow)
+3. Each profile shows its name and framework type
+4. Output is human-readable and formatted clearly
+5. Command handles empty profile directory gracefully with helpful message</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/PRD.md" title="Product Requirements Document" section="FR002: List Profiles">
+        <snippet>System shall list all available profiles with visual indicator showing currently active profile</snippet>
+      </doc>
+      <doc path="docs/architecture.md" title="Decision Architecture" section="Pattern 1: CLI Command Structure">
+        <snippet>Every command in src/cli/ follows Args struct with execute() function returning anyhow::Result. Commands validate inputs, load configuration, perform operation, and display user-friendly output.</snippet>
+      </doc>
+      <doc path="docs/architecture.md" title="Decision Architecture" section="Pattern 2: Error Handling">
+        <snippet>ALL fallible operations MUST use anyhow::Result with context. Never show raw Rust errors to users. Always provide what failed, why it might have failed, and how to fix it.</snippet>
+      </doc>
+      <doc path="docs/architecture.md" title="Decision Architecture" section="Pattern 4: TOML Manifest Schema">
+        <snippet>profile.toml schema includes [profile] section with name, framework, theme, created, modified fields. config.toml contains active_profile and optional default_framework.</snippet>
+      </doc>
+      <doc path="docs/architecture.md" title="Decision Architecture" section="Error Message Format">
+        <snippet>Use symbols: ✓ for success, ✗ for error, → for active/selected item. Format errors with context and actionable suggestions.</snippet>
+      </doc>
+      <doc path="docs/architecture.md" title="Decision Architecture" section="Epic 1 Story 1.2 Mapping">
+        <snippet>Primary modules: cli/list.rs, core/profile.rs. No secondary modules needed.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <note>No existing Rust code - this is a greenfield project. Project must be initialized using rust-starter template first (Story 1.1).</note>
+      <artifact path="src/cli/list.rs" kind="cli-command" symbol="execute" reason="Primary implementation file for list command - to be created">
+        <description>Implements the list command following Pattern 1: CLI Command Structure</description>
+      </artifact>
+      <artifact path="src/core/profile.rs" kind="core-module" symbol="ProfileInfo struct, scan_profiles function" reason="Profile discovery and metadata extraction - to be created">
+        <description>Contains ProfileInfo struct and logic to scan ~/.zsh-profiles/profiles/ directory</description>
+      </artifact>
+      <artifact path="src/core/config.rs" kind="core-module" symbol="read_active_profile function" reason="Reads active profile from config.toml - may exist from Story 1.1">
+        <description>Reads ~/.zsh-profiles/config.toml to determine active profile</description>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="clap" version="4.5.51" features="derive">CLI argument parsing with derive macros</package>
+        <package name="anyhow" version="2.0">Error handling with context</package>
+        <package name="serde" version="1.0" features="derive">Serialization/deserialization for TOML</package>
+        <package name="toml" version="0.9">TOML parsing for profile.toml and config.toml</package>
+      </rust>
+      <dev>
+        <package name="insta">Snapshot testing for CLI output validation</package>
+      </dev>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="architecture">Must follow Pattern 1: CLI Command Structure - Args struct with execute() function</constraint>
+    <constraint type="architecture">Must follow Pattern 2: Error Handling - anyhow::Result with context, user-friendly error messages</constraint>
+    <constraint type="architecture">Must follow Pattern 4: TOML Manifest Schema for reading profile.toml and config.toml</constraint>
+    <constraint type="file-operations">Read-only command - no backup operations needed (Pattern 3 not required)</constraint>
+    <constraint type="error-messages">Use Error Message Format: ✗ for errors, → for active profile indicator</constraint>
+    <constraint type="module-structure">Primary modules: cli/list.rs, core/profile.rs as per Epic 1 Story 1.2 Mapping</constraint>
+    <constraint type="performance">NFR001: Expected execution time < 50ms (directory scan + TOML read)</constraint>
+    <constraint type="output">Sort profiles alphabetically for consistent display</constraint>
+    <constraint type="output">Handle empty profile directory with helpful message: "No profiles found. Create your first profile with 'zprof create &lt;name&gt;'"</constraint>
+  </constraints>
+  <interfaces>
+    <interface name="ProfileInfo struct" kind="data-structure" path="src/core/profile.rs">
+      <signature>pub struct ProfileInfo {
+    pub name: String,
+    pub framework: String,
+    pub is_active: bool,
+}</signature>
+      <description>Represents profile metadata for display in list command</description>
+    </interface>
+    <interface name="scan_profiles function" kind="function" path="src/core/profile.rs">
+      <signature>pub fn scan_profiles() -&gt; Result&lt;Vec&lt;ProfileInfo&gt;&gt;</signature>
+      <description>Scans ~/.zsh-profiles/profiles/ directory and returns list of profile information</description>
+    </interface>
+    <interface name="read_active_profile function" kind="function" path="src/core/config.rs">
+      <signature>pub fn read_active_profile() -&gt; Result&lt;Option&lt;String&gt;&gt;</signature>
+      <description>Reads active_profile from ~/.zsh-profiles/config.toml, returns None if not set</description>
+    </interface>
+    <interface name="list command" kind="cli-command" path="src/cli/list.rs">
+      <signature>pub fn execute(args: ListArgs) -&gt; Result&lt;()&gt;</signature>
+      <description>Executes the list command - main entry point from CLI</description>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Use insta crate for snapshot testing of CLI output. Integration tests in tests/ directory. Unit tests in same file as code using #[cfg(test)] mod tests. Test both success cases and edge cases (empty directory, malformed TOML, missing files). All tests must use anyhow::Result for error handling consistency.</standards>
+    <locations>tests/list_test.rs (integration tests), tests/snapshots/ (insta snapshot files), src/cli/list.rs (unit tests), src/core/profile.rs (unit tests)</locations>
+    <ideas>
+      <test id="AC-1" criteria="zprof list displays all profiles">
+        <idea>Integration test: Create mock profiles directory with 3 profiles, verify all 3 appear in output</idea>
+        <idea>Snapshot test: Capture output format with multiple profiles and verify formatting</idea>
+      </test>
+      <test id="AC-2" criteria="Active profile visually indicated">
+        <idea>Integration test: Set active_profile in config.toml, verify → symbol appears next to correct profile</idea>
+        <idea>Test case where no active profile is set - no → indicator should appear</idea>
+      </test>
+      <test id="AC-3" criteria="Each profile shows name and framework">
+        <idea>Verify output includes both profile name and framework type (e.g., "work (oh-my-zsh)")</idea>
+        <idea>Test with different framework types to ensure all are displayed correctly</idea>
+      </test>
+      <test id="AC-4" criteria="Output human-readable and formatted">
+        <idea>Snapshot test to verify output format matches specification</idea>
+        <idea>Test alphabetical sorting of profiles</idea>
+      </test>
+      <test id="AC-5" criteria="Empty directory handled gracefully">
+        <idea>Integration test: Empty profiles directory should show helpful message</idea>
+        <idea>Snapshot test for empty directory message format</idea>
+      </test>
+      <test id="edge-cases" criteria="Error handling">
+        <idea>Test missing ~/.zsh-profiles/ directory - should suggest running 'zprof init'</idea>
+        <idea>Test malformed profile.toml files - should show warning but continue listing other profiles</idea>
+        <idea>Test permission denied on profiles directory - should show actionable error message</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>
