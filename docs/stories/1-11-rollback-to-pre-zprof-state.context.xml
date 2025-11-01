@@ -1,0 +1,238 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>11</storyId>
+    <title>Rollback to Pre-zprof State</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-01</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-11-rollback-to-pre-zprof-state.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer who wants to uninstall zprof</asA>
+    <iWant>to restore my original shell configuration</iWant>
+    <soThat>I can revert to my pre-zprof setup if needed</soThat>
+    <tasks>
+      <task id="1" title="Implement Rollback Detection and Validation">
+        <subtask id="1.1">Add rollback subcommand to CLI</subtask>
+        <subtask id="1.2">Search for .zshrc.pre-zprof backup file in profile directories</subtask>
+        <subtask id="1.3">Validate backup file exists and is readable</subtask>
+        <subtask id="1.4">Detect framework type from backup metadata or profile manifest</subtask>
+        <subtask id="1.5">Validate backup integrity (not modified/corrupted)</subtask>
+        <subtask id="1.6">Generate error message if backup missing or invalid</subtask>
+        <subtask id="1.7">Write unit tests for backup detection logic</subtask>
+      </task>
+      <task id="2" title="Implement Rollback Preview Display">
+        <subtask id="2.1">Create preview display showing restoration plan</subtask>
+        <subtask id="2.2">List what will be restored (.zshrc from backup)</subtask>
+        <subtask id="2.3">List what will be moved (framework to original location)</subtask>
+        <subtask id="2.4">List what will remain (~/.zsh-profiles/ for reference)</subtask>
+        <subtask id="2.5">Format preview with clear headings and visual structure</subtask>
+        <subtask id="2.6">Write tests for preview generation</subtask>
+      </task>
+      <task id="3" title="Implement User Confirmation Flow">
+        <subtask id="3.1">Add confirmation prompt with explicit "Continue? [y/N]" message</subtask>
+        <subtask id="3.2">Default to "No" for safety (require explicit "y" or "yes")</subtask>
+        <subtask id="3.3">Handle various input formats (Y, y, yes, YES)</subtask>
+        <subtask id="3.4">Exit gracefully on "No" without changes</subtask>
+        <subtask id="3.5">Write tests for confirmation handling</subtask>
+      </task>
+      <task id="4" title="Implement Rollback Execution">
+        <subtask id="4.1">Backup current .zshrc to .zshrc.pre-rollback for safety</subtask>
+        <subtask id="4.2">Restore .zshrc from .zshrc.pre-zprof backup</subtask>
+        <subtask id="4.3">Detect framework location in profile directory</subtask>
+        <subtask id="4.4">Move framework back to home directory (e.g., ~/.oh-my-zsh)</subtask>
+        <subtask id="4.5">Preserve ~/.zsh-profiles/ directory structure</subtask>
+        <subtask id="4.6">Set appropriate file permissions on restored files</subtask>
+        <subtask id="4.7">Handle errors during file operations (rollback on failure)</subtask>
+        <subtask id="4.8">Write integration tests for rollback execution</subtask>
+      </task>
+      <task id="5" title="Implement Success Messaging and Instructions">
+        <subtask id="5.1">Create success message confirming rollback completion</subtask>
+        <subtask id="5.2">Include instruction to restart shell or run source ~/.zshrc</subtask>
+        <subtask id="5.3">Suggest manual deletion of ~/.zsh-profiles/ if desired</subtask>
+        <subtask id="5.4">Display paths of restored files for reference</subtask>
+        <subtask id="5.5">Write tests for success message formatting</subtask>
+      </task>
+      <task id="6" title="Integration Testing and Documentation">
+        <subtask id="6.1">Test rollback on system with oh-my-zsh migration</subtask>
+        <subtask id="6.2">Test rollback on system with zinit migration</subtask>
+        <subtask id="6.3">Test rollback on system with prezto migration</subtask>
+        <subtask id="6.4">Test rollback on system with multiple profiles</subtask>
+        <subtask id="6.5">Test error cases (missing backup, corrupted backup)</subtask>
+        <subtask id="6.6">Update README with rollback documentation</subtask>
+        <subtask id="6.7">Add rollback examples to user guide</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">zprof rollback command checks for backup file (.zshrc.pre-zprof) in profiles</criterion>
+    <criterion id="AC2">Shows what will be restored and what will be moved back:
+      - Restore: ~/.zshrc from backup
+      - Move: Framework back to home directory (if applicable)
+      - Keep: ~/.zsh-profiles/ directory for reference</criterion>
+    <criterion id="AC3">Requires explicit confirmation: "Continue? [y/N]"</criterion>
+    <criterion id="AC4">On confirmation:
+      - Restores original .zshrc from backup
+      - Moves framework back to original location (e.g., ~/.oh-my-zsh)
+      - Leaves ~/.zsh-profiles/ intact but inactive</criterion>
+    <criterion id="AC5">Success message confirms rollback and provides instructions:
+      - Restart shell or run: source ~/.zshrc
+      - Can safely delete ~/.zsh-profiles/ manually if desired</criterion>
+    <criterion id="AC6">If no backup found, provides clear error message</criterion>
+    <criterion id="AC7">Cannot rollback if backup was modified or deleted</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>Non-Functional Requirements</section>
+        <snippet>NFR002: System shall not modify or corrupt user's existing dotfiles; all operations must be non-destructive with automatic backups</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Project Structure - CLI Commands</section>
+        <snippet>cli/rollback.rs - zprof rollback - Restore pre-zprof state. Located in src/cli/ module.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>User Data Directory Structure</section>
+        <snippet>profiles/default/.zshrc.pre-zprof - Backup of original .zshrc created during migration</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Core Business Logic</section>
+        <snippet>core/filesystem.rs - Safe file operations with backups (NFR002). Handles atomic file operations.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Story 1.11</section>
+        <snippet>Prerequisites: Story 1.1b (requires migration with backup), Story 1.4 (framework detection)</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/core/filesystem.rs</path>
+        <kind>module</kind>
+        <symbol>get_zprof_dir, create_directory, create_shared_history</symbol>
+        <lines>1-80</lines>
+        <reason>Provides safe file operations and path handling for zprof directories. Reuse for backup detection and file restoration.</reason>
+      </artifact>
+      <artifact>
+        <path>src/frameworks/detector.rs</path>
+        <kind>module</kind>
+        <symbol>detect_existing_framework, FrameworkInfo, FrameworkType</symbol>
+        <lines>1-80</lines>
+        <reason>Framework detection logic to identify which framework needs to be moved back. Reuse FrameworkType enum and detection patterns.</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/profile.rs</path>
+        <kind>module</kind>
+        <symbol>scan_profiles, read_profile_manifest, ProfileInfo</symbol>
+        <lines>1-80</lines>
+        <reason>Profile scanning and manifest parsing. Use to locate backup files within profile directories.</reason>
+      </artifact>
+      <artifact>
+        <path>src/cli/mod.rs</path>
+        <kind>module</kind>
+        <symbol>module structure</symbol>
+        <lines>1-5</lines>
+        <reason>CLI module organization pattern. New rollback.rs will follow same structure as init, list, create, current.</reason>
+      </artifact>
+      <artifact>
+        <path>src/main.rs</path>
+        <kind>file</kind>
+        <symbol>Commands enum, main function</symbol>
+        <lines>1-44</lines>
+        <reason>Main CLI entry point using Clap. Add Rollback variant to Commands enum and wire up rollback::execute.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="clap" version="4.5.51">CLI argument parsing with derive macros</package>
+        <package name="anyhow" version="1.0">Error handling with context</package>
+        <package name="serde" version="1.0">Serialization for manifest parsing</package>
+        <package name="toml" version="0.9">TOML parsing for profile manifests</package>
+        <package name="dirs" version="5.0">Home directory detection</package>
+        <package name="dialoguer" version="0.11">User confirmation prompts</package>
+        <package name="log" version="0.4">Logging for operations</package>
+        <package name="regex" version="1.10">Pattern matching for backup validation</package>
+      </rust>
+      <rust_dev>
+        <package name="insta" version="1.34">Snapshot testing for CLI output</package>
+        <package name="tempfile" version="3.8">Temporary directories for testing</package>
+        <package name="serial_test" version="3.0">Serial test execution for filesystem tests</package>
+      </rust_dev>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Must follow NFR002: Non-destructive operations with automatic backups. Create .zshrc.pre-rollback before restoring.</constraint>
+    <constraint>Use anyhow::Result for error handling with context throughout rollback operations.</constraint>
+    <constraint>Follow existing CLI command pattern: RollbackArgs struct + execute() function in src/cli/rollback.rs.</constraint>
+    <constraint>Must preserve ~/.zsh-profiles/ directory intact - do not delete during rollback.</constraint>
+    <constraint>File operations must be atomic where possible - rollback changes on error (4.7).</constraint>
+    <constraint>Use existing filesystem.rs utilities for safe file operations.</constraint>
+    <constraint>Framework relocation must preserve directory permissions and structure.</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>zprof rollback CLI command</name>
+      <kind>CLI command</kind>
+      <signature>zprof rollback [--yes] [--profile PROFILE_NAME]</signature>
+      <path>src/cli/rollback.rs</path>
+    </interface>
+    <interface>
+      <name>RollbackArgs struct</name>
+      <kind>Clap derive struct</kind>
+      <signature>#[derive(Debug, clap::Args)] struct RollbackArgs { yes: bool, profile: Option&lt;String&gt; }</signature>
+      <path>src/cli/rollback.rs</path>
+    </interface>
+    <interface>
+      <name>execute function</name>
+      <kind>function signature</kind>
+      <signature>pub fn execute(args: RollbackArgs) -> anyhow::Result&lt;()&gt;</signature>
+      <path>src/cli/rollback.rs</path>
+    </interface>
+    <interface>
+      <name>filesystem helpers</name>
+      <kind>module functions</kind>
+      <signature>get_zprof_dir() -> Result&lt;PathBuf&gt;, create_directory(), etc.</signature>
+      <path>src/core/filesystem.rs</path>
+    </interface>
+    <interface>
+      <name>FrameworkType enum</name>
+      <kind>enum</kind>
+      <signature>pub enum FrameworkType { OhMyZsh, Zimfw, Prezto, Zinit, Zap }</signature>
+      <path>src/frameworks/detector.rs</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>The project uses Rust's built-in test framework with insta for snapshot testing of CLI output. Integration tests are located in tests/ directory and use tempfile::TempDir for isolated filesystem testing. Tests use TestEnv helper pattern to set up temporary HOME directories. Serial execution via serial_test crate for filesystem-dependent tests. Acceptance criteria are mapped directly to test functions with AC# comments.</standards>
+    <locations>
+      <location>tests/rollback_test.rs - Integration tests for rollback command</location>
+      <location>src/cli/rollback.rs - Unit tests inline with implementation</location>
+      <location>tests/snapshots/ - Insta snapshots for CLI output validation</location>
+    </locations>
+    <ideas>
+      <test id="AC1">Test backup detection: Verify rollback finds .zshrc.pre-zprof in profile directories</test>
+      <test id="AC2">Test preview display: Validate restoration plan shows correct restore/move/keep items</test>
+      <test id="AC3">Test confirmation flow: Verify "Continue? [y/N]" prompt defaults to No and accepts y/yes</test>
+      <test id="AC4">Test rollback execution: Verify .zshrc restored, framework moved back, ~/.zsh-profiles/ preserved</test>
+      <test id="AC5">Test success messaging: Validate output includes shell restart instructions and cleanup suggestion</test>
+      <test id="AC6">Test missing backup: Verify clear error when .zshrc.pre-zprof not found</test>
+      <test id="AC7">Test corrupted backup: Verify rollback refuses if backup modified/invalid</test>
+      <test id="multi-framework">Test rollback with different frameworks: oh-my-zsh, zinit, prezto, zimfw</test>
+      <test id="multi-profile">Test rollback with multiple profiles: verify correct backup selected</test>
+      <test id="atomic-ops">Test error handling: verify rollback on failure (filesystem errors mid-operation)</test>
+    </ideas>
+  </tests>
+</story-context>
