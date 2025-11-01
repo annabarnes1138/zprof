@@ -28,6 +28,8 @@ enum Commands {
     Init(cli::init::InitArgs),
     /// List all available zsh profiles
     List(cli::list::ListArgs),
+    /// Restore original shell configuration (rollback zprof)
+    Rollback(cli::rollback::RollbackArgs),
     /// Switch to a different profile
     Use(cli::use_cmd::UseArgs),
 }
@@ -44,6 +46,7 @@ fn main() -> Result<()> {
         Commands::Delete(args) => cli::delete::execute(args),
         Commands::Init(args) => cli::init::execute(args),
         Commands::List(args) => cli::list::execute(args),
+        Commands::Rollback(args) => cli::rollback::execute(args),
         Commands::Use(args) => cli::use_cmd::execute(args),
     }
 }

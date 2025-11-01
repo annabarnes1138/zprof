@@ -48,7 +48,7 @@ development_status:
   1-8-tui-wizard-theme-selection-and-profile-generation: done
   1-9-switch-active-profile: done
   1-10-delete-profile: done
-  1-11-rollback-to-pre-zprof-state: ready-for-dev
+  1-11-rollback-to-pre-zprof-state: done
   epic-1-retrospective: optional
 
   epic-2: backlog
