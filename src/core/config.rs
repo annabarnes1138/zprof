@@ -43,6 +43,48 @@ impl Config {
     }
 }
 
+/// Load config from the default config.toml location
+pub fn load_config() -> Result<Config> {
+    use crate::core::profile::get_config_path;
+
+    let config_path = get_config_path()?;
+
+    if !config_path.exists() {
+        // Return default config if file doesn't exist
+        return Ok(Config::default());
+    }
+
+    let content = std::fs::read_to_string(&config_path)
+        .context("Failed to read config.toml")?;
+
+    toml::from_str(&content)
+        .context("Failed to parse config.toml - file may be corrupted")
+}
+
+/// Save config to the default config.toml location
+pub fn save_config(config: &Config) -> Result<()> {
+    use crate::core::profile::get_config_path;
+
+    let config_path = get_config_path()?;
+
+    let toml_string = toml::to_string_pretty(config)
+        .context("Failed to serialize config")?;
+
+    std::fs::write(&config_path, toml_string)
+        .with_context(|| format!("Failed to write config to {:?}", config_path))?;
+
+    log::debug!("Updated config.toml: active_profile = {:?}", config.active_profile);
+    Ok(())
+}
+
+/// Update the active_profile in config.toml
+pub fn update_active_profile(profile_name: &str) -> Result<()> {
+    let mut config = load_config()?;
+    config.active_profile = Some(profile_name.to_string());
+    save_config(&config)?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

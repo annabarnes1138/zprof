@@ -12,12 +12,38 @@ WORKFLOW_PATH: greenfield-level-2.yaml
 ## Current State
 
 CURRENT_PHASE: 4
-CURRENT_WORKFLOW: Ready for Implementation
+CURRENT_WORKFLOW: Story 1.1b - Migrate existing configuration during init
 CURRENT_AGENT: dev
 PHASE_1_COMPLETE: true
 PHASE_2_COMPLETE: true
 PHASE_3_COMPLETE: true
 PHASE_4_COMPLETE: false
+
+## Phase 4 Progress
+
+### Epic 1: Core Profile Management
+
+- ✅ Story 1.1a - Initialize zprof directory structure (DONE)
+- 🔄 Story 1.1b - Migrate existing configuration during init (READY-FOR-DEV)
+- ✅ Story 1.2 - List available profiles (DONE)
+- ✅ Story 1.3 - Display current active profile (DONE)
+- ✅ Story 1.4 - Framework detection for smart profile creation (DONE)
+- ✅ Story 1.5 - Quick profile creation via CLI (DONE)
+- ✅ Story 1.6 - TUI Wizard Framework Selection (DONE)
+- ✅ Story 1.7 - TUI Wizard Plugin Browser (DONE)
+- ✅ Story 1.8 - TUI Wizard Theme Selection and Profile Generation (DONE)
+- ⏸️ Story 1.9 - Switch active profile (TODO)
+- ⏸️ Story 1.10 - Delete profile (TODO)
+- ⏸️ Story 1.11 - Rollback to pre-zprof state (TODO)
+
+### Epic 2: Advanced Profile Features
+
+- ⏸️ Story 2.1 - Parse and validate TOML manifests (TODO)
+- ⏸️ Story 2.2 - Generate shell configuration from TOML (TODO)
+- ⏸️ Story 2.3 - Manual TOML editing with live validation (TODO)
+- ⏸️ Story 2.4 - Export profile to archive (TODO)
+- ⏸️ Story 2.5 - Import profile from local archive (TODO)
+- ⏸️ Story 2.6 - Import profile from GitHub repository (TODO)
 
 ## Phase 1 Deliverables
 
@@ -38,10 +64,10 @@ PHASE_4_COMPLETE: false
 
 ## Next Action
 
-NEXT_ACTION: Begin implementing Story 1.1 - Initialize zprof directory structure
-NEXT_COMMAND: /bmad:bmm:agents:dev then create story for 1.1
+NEXT_ACTION: Implement Story 1.1b - Migrate existing configuration during init
+NEXT_COMMAND: /bmad:bmm:agents:dev then *develop-story
 NEXT_AGENT: dev
 
 ---
 
-_Last Updated: 2025-10-31_
+_Last Updated: 2025-11-01_

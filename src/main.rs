@@ -26,6 +26,8 @@ enum Commands {
     Init(cli::init::InitArgs),
     /// List all available zsh profiles
     List(cli::list::ListArgs),
+    /// Switch to a different profile
+    Use(cli::use_cmd::UseArgs),
 }
 
 fn main() -> Result<()> {
@@ -39,5 +41,6 @@ fn main() -> Result<()> {
         Commands::Current(args) => cli::current::execute(args),
         Commands::Init(args) => cli::init::execute(args),
         Commands::List(args) => cli::list::execute(args),
+        Commands::Use(args) => cli::use_cmd::execute(args),
     }
 }

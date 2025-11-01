@@ -148,6 +148,85 @@ pub fn load_profile_metadata(profile_name: &str) -> Result<ProfileMetadataFull> 
     })
 }
 
+/// Get the path to a profile directory, returning error if it doesn't exist
+pub fn get_profile_path(profile_name: &str) -> Result<PathBuf> {
+    let profiles_dir = get_profiles_dir()?;
+    let profile_path = profiles_dir.join(profile_name);
+
+    if !profile_path.exists() {
+        let available = list_available_profiles()?;
+        anyhow::bail!(
+            "✗ Error: Profile '{}' not found\n  Available profiles:\n{}",
+            profile_name,
+            format_profile_list(&available)
+        );
+    }
+
+    Ok(profile_path)
+}
+
+/// Validate that a profile has all required files
+pub fn validate_profile(profile_path: &Path) -> Result<()> {
+    let zshrc = profile_path.join(".zshrc");
+    let manifest = profile_path.join("profile.toml");
+
+    if !zshrc.exists() {
+        anyhow::bail!(
+            "✗ Error: Profile is incomplete - missing .zshrc\n  Path: {:?}\n  → Run 'zprof edit {}' to regenerate configuration",
+            profile_path,
+            profile_path.file_name().unwrap_or_default().to_string_lossy()
+        );
+    }
+
+    if !manifest.exists() {
+        anyhow::bail!(
+            "✗ Error: Profile is incomplete - missing profile.toml\n  Path: {:?}",
+            profile_path
+        );
+    }
+
+    Ok(())
+}
+
+/// List all available profile names (sorted alphabetically)
+fn list_available_profiles() -> Result<Vec<String>> {
+    let profiles_dir = get_profiles_dir()?;
+    let mut profiles = Vec::new();
+
+    if !profiles_dir.exists() {
+        anyhow::bail!(
+            "No profiles found. Create your first profile:\n  zprof create <name>"
+        );
+    }
+
+    for entry in fs::read_dir(&profiles_dir)
+        .context("Failed to read profiles directory")? {
+        let entry = entry?;
+        if entry.path().is_dir() {
+            if let Some(name) = entry.file_name().to_str() {
+                profiles.push(name.to_string());
+            }
+        }
+    }
+
+    if profiles.is_empty() {
+        anyhow::bail!(
+            "No profiles found. Create your first profile:\n  zprof create <name>"
+        );
+    }
+
+    profiles.sort();
+    Ok(profiles)
+}
+
+/// Format a list of profile names for display
+fn format_profile_list(profiles: &[String]) -> String {
+    profiles.iter()
+        .map(|p| format!("    - {}", p))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -235,6 +314,71 @@ modified = "2025-10-31T14:30:00Z"
         // Should only find the valid profile
         assert_eq!(profiles.len(), 1);
         assert_eq!(profiles[0].name, "valid");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_validate_profile_success() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let profile_dir = temp_dir.path().join("test-profile");
+        fs::create_dir(&profile_dir)?;
+
+        // Create required files
+        fs::write(profile_dir.join(".zshrc"), "# test zshrc")?;
+        fs::write(
+            profile_dir.join("profile.toml"),
+            r#"[profile]
+name = "test-profile"
+framework = "oh-my-zsh"
+"#,
+        )?;
+
+        // Should succeed with all required files present
+        let result = validate_profile(&profile_dir);
+        assert!(result.is_ok());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_validate_profile_missing_zshrc() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let profile_dir = temp_dir.path().join("test-profile");
+        fs::create_dir(&profile_dir)?;
+
+        // Only create profile.toml, missing .zshrc
+        fs::write(
+            profile_dir.join("profile.toml"),
+            r#"[profile]
+name = "test-profile"
+framework = "oh-my-zsh"
+"#,
+        )?;
+
+        // Should fail with missing .zshrc
+        let result = validate_profile(&profile_dir);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        assert!(err_msg.contains("missing .zshrc"));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_validate_profile_missing_manifest() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let profile_dir = temp_dir.path().join("test-profile");
+        fs::create_dir(&profile_dir)?;
+
+        // Only create .zshrc, missing profile.toml
+        fs::write(profile_dir.join(".zshrc"), "# test zshrc")?;
+
+        // Should fail with missing profile.toml
+        let result = validate_profile(&profile_dir);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        assert!(err_msg.contains("missing profile.toml"));
 
         Ok(())
     }

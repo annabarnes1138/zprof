@@ -9,5 +9,6 @@ expression: normalized
 ✓ Created shared history file: $HOME/.zsh-profiles/shared/.zsh_history
 ✓ Created configuration file: $HOME/.zsh-profiles/config.toml
 
-zprof initialized successfully!
-Run 'zprof --help' to see available commands
+No existing framework detected.
+Create your first profile with:
+  zprof wizard  - Interactive profile creation

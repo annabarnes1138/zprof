@@ -3,5 +3,6 @@
 //! Handles generation of .zshrc and .zshenv files from profile manifests.
 
 pub mod generator;
+pub mod zdotdir;
 
 pub use generator::generate_shell_configs;

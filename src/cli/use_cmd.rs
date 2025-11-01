@@ -1,0 +1,46 @@
+use anyhow::{Context, Result};
+use clap::Args;
+use std::os::unix::process::CommandExt; // For exec()
+
+use crate::core::{config, profile};
+use crate::shell::zdotdir;
+
+#[derive(Debug, Args)]
+pub struct UseArgs {
+    /// Name of the profile to activate
+    pub profile_name: String,
+}
+
+pub fn execute(args: UseArgs) -> Result<()> {
+    // Step 1: Validate profile exists and is complete (AC: #6)
+    let profile_path = profile::get_profile_path(&args.profile_name)?;
+    profile::validate_profile(&profile_path)?;
+
+    // Step 2: Update config.toml with new active profile (AC: #5)
+    config::update_active_profile(&args.profile_name)
+        .context("Failed to update active profile in config")?;
+
+    // Step 3: Set ZDOTDIR in ~/.zshenv to point to the new profile (AC: #1)
+    // This persists across all future shell sessions
+    zdotdir::set_active_profile(&profile_path)
+        .context("Failed to set ZDOTDIR for new profile")?;
+
+    // Step 4: Display confirmation message (AC: #5)
+    println!("✓ Switching to profile '{}'", args.profile_name);
+    println!();
+    println!("  Location: {}", profile_path.display());
+    println!("  Shared history: enabled");
+    println!();
+
+    // Step 5: Launch new shell with exec() per ADR-004 (AC: #2)
+    // This replaces the current process - new shell will read ~/.zshenv and pick up ZDOTDIR
+    // Never returns on success
+    let err = std::process::Command::new("zsh").exec();
+
+    // Only reached if exec() fails
+    Err(anyhow::anyhow!(
+        "Failed to execute zsh shell: {}. Your profile has been switched in config, \
+         but you'll need to manually start a new shell session (run: exec zsh)",
+        err
+    ))
+}
