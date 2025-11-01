@@ -3,9 +3,9 @@
     <epicId>1</epicId>
     <storyId>5</storyId>
     <title>Profile Creation with Import Current Setup</title>
-    <status>drafted</status>
-    <generatedAt>2025-10-31</generatedAt>
-    <generator>BMAD Story Context Workflow</generator>
+    <status>review</status>
+    <generatedAt>2025-11-01</generatedAt>
+    <generator>BMAD Story Context Workflow (Regenerated)</generator>
     <sourceStoryPath>docs/stories/1-5-profile-creation-with-import-current-setup.md</sourceStoryPath>
   </metadata>
 
@@ -13,100 +13,258 @@
     <asA>a developer with an existing zsh configuration</asA>
     <iWant>to import my current setup as a zprof profile</iWant>
     <soThat>I can preserve my working configuration before experimenting</soThat>
-    <tasks>- Implement `zprof create` CLI command (AC: #1)
-- Integrate framework detection (AC: #1, #3)
-- Implement interactive import prompt (AC: #1)
-- Copy framework files to profile directory (AC: #2, #3, #5)
-- Generate TOML manifest from imported config (AC: #4)
-- Update global config to track new profile (AC: #6)
-- Display success message (AC: #6)
-- Handle edge cases and errors (AC: All)
-- Write comprehensive tests (AC: All)</tasks>
+    <tasks>
+      <task id="1" ac="1">
+        <description>Implement `zprof create` CLI command</description>
+        <subtasks>
+          <subtask>Create cli/create.rs with CreateArgs struct using Clap derive API per Pattern 1</subtask>
+          <subtask>Accept profile name as required positional argument</subtask>
+          <subtask>Add execute(args: CreateArgs) -> Result&lt;()&gt; function following Pattern 1</subtask>
+          <subtask>Wire up command in main.rs CLI structure</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="1,3">
+        <description>Integrate framework detection</description>
+        <subtasks>
+          <subtask>Call frameworks::detector::detect_existing_framework() from Story 1.4</subtask>
+          <subtask>Handle case when framework is detected vs not detected</subtask>
+          <subtask>If detected, display framework info (type, plugins, theme) to user</subtask>
+          <subtask>If not detected, show message and defer to Story 1.6 (TUI wizard path)</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="1">
+        <description>Implement interactive import prompt</description>
+        <subtasks>
+          <subtask>Display "Import current setup? (y/n)" prompt when framework detected</subtask>
+          <subtask>Use dialoguer::Confirm for user input</subtask>
+          <subtask>Handle 'y', 'n', and invalid inputs with clear feedback</subtask>
+          <subtask>On 'n', show message that import is skipped (defer to TUI wizard in Story 1.6)</subtask>
+          <subtask>Support case-insensitive input (Y/y, N/n)</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="2,3,5">
+        <description>Copy framework files to profile directory</description>
+        <subtasks>
+          <subtask>Create profile directory at ~/.zsh-profiles/profiles/&lt;name&gt;/</subtask>
+          <subtask>Use core/filesystem.rs safe file operations following Pattern 3</subtask>
+          <subtask>Copy framework installation directory (e.g., ~/.oh-my-zsh → profile/.oh-my-zsh)</subtask>
+          <subtask>Copy .zshrc to profile/.zshrc (preserve original in home directory per NFR002)</subtask>
+          <subtask>Copy .zshenv if exists to profile/.zshenv</subtask>
+          <subtask>Copy any framework-specific config files (.zimrc, .zpreztorc, etc.)</subtask>
+          <subtask>Verify original dotfiles unchanged after copy (AC: #5)</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="4">
+        <description>Generate TOML manifest from imported config</description>
+        <subtasks>
+          <subtask>Create core/manifest.rs with Manifest struct using serde</subtask>
+          <subtask>Define Manifest schema matching architecture.md Pattern 4</subtask>
+          <subtask>Extract framework info from FrameworkInfo struct</subtask>
+          <subtask>Write profile.toml with framework type, plugins, theme, env vars</subtask>
+          <subtask>Add creation timestamp using chrono</subtask>
+          <subtask>Save manifest to ~/.zsh-profiles/profiles/&lt;name&gt;/profile.toml</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="6">
+        <description>Update global config to track new profile</description>
+        <subtasks>
+          <subtask>Load ~/.zsh-profiles/config.toml using core/config.rs</subtask>
+          <subtask>Add new profile to configuration if not already tracked</subtask>
+          <subtask>Save updated config.toml</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="6">
+        <description>Display success message</description>
+        <subtasks>
+          <subtask>Show confirmation: "✓ Profile '&lt;name&gt;' created successfully"</subtask>
+          <subtask>Display imported framework details (type, plugin count, theme)</subtask>
+          <subtask>Show profile location path</subtask>
+          <subtask>Suggest next steps: "Use 'zprof use &lt;name&gt;' to switch to this profile"</subtask>
+          <subtask>Follow error message format from architecture.md consistency rules</subtask>
+        </subtasks>
+      </task>
+      <task id="8" ac="all">
+        <description>Handle edge cases and errors</description>
+        <subtasks>
+          <subtask>Check if profile name already exists, show error with suggestion</subtask>
+          <subtask>Handle permission errors during file copy with context using Pattern 2</subtask>
+          <subtask>Handle invalid profile names (special chars, path traversal attempts)</subtask>
+          <subtask>Gracefully handle partial detection (some config missing)</subtask>
+          <subtask>Log operations with env_logger for debugging</subtask>
+        </subtasks>
+      </task>
+      <task id="9" ac="all">
+        <description>Write comprehensive tests</description>
+        <subtasks>
+          <subtask>Unit test CreateArgs parsing with Clap</subtask>
+          <subtask>Unit test manifest generation from FrameworkInfo</subtask>
+          <subtask>Integration test full `zprof create work` flow with mock detected framework</subtask>
+          <subtask>Test import flow with 'y' response</subtask>
+          <subtask>Test skip import with 'n' response</subtask>
+          <subtask>Test profile name conflict handling</subtask>
+          <subtask>Test original dotfiles remain unchanged after import (NFR002)</subtask>
+          <subtask>Test invalid profile name rejection</subtask>
+          <subtask>Snapshot test CLI output with insta crate</subtask>
+          <subtask>Test creation completes in under 5 seconds for typical profile</subtask>
+        </subtasks>
+      </task>
+    </tasks>
   </story>
 
-  <acceptanceCriteria>1. When framework detected, `zprof create <name>` prompts "Import current setup? (y/n)"
-2. On "y", system copies current framework files to new profile directory
-3. Profile includes detected framework, plugins, theme, and custom configurations
-4. TOML manifest is generated from imported configuration
-5. Original dotfiles remain untouched and functional
-6. Success message confirms profile creation with imported details</acceptanceCriteria>
+  <acceptanceCriteria>
+    <criterion id="1">When framework detected, `zprof create &lt;name&gt;` prompts "Import current setup? (y/n)"</criterion>
+    <criterion id="2">On "y", system copies current framework files to new profile directory</criterion>
+    <criterion id="3">Profile includes detected framework, plugins, theme, and custom configurations</criterion>
+    <criterion id="4">TOML manifest is generated from imported configuration</criterion>
+    <criterion id="5">Original dotfiles remain untouched and functional</criterion>
+    <criterion id="6">Success message confirms profile creation with imported details</criterion>
+  </acceptanceCriteria>
 
   <artifacts>
     <docs>
-      <artifact>
+      <doc>
         <path>docs/PRD.md</path>
         <title>zprof Product Requirements Document</title>
         <section>FR006: Import Current Setup</section>
         <snippet>System shall detect existing zsh framework configuration and prompt user to "Import current setup" or "Start fresh" when creating first profile</snippet>
-      </artifact>
-      <artifact>
+      </doc>
+      <doc>
         <path>docs/architecture.md</path>
         <title>Decision Architecture</title>
         <section>Pattern 1: CLI Command Structure</section>
         <snippet>Every command in src/cli/ follows structure with Clap Args derive, execute() function returning Result, with validate inputs, load config, perform operation, display output steps</snippet>
-      </artifact>
-      <artifact>
+      </doc>
+      <doc>
         <path>docs/architecture.md</path>
         <title>Decision Architecture</title>
         <section>Pattern 2: Error Handling</section>
         <snippet>ALL fallible operations MUST use anyhow::Result with context. Never show raw Rust errors - always provide what failed, why, and how to fix it</snippet>
-      </artifact>
-      <artifact>
+      </doc>
+      <doc>
         <path>docs/architecture.md</path>
         <title>Decision Architecture</title>
         <section>Pattern 3: Safe File Operations</section>
         <snippet>Pattern: Check -> Backup -> Operate -> Verify -> Cleanup. For imports: use copy NOT move to preserve originals (NFR002 compliance)</snippet>
-      </artifact>
-      <artifact>
+      </doc>
+      <doc>
         <path>docs/architecture.md</path>
         <title>Decision Architecture</title>
         <section>Pattern 4: TOML Manifest Schema</section>
         <snippet>profile.toml contains [profile] section with name, framework, theme, created, modified; [plugins] with enabled array; [env] for variables</snippet>
-      </artifact>
-      <artifact>
-        <path>docs/architecture.md</path>
-        <title>Decision Architecture</title>
-        <section>NFR002: Non-Destructive Operations</section>
+      </doc>
+      <doc>
+        <path>docs/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>NFR002</section>
         <snippet>System shall not modify or corrupt user's existing dotfiles; all operations must be non-destructive with automatic backups</snippet>
-      </artifact>
-      <artifact>
-        <path>docs/stories/1-4-framework-detection-for-smart-profile-creation.context.xml</path>
-        <title>Story 1.4 Context</title>
-        <section>Interfaces</section>
-        <snippet>detect_existing_framework() -> Option&lt;FrameworkInfo&gt; from frameworks/detector.rs. FrameworkInfo has framework_type, plugins, theme, config_path, install_path</snippet>
-      </artifact>
+      </doc>
     </docs>
     <code>
-      <!-- No existing code - greenfield implementation -->
-      <!-- Note: Story 1.4 (framework detection) is drafted but not yet implemented -->
-      <!-- Expected integration: frameworks::detector::detect_existing_framework() -->
+      <artifact>
+        <path>src/cli/create.rs</path>
+        <kind>command</kind>
+        <symbol>execute</symbol>
+        <lines>36-103</lines>
+        <reason>Main create command implementation - validates profile name, detects framework, prompts for import, handles wizard fallback</reason>
+      </artifact>
+      <artifact>
+        <path>src/cli/create.rs</path>
+        <kind>function</kind>
+        <symbol>validate_profile_name</symbol>
+        <lines>116-131</lines>
+        <reason>Profile name validation using regex - prevents path traversal and special characters</reason>
+      </artifact>
+      <artifact>
+        <path>src/cli/create.rs</path>
+        <kind>function</kind>
+        <symbol>copy_framework_files</symbol>
+        <lines>147-218</lines>
+        <reason>Safe framework file copying following Pattern 3 - copies .zshrc, .zshenv, framework dir with NFR002 verification</reason>
+      </artifact>
+      <artifact>
+        <path>src/frameworks/detector.rs</path>
+        <kind>function</kind>
+        <symbol>detect_existing_framework</symbol>
+        <lines>74-116</lines>
+        <reason>Framework detection from Story 1.4 - returns Option&lt;FrameworkInfo&gt; with framework type, plugins, theme, paths</reason>
+      </artifact>
+      <artifact>
+        <path>src/frameworks/detector.rs</path>
+        <kind>struct</kind>
+        <symbol>FrameworkInfo</symbol>
+        <lines>33-45</lines>
+        <reason>Data structure containing detected framework information used for import and manifest generation</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/manifest.rs</path>
+        <kind>struct</kind>
+        <symbol>Manifest</symbol>
+        <lines>14-36</lines>
+        <reason>TOML manifest structure following Pattern 4 - profile section, plugins section, env HashMap</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/manifest.rs</path>
+        <kind>method</kind>
+        <symbol>Manifest::from_framework_info</symbol>
+        <lines>56-72</lines>
+        <reason>Creates profile.toml manifest from FrameworkInfo with timestamps - used during import</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/manifest.rs</path>
+        <kind>method</kind>
+        <symbol>Manifest::from_wizard_state</symbol>
+        <lines>85-106</lines>
+        <reason>Creates manifest from TUI wizard selections when import declined - integrates with Story 1.6-1.8</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/filesystem.rs</path>
+        <kind>function</kind>
+        <symbol>copy_dir_recursive</symbol>
+        <lines>100-185</lines>
+        <reason>Safe recursive directory copy following Pattern 3 - preserves originals (NFR002), handles symlinks</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/filesystem.rs</path>
+        <kind>function</kind>
+        <symbol>get_zprof_dir</symbol>
+        <lines>6-10</lines>
+        <reason>Returns ~/.zsh-profiles/ base directory path - used for profile directory construction</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/config.rs</path>
+        <kind>struct</kind>
+        <symbol>Config</symbol>
+        <lines>all</lines>
+        <reason>Global config.toml management - updated to track newly created profiles</reason>
+      </artifact>
     </code>
     <dependencies>
       <rust>
-        <package name="anyhow" version="2.0" purpose="Error handling with context" />
-        <package name="clap" version="4.5.51" purpose="CLI argument parsing with derive macros" />
-        <package name="chrono" version="0.4" purpose="Timestamps for manifest creation/modification dates" />
-        <package name="dialoguer" version="0.11" purpose="Interactive y/n prompts for import confirmation" />
-        <package name="serde" version="1.0" purpose="TOML serialization with derive" />
-        <package name="toml" version="0.8" purpose="TOML parsing and generation" />
+        <package name="anyhow" version="1.0">Error handling with context following Pattern 2</package>
+        <package name="clap" version="4.5.51">CLI argument parsing with derive macros</package>
+        <package name="chrono" version="0.4">Timestamps for manifest creation/modification dates (with serde feature)</package>
+        <package name="dialoguer" version="0.11">Interactive y/n prompts for import confirmation</package>
+        <package name="serde" version="1.0">TOML serialization with derive</package>
+        <package name="toml" version="0.9">TOML parsing and generation</package>
+        <package name="regex" version="1.10">Profile name validation pattern matching</package>
       </rust>
     </dependencies>
   </artifacts>
 
   <constraints>
-    - Follow Pattern 1 (CLI Command Structure) for cli/create.rs implementation
-    - Follow Pattern 2 (Error Handling) with anyhow::Result and user-friendly context
-    - Follow Pattern 3 (Safe File Operations) - MUST use copy NOT move to preserve originals (NFR002)
-    - Follow Pattern 4 (TOML Manifest Schema) for profile.toml generation
-    - Original dotfiles MUST remain untouched after import (NFR002 critical requirement)
-    - Profile names must be validated (alphanumeric and hyphens only, no special chars)
-    - Check for existing profile name conflicts before creation
-    - Handle case-insensitive y/n input gracefully
-    - Use dialoguer crate for interactive prompts, not raw stdin
-    - Copy entire framework directory recursively (e.g., ~/.oh-my-zsh)
-    - Verify source files still exist after copy operation
-    - Log all operations with env_logger for debugging
-    - Display clear success message with framework details
+    <constraint id="1" source="architecture.md">Follow Pattern 1 (CLI Command Structure) for cli/create.rs implementation</constraint>
+    <constraint id="2" source="architecture.md">Follow Pattern 2 (Error Handling) with anyhow::Result and user-friendly context</constraint>
+    <constraint id="3" source="architecture.md">Follow Pattern 3 (Safe File Operations) - MUST use copy NOT move to preserve originals (NFR002)</constraint>
+    <constraint id="4" source="architecture.md">Follow Pattern 4 (TOML Manifest Schema) for profile.toml generation</constraint>
+    <constraint id="5" source="PRD.md NFR002">Original dotfiles MUST remain untouched after import (NFR002 critical requirement)</constraint>
+    <constraint id="6" source="story">Profile names must be validated (alphanumeric and hyphens only, no special chars)</constraint>
+    <constraint id="7" source="story">Check for existing profile name conflicts before creation</constraint>
+    <constraint id="8" source="story">Handle case-insensitive y/n input gracefully with dialoguer</constraint>
+    <constraint id="9" source="story">Use dialoguer crate for interactive prompts, not raw stdin</constraint>
+    <constraint id="10" source="story">Copy entire framework directory recursively (e.g., ~/.oh-my-zsh)</constraint>
+    <constraint id="11" source="story">Verify source files still exist after copy operation (NFR002 verification)</constraint>
+    <constraint id="12" source="story">Display clear success message with framework details</constraint>
+    <constraint id="13" source="story">Integrate with TUI wizard (Stories 1.6-1.8) when import declined or no framework detected</constraint>
   </constraints>
 
   <interfaces>
@@ -120,86 +278,77 @@ pub struct CreateArgs {
     pub name: String,
 }</signature>
       <path>src/cli/create.rs</path>
+      <description>CLI arguments for create command - accepts profile name as required positional argument</description>
     </interface>
     <interface>
       <name>execute</name>
       <kind>function</kind>
       <signature>pub fn execute(args: CreateArgs) -> Result&lt;()&gt;</signature>
       <path>src/cli/create.rs</path>
+      <description>Main create command execution - validates name, detects framework, prompts for import, creates profile</description>
     </interface>
     <interface>
-      <name>Manifest</name>
+      <name>detect_existing_framework</name>
+      <kind>function</kind>
+      <signature>pub fn detect_existing_framework() -> Option&lt;FrameworkInfo&gt;</signature>
+      <path>src/frameworks/detector.rs</path>
+      <description>Detects existing framework installations from Story 1.4. Returns None if no framework found, Some(FrameworkInfo) with framework details otherwise.</description>
+    </interface>
+    <interface>
+      <name>FrameworkInfo</name>
       <kind>struct</kind>
-      <signature>// Defined per Pattern 4 TOML schema
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Manifest {
-    pub profile: ProfileSection,
-    pub plugins: PluginsSection,
-    pub env: HashMap&lt;String, String&gt;,
+      <signature>pub struct FrameworkInfo {
+    pub framework_type: FrameworkType,
+    pub plugins: Vec&lt;String&gt;,
+    pub theme: String,
+    pub config_path: PathBuf,
+    pub install_path: PathBuf,
 }</signature>
+      <path>src/frameworks/detector.rs</path>
+      <description>Contains detected framework information used for import and manifest generation</description>
+    </interface>
+    <interface>
+      <name>Manifest::from_framework_info</name>
+      <kind>method</kind>
+      <signature>pub fn from_framework_info(name: &amp;str, framework_info: &amp;FrameworkInfo) -> Self</signature>
       <path>src/core/manifest.rs</path>
+      <description>Creates profile.toml manifest from framework detection information with timestamps</description>
     </interface>
     <interface>
       <name>copy_dir_recursive</name>
       <kind>function</kind>
       <signature>pub fn copy_dir_recursive(source: &amp;Path, dest: &amp;Path) -> Result&lt;()&gt;</signature>
       <path>src/core/filesystem.rs</path>
+      <description>Safely copies directory recursively following Pattern 3, preserving originals (NFR002), handles symlinks</description>
     </interface>
     <interface>
-      <name>detect_existing_framework</name>
-      <kind>function (from Story 1.4)</kind>
-      <signature>pub fn detect_existing_framework() -> Option&lt;FrameworkInfo&gt;</signature>
-      <path>src/frameworks/detector.rs</path>
+      <name>dialoguer::Confirm</name>
+      <kind>prompt</kind>
+      <signature>Confirm::new().with_prompt("...").default(bool).interact()?</signature>
+      <path>external crate</path>
+      <description>Interactive yes/no confirmation prompt for import decision</description>
     </interface>
   </interfaces>
 
   <tests>
-    <standards>Use insta for snapshot testing CLI output. Unit tests for CreateArgs parsing, manifest generation, and file operations. Integration tests for full `zprof create work` flow with mock framework detection. Use tempfile crate for temporary test directories. Test that original dotfiles remain unchanged (NFR002 verification).</standards>
+    <standards>
+      <paragraph>Tests use Rust's built-in test framework with #[test] attributes. Integration tests live in tests/ directory, unit tests in module files. Use tempfile crate for filesystem tests with isolated temp directories. NFR002 compliance tests are CRITICAL - verify originals remain untouched after operations. Use insta for snapshot testing CLI output. All integration tests use serial_test to prevent race conditions.</paragraph>
+    </standards>
     <locations>
-      - tests/create_test.rs (integration tests)
-      - src/cli/create.rs (unit tests via #[cfg(test)])
-      - src/core/manifest.rs (unit tests via #[cfg(test)])
-      - src/core/filesystem.rs (unit tests via #[cfg(test)])
+      <location>tests/create_test.rs</location>
+      <location>src/cli/create.rs (unit tests in mod tests)</location>
+      <location>src/core/manifest.rs (unit tests in mod tests)</location>
+      <location>src/core/filesystem.rs (unit tests in mod tests)</location>
     </locations>
     <ideas>
-      <test id="AC1" description="Interactive import prompt when framework detected">
-        - Test 'y' response triggers import flow
-        - Test 'n' response skips import
-        - Test case-insensitive input (Y, y, N, n)
-        - Test invalid input handling
-      </test>
-      <test id="AC2-AC3" description="File copying and configuration preservation">
-        - Mock framework detection returning FrameworkInfo
-        - Verify framework directory copied recursively
-        - Verify .zshrc copied to profile directory
-        - Verify .zshenv copied if exists
-        - Verify plugins, theme, and config preserved
-      </test>
-      <test id="AC4" description="TOML manifest generation">
-        - Verify profile.toml created with correct schema
-        - Test manifest contains framework type, plugins, theme
-        - Test creation and modification timestamps
-        - Test manifest can be parsed back successfully
-      </test>
-      <test id="AC5" description="NFR002: Original dotfiles untouched">
-        - Compare original files before and after import
-        - Verify original file timestamps unchanged
-        - Verify original file contents unchanged
-        - Verify copy operation, not move
-      </test>
-      <test id="AC6" description="Success message and profile tracking">
-        - Snapshot test CLI success output with insta
-        - Verify framework details displayed
-        - Verify profile path shown
-        - Verify next steps suggestion included
-      </test>
-      <test id="Edge Cases" description="Error handling and validation">
-        - Test profile name already exists error
-        - Test invalid profile name (special chars, paths)
-        - Test permission errors during file copy
-        - Test no framework detected scenario
-        - Test partial framework detection
-      </test>
+      <idea ac="1">Integration test: Mock framework detection, verify user prompted with correct message</idea>
+      <idea ac="2,3,4">Integration test: Accept import, verify profile created with manifest and framework files copied</idea>
+      <idea ac="5">Integration test: CRITICAL NFR002 - Verify ~/.zshrc and ~/.zshenv unchanged after copy (lines 181-184 in create.rs)</idea>
+      <idea ac="6">Snapshot test: Capture success message output with import details using insta</idea>
+      <idea ac="1">Integration test: Decline import, verify TUI wizard launched (Stories 1.6-1.8 integration)</idea>
+      <idea ac="all">Unit test: Profile name validation rejects special chars and path traversal</idea>
+      <idea ac="all">Integration test: Profile name conflict shows clear error with suggestion</idea>
+      <idea ac="all">Unit test: Manifest generation from FrameworkInfo includes timestamps and correct schema</idea>
     </ideas>
   </tests>
 </story-context>

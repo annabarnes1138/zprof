@@ -275,7 +275,7 @@ Since Story 1.4 is drafted but not implemented, Story 1.5 implementation should:
 
 ### Context Reference
 
-- docs/stories/1-5-profile-creation-with-import-current-setup.context.xml
+- [Story Context XML](1-5-profile-creation-with-import-current-setup.context.xml) - Generated 2025-10-31, Regenerated 2025-11-01 with existing code artifacts
 
 ### Agent Model Used
 

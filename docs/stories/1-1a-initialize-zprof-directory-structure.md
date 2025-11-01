@@ -1,6 +1,10 @@
-# Story 1.1: Initialize zprof Directory Structure
+# Story 1.1a: Initialize zprof Directory Structure
 
 Status: done
+
+**Note:** This story has been split into substories:
+- **Story 1.1a (this story):** Directory structure initialization - DONE
+- **Story 1.1b:** Framework detection and import during init - TODO
 
 ## Story
 

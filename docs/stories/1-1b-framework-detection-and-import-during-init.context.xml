@@ -1,0 +1,289 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1b</storyId>
+    <title>Framework Detection and Import During Init</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-01</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-1b-framework-detection-and-import-during-init.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer with an existing zsh framework</asA>
+    <iWant>zprof to detect and import my current setup during initialization</iWant>
+    <soThat>I can immediately start using profile switching without manual migration</soThat>
+    <tasks>
+      <task id="1" ac="1,2">
+        <description>Integrate framework detection during init</description>
+        <subtasks>
+          <subtask>Call frameworks::detector::detect_existing_framework() from Story 1.4</subtask>
+          <subtask>Display detected framework details to user (type, plugins, theme)</subtask>
+          <subtask>Handle case when no framework detected (continue with basic init)</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="2,3,11">
+        <description>Implement interactive import prompt</description>
+        <subtasks>
+          <subtask>Use dialoguer::Confirm for "Import as a profile? (y/n)" prompt</subtask>
+          <subtask>Use dialoguer::Input for profile name with default "default"</subtask>
+          <subtask>Handle 'y', 'n', and invalid inputs with clear feedback</subtask>
+          <subtask>On 'n', display message that user can create profiles later with `zprof create`</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="4,8">
+        <description>Import framework configuration to profile</description>
+        <subtasks>
+          <subtask>Create profile directory at ~/.zsh-profiles/profiles/&lt;name&gt;/</subtask>
+          <subtask>Use core/filesystem.rs safe file operations following Pattern 3</subtask>
+          <subtask>Copy framework installation directory (e.g., ~/.oh-my-zsh → profile/.oh-my-zsh)</subtask>
+          <subtask>Copy .zshrc to profile/.zshrc</subtask>
+          <subtask>Copy .zshenv (if exists and doesn't conflict with zprof's ZDOTDIR export) to profile/.zshenv</subtask>
+          <subtask>Copy any framework-specific config files (.zimrc, .zpreztorc, etc.)</subtask>
+          <subtask>Generate profile.toml manifest using core/manifest.rs from Story 1.5</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="5,6,7">
+        <description>Manage ~/.zshenv for profile switching</description>
+        <subtasks>
+          <subtask>Implement backup of existing ~/.zshenv with timestamp</subtask>
+          <subtask>Create/update ~/.zshenv to export ZDOTDIR following Pattern 5</subtask>
+          <subtask>Add comment in ~/.zshenv: "# Managed by zprof - DO NOT EDIT MANUALLY"</subtask>
+          <subtask>Include backup path reference in comment</subtask>
+          <subtask>Verify user's ~/.zshrc is NOT modified (NFR002 compliance)</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="9">
+        <description>Update global config with imported profile</description>
+        <subtasks>
+          <subtask>Load ~/.zsh-profiles/config.toml using core/config.rs</subtask>
+          <subtask>Set active_profile field to imported profile name</subtask>
+          <subtask>Add profile to tracked profiles list</subtask>
+          <subtask>Save updated config.toml</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="10">
+        <description>Display success message</description>
+        <subtasks>
+          <subtask>Show confirmation: "✓ Imported [framework] as profile '[name]' (now active)"</subtask>
+          <subtask>Display framework details: type, plugin count, theme</subtask>
+          <subtask>Show profile location path</subtask>
+          <subtask>Show .zshenv backup location</subtask>
+          <subtask>Inform user: "Open a new terminal to use this profile"</subtask>
+          <subtask>Follow error message format from architecture.md consistency rules</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="all">
+        <description>Handle edge cases and errors</description>
+        <subtasks>
+          <subtask>Handle permission errors during .zshenv backup/modification with context using Pattern 2</subtask>
+          <subtask>Handle case where .zshenv already has ZDOTDIR set (warn user, ask to overwrite)</subtask>
+          <subtask>Gracefully handle partial framework detection (some config missing)</subtask>
+          <subtask>Handle profile name conflicts (unlikely during init, but validate)</subtask>
+          <subtask>Log operations with env_logger for debugging</subtask>
+        </subtasks>
+      </task>
+      <task id="8" ac="all">
+        <description>Write comprehensive tests</description>
+        <subtasks>
+          <subtask>Integration test: init with oh-my-zsh detected → import → verify profile created</subtask>
+          <subtask>Integration test: init with framework detected, user chooses 'n' → no import</subtask>
+          <subtask>Integration test: verify .zshenv created/updated with ZDOTDIR</subtask>
+          <subtask>Integration test: verify .zshenv backup created with timestamp</subtask>
+          <subtask>Integration test: verify user's .zshrc untouched (NFR002 critical)</subtask>
+          <subtask>Integration test: verify imported profile set as active in config.toml</subtask>
+          <subtask>Unit test: ZDOTDIR path generation is correct</subtask>
+          <subtask>Unit test: backup filename generation with timestamp</subtask>
+          <subtask>Snapshot test: CLI output for successful import</subtask>
+          <subtask>Snapshot test: CLI output when user declines import</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">During `zprof init`, system detects existing zsh framework (oh-my-zsh, prezto, zimfw, zinit, zap) installations</criterion>
+    <criterion id="2">If framework detected, prompts user: "Existing [framework] detected with [N] plugins and '[theme]' theme. Import as a profile? (y/n)"</criterion>
+    <criterion id="3">On "y", prompts for profile name with default: "default"</criterion>
+    <criterion id="4">System imports detected framework configuration into new profile directory</criterion>
+    <criterion id="5">Backs up existing `~/.zshenv` to `~/.zsh-profiles/cache/backups/.zshenv.backup.TIMESTAMP` (if file exists)</criterion>
+    <criterion id="6">Creates or updates `~/.zshenv` to set `ZDOTDIR` pointing to imported profile directory</criterion>
+    <criterion id="7">User's `~/.zshrc` remains completely untouched (framework init becomes unreachable due to ZDOTDIR precedence)</criterion>
+    <criterion id="8">TOML manifest is generated from imported framework configuration</criterion>
+    <criterion id="9">Imported profile is set as active profile in global `config.toml`</criterion>
+    <criterion id="10">Success message displays import details: framework type, plugin count, theme, and profile name</criterion>
+    <criterion id="11">If user chooses "n" (skip import), init completes without import and user can create profiles manually later</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Pattern 5: Shell Integration</section>
+        <snippet>Set ZDOTDIR to profile directory via ~/.zshenv. This causes zsh to source $ZDOTDIR/.zshrc instead of ~/.zshrc, enabling profile switching while preserving user's original .zshrc untouched (NFR002).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Module Structure - shell/</section>
+        <snippet>shell/zdotdir.rs - ZDOTDIR manipulation for profile switching</snippet>
+      </doc>
+      <doc>
+        <path>docs/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR006</section>
+        <snippet>System shall detect existing zsh framework configuration and prompt user to "Import current setup" or "Start fresh" when creating first profile</snippet>
+      </doc>
+      <doc>
+        <path>docs/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>NFR002</section>
+        <snippet>System shall not modify or corrupt user's existing dotfiles; all operations must be non-destructive with automatic backups</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-change-proposal-2025-11-01.md</path>
+        <title>Sprint Change Proposal - Shell Initialization Architecture Gap</title>
+        <section>Pattern 5 Technical Details</section>
+        <snippet>zprof manages ~/.zshenv to control profile loading. Setting ZDOTDIR in .zshenv causes zsh to source $ZDOTDIR/.zshrc instead of ~/.zshrc. User's original ~/.zshrc remains pristine and untouched (strong NFR002 compliance).</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/cli/init.rs</path>
+        <kind>command</kind>
+        <symbol>execute</symbol>
+        <lines>12-45</lines>
+        <reason>Existing init command implementation from Story 1.1a - needs enhancement with framework detection and import flow</reason>
+      </artifact>
+      <artifact>
+        <path>src/frameworks/detector.rs</path>
+        <kind>module</kind>
+        <symbol>detect_existing_framework</symbol>
+        <lines>74-116</lines>
+        <reason>Framework detection function from Story 1.4 - returns Option&lt;FrameworkInfo&gt; with framework type, plugins, theme, config path, and install path</reason>
+      </artifact>
+      <artifact>
+        <path>src/frameworks/detector.rs</path>
+        <kind>struct</kind>
+        <symbol>FrameworkInfo</symbol>
+        <lines>33-45</lines>
+        <reason>Data structure containing detected framework information (type, plugins, theme, paths) - used for import</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/manifest.rs</path>
+        <kind>module</kind>
+        <symbol>Manifest::from_framework_info</symbol>
+        <lines>56-72</lines>
+        <reason>Creates profile.toml manifest from FrameworkInfo - reused from Story 1.5 for generating manifest during import</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/filesystem.rs</path>
+        <kind>module</kind>
+        <symbol>copy_dir_recursive</symbol>
+        <lines>100-185</lines>
+        <reason>Safe file copy following Pattern 3 with NFR002 compliance - copies framework installation preserving originals</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/filesystem.rs</path>
+        <kind>module</kind>
+        <symbol>get_zprof_dir</symbol>
+        <lines>6-10</lines>
+        <reason>Returns ~/.zsh-profiles/ base directory path - used for constructing profile and backup paths</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/config.rs</path>
+        <kind>module</kind>
+        <symbol>Config</symbol>
+        <lines>all</lines>
+        <reason>Global config.toml management - needs to be updated with active_profile field after import</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="dialoguer" version="0.11">Interactive prompts for import confirmation and profile name input</package>
+        <package name="chrono" version="0.4">Timestamp generation for .zshenv backup filenames</package>
+        <package name="anyhow" version="1.0">Error handling with context following Pattern 2</package>
+        <package name="clap" version="4.5.51">CLI argument parsing (already used in init.rs)</package>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint id="1" source="architecture.md">Follow Pattern 1 (CLI Command Structure) for enhancing init command</constraint>
+    <constraint id="2" source="architecture.md">Follow Pattern 2 (Error Handling) with anyhow::Result and context for all operations</constraint>
+    <constraint id="3" source="architecture.md">Follow Pattern 3 (Safe File Operations) for all file operations - Check → Backup → Operate → Verify flow</constraint>
+    <constraint id="4" source="architecture.md">Follow Pattern 5 (Shell Integration via .zshenv) - manage ~/.zshenv NOT ~/.zshrc</constraint>
+    <constraint id="5" source="PRD.md NFR002">CRITICAL: User's ~/.zshrc must remain completely untouched - verify in tests</constraint>
+    <constraint id="6" source="PRD.md NFR002">All destructive operations require automatic backups - backup ~/.zshenv before modification with timestamp</constraint>
+    <constraint id="7" source="story">Create new shell/zdotdir.rs module for ZDOTDIR management</constraint>
+    <constraint id="8" source="story">Enhance existing cli/init.rs from Story 1.1a - don't create new file</constraint>
+    <constraint id="9" source="story">Reuse frameworks::detector from Story 1.4 and core/manifest from Story 1.5</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>detect_existing_framework</name>
+      <kind>function</kind>
+      <signature>pub fn detect_existing_framework() -> Option&lt;FrameworkInfo&gt;</signature>
+      <path>src/frameworks/detector.rs</path>
+      <description>Detects existing framework installations. Returns None if no framework found, Some(FrameworkInfo) with framework details otherwise.</description>
+    </interface>
+    <interface>
+      <name>FrameworkInfo</name>
+      <kind>struct</kind>
+      <signature>pub struct FrameworkInfo { pub framework_type: FrameworkType, pub plugins: Vec&lt;String&gt;, pub theme: String, pub config_path: PathBuf, pub install_path: PathBuf }</signature>
+      <path>src/frameworks/detector.rs</path>
+      <description>Contains detected framework information used for import</description>
+    </interface>
+    <interface>
+      <name>Manifest::from_framework_info</name>
+      <kind>method</kind>
+      <signature>pub fn from_framework_info(name: &amp;str, framework_info: &amp;FrameworkInfo) -> Self</signature>
+      <path>src/core/manifest.rs</path>
+      <description>Creates profile.toml manifest from framework detection information</description>
+    </interface>
+    <interface>
+      <name>copy_dir_recursive</name>
+      <kind>function</kind>
+      <signature>pub fn copy_dir_recursive(source: &amp;Path, dest: &amp;Path) -> Result&lt;()&gt;</signature>
+      <path>src/core/filesystem.rs</path>
+      <description>Safely copies directory recursively following Pattern 3, preserving originals (NFR002)</description>
+    </interface>
+    <interface>
+      <name>dialoguer::Confirm</name>
+      <kind>prompt</kind>
+      <signature>Confirm::new().with_prompt("...").default(bool).interact()?</signature>
+      <path>external crate</path>
+      <description>Interactive yes/no confirmation prompt for import decision</description>
+    </interface>
+    <interface>
+      <name>dialoguer::Input</name>
+      <kind>prompt</kind>
+      <signature>Input::new().with_prompt("...").default("...").interact_text()?</signature>
+      <path>external crate</path>
+      <description>Interactive text input prompt for profile name</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      <paragraph>Tests use Rust's built-in test framework with #[test] attributes. Integration tests live in tests/ directory, unit tests in module files. Use tempfile crate for filesystem tests with isolated temp directories. NFR002 compliance tests are critical - verify originals remain untouched after operations. Use insta for snapshot testing CLI output.</paragraph>
+    </standards>
+    <locations>
+      <location>tests/init_test.rs</location>
+      <location>src/cli/init.rs (unit tests in mod tests)</location>
+      <location>src/shell/zdotdir.rs (new module with unit tests)</location>
+    </locations>
+    <ideas>
+      <idea ac="1,2">Integration test: Mock framework detection, verify user prompted correctly</idea>
+      <idea ac="3,4,8">Integration test: Accept import, verify profile created with manifest</idea>
+      <idea ac="5">Integration test: Verify .zshenv backup created with timestamp format</idea>
+      <idea ac="6">Integration test: Verify .zshenv contains ZDOTDIR export to profile directory</idea>
+      <idea ac="7">Integration test: CRITICAL - Verify ~/.zshrc never modified (NFR002)</idea>
+      <idea ac="9">Integration test: Verify config.toml updated with active_profile</idea>
+      <idea ac="10">Snapshot test: Capture success message output with import details</idea>
+      <idea ac="11">Integration test: Decline import, verify clean init without profile</idea>
+    </ideas>
+  </tests>
+</story-context>
