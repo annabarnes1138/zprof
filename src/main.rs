@@ -22,6 +22,8 @@ enum Commands {
     Create(cli::create::CreateArgs),
     /// Display the currently active profile
     Current(cli::current::CurrentArgs),
+    /// Delete a profile
+    Delete(cli::delete::DeleteArgs),
     /// Initialize zprof directory structure
     Init(cli::init::InitArgs),
     /// List all available zsh profiles
@@ -39,6 +41,7 @@ fn main() -> Result<()> {
     match cli.command {
         Commands::Create(args) => cli::create::execute(args),
         Commands::Current(args) => cli::current::execute(args),
+        Commands::Delete(args) => cli::delete::execute(args),
         Commands::Init(args) => cli::init::execute(args),
         Commands::List(args) => cli::list::execute(args),
         Commands::Use(args) => cli::use_cmd::execute(args),

@@ -184,6 +184,80 @@ pub fn copy_dir_recursive(source: &Path, dest: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Create and return path to backup directory for deletion operations
+fn create_backup_directory() -> Result<PathBuf> {
+    let base_dir = get_zprof_dir()?;
+    let backup_dir = base_dir.join("cache").join("backups");
+
+    fs::create_dir_all(&backup_dir)
+        .context("Failed to create backups directory")?;
+
+    Ok(backup_dir)
+}
+
+/// Safely delete a directory following Pattern 3: Check → Backup → Operate → Verify → Cleanup
+///
+/// This implements NFR002 non-destructive operations by creating a backup before deletion.
+/// The backup is retained even after successful deletion for safety.
+///
+/// # Arguments
+///
+/// * `dir_path` - Directory to delete
+/// * `reason` - Human-readable reason for deletion (for logging)
+///
+/// # Errors
+///
+/// Returns error if:
+/// - Directory does not exist
+/// - Path is not a directory
+/// - Backup creation fails
+/// - Deletion fails (backup is preserved)
+///
+/// # Examples
+///
+/// ```no_run
+/// use std::path::Path;
+/// use zprof::core::filesystem::safe_delete_directory;
+///
+/// let profile_path = Path::new("/home/user/.zsh-profiles/profiles/old-profile");
+/// safe_delete_directory(profile_path, "User requested deletion").unwrap();
+/// ```
+pub fn safe_delete_directory(dir_path: &Path, reason: &str) -> Result<()> {
+    // Check: Verify directory exists and is valid
+    ensure!(dir_path.exists(), "Directory does not exist: {:?}", dir_path);
+    ensure!(dir_path.is_dir(), "Path is not a directory: {:?}", dir_path);
+
+    // Backup: Create timestamped backup before deletion
+    let backup_dir = create_backup_directory()?;
+    let timestamp = chrono::Local::now().format("%Y%m%d-%H%M%S");
+    let dir_name = dir_path.file_name()
+        .context("Invalid directory path")?;
+    let backup_path = backup_dir.join(format!("{}-{}",
+        dir_name.to_string_lossy(), timestamp));
+
+    log::debug!("Creating backup at {:?}", backup_path);
+    copy_dir_recursive(dir_path, &backup_path)
+        .context("Failed to create backup before deletion")?;
+
+    // Operate: Delete original directory
+    match fs::remove_dir_all(dir_path) {
+        Ok(_) => {
+            log::info!("Deleted directory: {:?} (reason: {})", dir_path, reason);
+            // Verify: Confirm deletion succeeded
+            if dir_path.exists() {
+                anyhow::bail!("Directory still exists after deletion attempt: {:?}", dir_path);
+            }
+            // Cleanup: Keep backup for safety (as per NFR002)
+            log::debug!("Backup retained at {:?}", backup_path);
+            Ok(())
+        }
+        Err(e) => {
+            log::error!("Failed to delete directory, backup preserved at {:?}", backup_path);
+            Err(e).context(format!("Failed to delete directory {:?}", dir_path))
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -254,5 +328,49 @@ mod tests {
             .unwrap_err()
             .to_string()
             .contains("Source directory does not exist"));
+    }
+
+    #[test]
+    fn test_safe_delete_directory_success() {
+        let temp = TempDir::new().unwrap();
+        let dir_to_delete = temp.path().join("test-profile");
+        fs::create_dir_all(&dir_to_delete).unwrap();
+        fs::write(dir_to_delete.join("file.txt"), "content").unwrap();
+
+        // Mock the backup directory to use temp location
+        // In real usage, backups go to ~/.zsh-profiles/cache/backups
+        // For this test, safe_delete_directory will create backup in the real location
+        // We can't easily test the backup without mocking, so we verify deletion works
+
+        let result = safe_delete_directory(&dir_to_delete, "test deletion");
+        assert!(result.is_ok());
+        assert!(!dir_to_delete.exists());
+    }
+
+    #[test]
+    fn test_safe_delete_directory_not_exists() {
+        let temp = TempDir::new().unwrap();
+        let nonexistent = temp.path().join("nonexistent");
+
+        let result = safe_delete_directory(&nonexistent, "test");
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Directory does not exist"));
+    }
+
+    #[test]
+    fn test_safe_delete_directory_not_a_directory() {
+        let temp = TempDir::new().unwrap();
+        let file_path = temp.path().join("file.txt");
+        fs::write(&file_path, "content").unwrap();
+
+        let result = safe_delete_directory(&file_path, "test");
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Path is not a directory"));
     }
 }
