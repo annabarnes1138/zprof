@@ -1,0 +1,9 @@
+---
+source: tests/list_test.rs
+expression: stdout.trim()
+---
+Available profiles:
+
+  experimental    (zimfw)
+  minimal         (zinit)
+→ work            (oh-my-zsh)

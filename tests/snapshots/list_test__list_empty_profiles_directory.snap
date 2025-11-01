@@ -1,0 +1,5 @@
+---
+source: tests/list_test.rs
+expression: stdout.trim()
+---
+No profiles found. Create your first profile with 'zprof create <name>'

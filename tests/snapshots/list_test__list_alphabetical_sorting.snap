@@ -1,0 +1,9 @@
+---
+source: tests/list_test.rs
+expression: stdout.trim()
+---
+Available profiles:
+
+→ alpha           (zimfw)
+  middle          (zinit)
+  zebra           (oh-my-zsh)

@@ -1,0 +1,8 @@
+---
+source: tests/list_test.rs
+expression: stdout.trim()
+---
+Available profiles:
+
+  minimal         (zinit)
+  work            (oh-my-zsh)

@@ -17,6 +17,8 @@ struct Cli {
 enum Commands {
     /// Initialize zprof directory structure
     Init(cli::init::InitArgs),
+    /// List all available zsh profiles
+    List(cli::list::ListArgs),
 }
 
 fn main() -> Result<()> {
@@ -24,5 +26,6 @@ fn main() -> Result<()> {
 
     match cli.command {
         Commands::Init(args) => cli::init::execute(args),
+        Commands::List(args) => cli::list::execute(args),
     }
 }
