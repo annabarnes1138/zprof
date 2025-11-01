@@ -3,7 +3,7 @@
 //! Detects oh-my-zsh installations by looking for ~/.oh-my-zsh directory
 //! and parsing ~/.zshrc for plugin and theme configuration.
 
-use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, Theme};
+use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, PluginCategory, Theme};
 use anyhow::Result;
 use std::fs;
 use std::path::Path;
@@ -84,8 +84,83 @@ impl Framework for OhMyZsh {
     }
 
     fn get_plugins() -> Vec<Plugin> {
-        // Not implemented in this story
-        vec![]
+        vec![
+            Plugin {
+                name: "git".to_string(),
+                description: "Git aliases and functions".to_string(),
+                category: PluginCategory::Git,
+            },
+            Plugin {
+                name: "docker".to_string(),
+                description: "Docker aliases and completion".to_string(),
+                category: PluginCategory::Docker,
+            },
+            Plugin {
+                name: "kubectl".to_string(),
+                description: "Kubernetes kubectl aliases and completion".to_string(),
+                category: PluginCategory::Kubernetes,
+            },
+            Plugin {
+                name: "rust".to_string(),
+                description: "Rust language support and cargo aliases".to_string(),
+                category: PluginCategory::Language,
+            },
+            Plugin {
+                name: "fzf".to_string(),
+                description: "Fuzzy file finder integration".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "zsh-autosuggestions".to_string(),
+                description: "Fish-like autosuggestions for zsh".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "zsh-syntax-highlighting".to_string(),
+                description: "Syntax highlighting for commands".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "z".to_string(),
+                description: "Jump to frequently used directories".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "nvm".to_string(),
+                description: "Node Version Manager integration".to_string(),
+                category: PluginCategory::Language,
+            },
+            Plugin {
+                name: "brew".to_string(),
+                description: "Homebrew completion and aliases".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "sudo".to_string(),
+                description: "Prefix last command with sudo using ESC-ESC".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "history".to_string(),
+                description: "History search and aliases".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "aws".to_string(),
+                description: "AWS CLI completion".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "terraform".to_string(),
+                description: "Terraform completion and aliases".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "node".to_string(),
+                description: "Node.js aliases and utilities".to_string(),
+                category: PluginCategory::Language,
+            },
+        ]
     }
 
     fn get_themes() -> Vec<Theme> {

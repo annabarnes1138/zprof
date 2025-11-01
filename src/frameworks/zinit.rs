@@ -3,7 +3,7 @@
 //! Detects zinit installations by looking for ~/.zinit or ~/.local/share/zinit directory
 //! and parsing ~/.zshrc for zinit plugin declarations.
 
-use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, Theme};
+use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, PluginCategory, Theme};
 use anyhow::Result;
 use std::fs;
 use std::path::Path;
@@ -85,7 +85,83 @@ impl Framework for Zinit {
     }
 
     fn get_plugins() -> Vec<Plugin> {
-        vec![]
+        vec![
+            Plugin {
+                name: "git".to_string(),
+                description: "Git aliases and functions".to_string(),
+                category: PluginCategory::Git,
+            },
+            Plugin {
+                name: "docker".to_string(),
+                description: "Docker completion and utilities".to_string(),
+                category: PluginCategory::Docker,
+            },
+            Plugin {
+                name: "kubectl".to_string(),
+                description: "Kubernetes completion".to_string(),
+                category: PluginCategory::Kubernetes,
+            },
+            Plugin {
+                name: "fzf".to_string(),
+                description: "Fuzzy finder integration".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "zsh-autosuggestions".to_string(),
+                description: "Fish-like autosuggestions".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "fast-syntax-highlighting".to_string(),
+                description: "Fast syntax highlighting for zinit".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "zsh-completions".to_string(),
+                description: "Additional completion definitions".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "history-search-multi-word".to_string(),
+                description: "Multi-word history search".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "rust".to_string(),
+                description: "Rust toolchain support".to_string(),
+                category: PluginCategory::Language,
+            },
+            Plugin {
+                name: "node".to_string(),
+                description: "Node.js utilities".to_string(),
+                category: PluginCategory::Language,
+            },
+            Plugin {
+                name: "python".to_string(),
+                description: "Python virtual environment support".to_string(),
+                category: PluginCategory::Language,
+            },
+            Plugin {
+                name: "direnv".to_string(),
+                description: "Environment switcher for shell".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "aws".to_string(),
+                description: "AWS CLI completion".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "terraform".to_string(),
+                description: "Terraform completion".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "colored-man-pages".to_string(),
+                description: "Colorized man pages".to_string(),
+                category: PluginCategory::Utility,
+            },
+        ]
     }
 
     fn get_themes() -> Vec<Theme> {

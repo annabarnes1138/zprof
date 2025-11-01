@@ -3,7 +3,7 @@
 //! Detects zap installations by looking for ~/.local/share/zap directory
 //! and parsing ~/.zshrc for zap plugin declarations.
 
-use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, Theme};
+use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, PluginCategory, Theme};
 use anyhow::Result;
 use std::fs;
 use std::path::Path;
@@ -81,7 +81,83 @@ impl Framework for Zap {
     }
 
     fn get_plugins() -> Vec<Plugin> {
-        vec![]
+        vec![
+            Plugin {
+                name: "git".to_string(),
+                description: "Git integration and aliases".to_string(),
+                category: PluginCategory::Git,
+            },
+            Plugin {
+                name: "docker".to_string(),
+                description: "Docker aliases and completion".to_string(),
+                category: PluginCategory::Docker,
+            },
+            Plugin {
+                name: "kubectl".to_string(),
+                description: "Kubernetes kubectl completion".to_string(),
+                category: PluginCategory::Kubernetes,
+            },
+            Plugin {
+                name: "fzf".to_string(),
+                description: "Fuzzy finder for files and history".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "zsh-autosuggestions".to_string(),
+                description: "Command suggestions as you type".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "zsh-syntax-highlighting".to_string(),
+                description: "Syntax highlighting in terminal".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "zsh-vi-mode".to_string(),
+                description: "Vi mode improvements for zsh".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "eza".to_string(),
+                description: "Modern ls replacement with git integration".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "rust".to_string(),
+                description: "Rust development utilities".to_string(),
+                category: PluginCategory::Language,
+            },
+            Plugin {
+                name: "node".to_string(),
+                description: "Node.js and npm utilities".to_string(),
+                category: PluginCategory::Language,
+            },
+            Plugin {
+                name: "python".to_string(),
+                description: "Python environment management".to_string(),
+                category: PluginCategory::Language,
+            },
+            Plugin {
+                name: "bat".to_string(),
+                description: "Cat clone with syntax highlighting".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "ripgrep".to_string(),
+                description: "Fast recursive grep".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "starship".to_string(),
+                description: "Cross-shell prompt".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "zoxide".to_string(),
+                description: "Smarter cd command".to_string(),
+                category: PluginCategory::Utility,
+            },
+        ]
     }
 
     fn get_themes() -> Vec<Theme> {

@@ -3,7 +3,7 @@
 //! Detects zimfw installations by looking for ~/.zim or ~/.zimfw directory
 //! and parsing ~/.zimrc for module configuration.
 
-use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, Theme};
+use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, PluginCategory, Theme};
 use anyhow::Result;
 use std::fs;
 use std::path::Path;
@@ -80,7 +80,83 @@ impl Framework for Zimfw {
     }
 
     fn get_plugins() -> Vec<Plugin> {
-        vec![]
+        vec![
+            Plugin {
+                name: "git".to_string(),
+                description: "Git aliases and functions".to_string(),
+                category: PluginCategory::Git,
+            },
+            Plugin {
+                name: "docker".to_string(),
+                description: "Docker completion and aliases".to_string(),
+                category: PluginCategory::Docker,
+            },
+            Plugin {
+                name: "kubectl".to_string(),
+                description: "Kubectl completion and aliases".to_string(),
+                category: PluginCategory::Kubernetes,
+            },
+            Plugin {
+                name: "rust".to_string(),
+                description: "Rust and Cargo completions".to_string(),
+                category: PluginCategory::Language,
+            },
+            Plugin {
+                name: "fzf".to_string(),
+                description: "Fuzzy finder integration".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "zsh-autosuggestions".to_string(),
+                description: "Fish-like autosuggestions".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "zsh-syntax-highlighting".to_string(),
+                description: "Syntax highlighting for zsh".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "zoxide".to_string(),
+                description: "Smarter cd command that learns your habits".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "node".to_string(),
+                description: "Node.js completion and utilities".to_string(),
+                category: PluginCategory::Language,
+            },
+            Plugin {
+                name: "python".to_string(),
+                description: "Python virtual environment support".to_string(),
+                category: PluginCategory::Language,
+            },
+            Plugin {
+                name: "exa".to_string(),
+                description: "Modern replacement for ls".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "archive".to_string(),
+                description: "Archive extraction utilities".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "ssh".to_string(),
+                description: "SSH completion and utilities".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "terraform".to_string(),
+                description: "Terraform completion".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "completion".to_string(),
+                description: "Enhanced tab completion".to_string(),
+                category: PluginCategory::Utility,
+            },
+        ]
     }
 
     fn get_themes() -> Vec<Theme> {

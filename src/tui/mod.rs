@@ -4,6 +4,7 @@
 //! plugin selection, theme browsing, and other interactive workflows.
 
 pub mod framework_select;
+pub mod plugin_browser;
 
 use anyhow::Result;
 use crossterm::{

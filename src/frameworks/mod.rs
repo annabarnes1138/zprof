@@ -4,11 +4,11 @@
 //! various zsh framework installations (oh-my-zsh, zimfw, prezto, zinit, zap).
 
 mod detector;
-mod oh_my_zsh;
-mod prezto;
-mod zap;
-mod zimfw;
-mod zinit;
+pub mod oh_my_zsh;
+pub mod prezto;
+pub mod zap;
+pub mod zimfw;
+pub mod zinit;
 
 pub use detector::detect_existing_framework;
 pub use detector::FrameworkInfo;
@@ -41,10 +41,22 @@ pub trait Framework {
     fn get_themes() -> Vec<Theme>;
 }
 
-/// Placeholder for Plugin type (to be implemented in future stories)
+/// Plugin data model for framework plugins
 #[derive(Debug, Clone)]
 pub struct Plugin {
     pub name: String,
+    pub description: String,
+    pub category: PluginCategory,
+}
+
+/// Plugin categories for organizing plugins
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PluginCategory {
+    Git,
+    Docker,
+    Kubernetes,
+    Language,
+    Utility,
 }
 
 /// Placeholder for Theme type (to be implemented in future stories)

@@ -14,7 +14,7 @@ use crate::core::config::Config;
 use crate::core::filesystem::{copy_dir_recursive, get_zprof_dir};
 use crate::core::manifest::Manifest;
 use crate::frameworks::detect_existing_framework;
-use crate::tui::framework_select;
+use crate::tui::{framework_select, plugin_browser};
 
 /// Arguments for the create command
 #[derive(Debug, Args)]
@@ -49,7 +49,7 @@ pub fn execute(args: CreateArgs) -> Result<()> {
     let detected_framework = detect_existing_framework();
 
     // 3. Determine framework (from detection or TUI wizard)
-    let (selected_framework, should_import_files) = if let Some(info) = detected_framework.as_ref() {
+    let (selected_framework, should_import_files, wizard_plugins) = if let Some(info) = detected_framework.as_ref() {
         // Framework detected - prompt for import
         println!(
             "Detected {} with {} plugins ({}) and theme '{}'.",
@@ -66,13 +66,20 @@ pub fn execute(args: CreateArgs) -> Result<()> {
             .context("Failed to read user input for import confirmation")?;
 
         if should_import {
-            (info.framework_type.clone(), true)
+            (info.framework_type.clone(), true, vec![])
         } else {
             // User declined import - launch TUI wizard
             println!("Import skipped. Launching TUI wizard...\n");
             let selected = framework_select::run_framework_selection(&args.name)
                 .context("Framework selection cancelled. Profile creation aborted.")?;
-            (selected, false)
+
+            // Launch plugin browser (Story 1.7)
+            let plugins = plugin_browser::run_plugin_selection(selected.clone())
+                .context("Plugin selection cancelled. Profile creation aborted.")?;
+
+            log::info!("User selected {} plugins for {:?}", plugins.len(), selected);
+
+            (selected, false, plugins)
         }
     } else {
         // No framework detected - launch TUI wizard
@@ -80,7 +87,14 @@ pub fn execute(args: CreateArgs) -> Result<()> {
         println!("Launching TUI wizard to create profile from scratch...\n");
         let selected = framework_select::run_framework_selection(&args.name)
             .context("Framework selection cancelled. Profile creation aborted.")?;
-        (selected, false)
+
+        // Launch plugin browser (Story 1.7)
+        let plugins = plugin_browser::run_plugin_selection(selected.clone())
+            .context("Plugin selection cancelled. Profile creation aborted.")?;
+
+        log::info!("User selected {} plugins for {:?}", plugins.len(), selected);
+
+        (selected, false, plugins)
     };
 
     // Build framework info for profile creation
@@ -88,10 +102,10 @@ pub fn execute(args: CreateArgs) -> Result<()> {
         // Use detected framework info
         detected_framework.unwrap()
     } else {
-        // TUI was used - create minimal framework info (no plugins/theme to import)
+        // TUI was used - create framework info with wizard-selected plugins
         crate::frameworks::FrameworkInfo {
             framework_type: selected_framework,
-            plugins: vec![],
+            plugins: wizard_plugins,
             theme: String::from("default"),
             config_path: std::path::PathBuf::new(),
             install_path: std::path::PathBuf::new(),

@@ -3,7 +3,7 @@
 //! Detects prezto installations by looking for ~/.zprezto directory
 //! and parsing ~/.zpreztorc for module and theme configuration.
 
-use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, Theme};
+use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, PluginCategory, Theme};
 use anyhow::Result;
 use std::fs;
 use std::path::Path;
@@ -79,7 +79,83 @@ impl Framework for Prezto {
     }
 
     fn get_plugins() -> Vec<Plugin> {
-        vec![]
+        vec![
+            Plugin {
+                name: "git".to_string(),
+                description: "Git aliases and information".to_string(),
+                category: PluginCategory::Git,
+            },
+            Plugin {
+                name: "docker".to_string(),
+                description: "Docker aliases and completion".to_string(),
+                category: PluginCategory::Docker,
+            },
+            Plugin {
+                name: "command-not-found".to_string(),
+                description: "Suggests package installation for unknown commands".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "history".to_string(),
+                description: "History search and management".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "directory".to_string(),
+                description: "Directory navigation shortcuts".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "completion".to_string(),
+                description: "Enhanced completion system".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "syntax-highlighting".to_string(),
+                description: "Real-time syntax highlighting".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "autosuggestions".to_string(),
+                description: "Fish-style command suggestions".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "python".to_string(),
+                description: "Python virtual environment helpers".to_string(),
+                category: PluginCategory::Language,
+            },
+            Plugin {
+                name: "node".to_string(),
+                description: "Node.js version management".to_string(),
+                category: PluginCategory::Language,
+            },
+            Plugin {
+                name: "ruby".to_string(),
+                description: "Ruby version management".to_string(),
+                category: PluginCategory::Language,
+            },
+            Plugin {
+                name: "rsync".to_string(),
+                description: "Rsync aliases and helpers".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "ssh".to_string(),
+                description: "SSH key management and completion".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "tmux".to_string(),
+                description: "Tmux auto-start and integration".to_string(),
+                category: PluginCategory::Utility,
+            },
+            Plugin {
+                name: "utility".to_string(),
+                description: "General shell utility functions".to_string(),
+                category: PluginCategory::Utility,
+            },
+        ]
     }
 
     fn get_themes() -> Vec<Theme> {
