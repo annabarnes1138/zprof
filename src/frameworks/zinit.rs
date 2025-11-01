@@ -165,7 +165,58 @@ impl Framework for Zinit {
     }
 
     fn get_themes() -> Vec<Theme> {
-        vec![]
+        vec![
+            Theme {
+                name: "powerlevel10k".to_string(),
+                description: "Extremely fast, customizable powerline theme".to_string(),
+                preview: "Instant prompt, rich customization, powerline".to_string(),
+            },
+            Theme {
+                name: "pure".to_string(),
+                description: "Minimal, fast, asynchronous prompt".to_string(),
+                preview: "Clean single-line with git status".to_string(),
+            },
+            Theme {
+                name: "spaceship".to_string(),
+                description: "Modern prompt with extensive context info".to_string(),
+                preview: "Git, package versions, execution time".to_string(),
+            },
+            Theme {
+                name: "starship".to_string(),
+                description: "Cross-shell Rust-powered prompt".to_string(),
+                preview: "Minimal, fast, highly configurable".to_string(),
+            },
+            Theme {
+                name: "agnoster".to_string(),
+                description: "Powerline theme with git integration".to_string(),
+                preview: "Segments: user, path, git status".to_string(),
+            },
+            Theme {
+                name: "geometry".to_string(),
+                description: "Minimal, customizable git-aware prompt".to_string(),
+                preview: "Single-line with color-coded git info".to_string(),
+            },
+            Theme {
+                name: "bullet-train".to_string(),
+                description: "Powerline with modular customizable cars".to_string(),
+                preview: "Modular sections, git integration".to_string(),
+            },
+            Theme {
+                name: "typewritten".to_string(),
+                description: "Minimal, two-line informative prompt".to_string(),
+                preview: "Top: path, git | Bottom: clean input".to_string(),
+            },
+            Theme {
+                name: "minimal".to_string(),
+                description: "Ultra-minimal prompt with essentials".to_string(),
+                preview: "Just path and git branch".to_string(),
+            },
+            Theme {
+                name: "robbyrussell".to_string(),
+                description: "Classic oh-my-zsh default theme".to_string(),
+                preview: "➜ user@host:~/dir (git:main)".to_string(),
+            },
+        ]
     }
 }
 

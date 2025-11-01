@@ -6,6 +6,7 @@
 pub mod cli;
 pub mod core;
 pub mod frameworks;
+pub mod shell;
 pub mod tui;
 
 // Re-export commonly used items

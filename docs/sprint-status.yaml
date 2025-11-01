@@ -44,7 +44,7 @@ development_status:
   1-5-profile-creation-with-import-current-setup: done
   1-6-tui-wizard-framework-selection: done
   1-7-tui-wizard-plugin-browser: done
-  1-8-tui-wizard-theme-selection-and-profile-generation: ready-for-dev
+  1-8-tui-wizard-theme-selection-and-profile-generation: done
   1-9-switch-active-profile: ready-for-dev
   1-10-delete-profile: ready-for-dev
   epic-1-retrospective: optional

@@ -1,6 +1,7 @@
 mod cli;
 mod core;
 mod frameworks;
+mod shell;
 mod tui;
 
 use anyhow::Result;

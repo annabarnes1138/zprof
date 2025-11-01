@@ -4,6 +4,7 @@
 //! various zsh framework installations (oh-my-zsh, zimfw, prezto, zinit, zap).
 
 mod detector;
+pub mod installer;
 pub mod oh_my_zsh;
 pub mod prezto;
 pub mod zap;
@@ -59,10 +60,12 @@ pub enum PluginCategory {
     Utility,
 }
 
-/// Placeholder for Theme type (to be implemented in future stories)
+/// Theme data model for framework themes
 #[derive(Debug, Clone)]
 pub struct Theme {
     pub name: String,
+    pub description: String,
+    pub preview: String,
 }
 
 /// Helper to get home directory, respecting HOME env var for testing

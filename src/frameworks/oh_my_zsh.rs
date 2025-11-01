@@ -164,8 +164,58 @@ impl Framework for OhMyZsh {
     }
 
     fn get_themes() -> Vec<Theme> {
-        // Not implemented in this story
-        vec![]
+        vec![
+            Theme {
+                name: "robbyrussell".to_string(),
+                description: "Default oh-my-zsh theme, minimal and fast".to_string(),
+                preview: "➜ user@host:~/dir (git:main)".to_string(),
+            },
+            Theme {
+                name: "agnoster".to_string(),
+                description: "Powerline-style theme with git info".to_string(),
+                preview: "Powerline arrows, git status, dark background".to_string(),
+            },
+            Theme {
+                name: "powerlevel10k/powerlevel10k".to_string(),
+                description: "Fast, customizable, feature-rich theme".to_string(),
+                preview: "Highly customizable, extensive git integration".to_string(),
+            },
+            Theme {
+                name: "pure".to_string(),
+                description: "Minimal, fast, asynchronous prompt".to_string(),
+                preview: "Clean single-line prompt with git status".to_string(),
+            },
+            Theme {
+                name: "spaceship".to_string(),
+                description: "Minimalist, powerful prompt for astronauts".to_string(),
+                preview: "Modern icons, git info, execution time".to_string(),
+            },
+            Theme {
+                name: "bullet-train".to_string(),
+                description: "Powerline-inspired with customizable cars".to_string(),
+                preview: "Modular sections, colorful, git integration".to_string(),
+            },
+            Theme {
+                name: "af-magic".to_string(),
+                description: "Two-line theme with timestamp and git".to_string(),
+                preview: "Timestamp, path, git status on separate lines".to_string(),
+            },
+            Theme {
+                name: "bira".to_string(),
+                description: "Two-line theme with user and time".to_string(),
+                preview: "User@host, time, path, git on two lines".to_string(),
+            },
+            Theme {
+                name: "cloud".to_string(),
+                description: "Minimalist cloud-inspired theme".to_string(),
+                preview: "Simple, clean, hostname and path".to_string(),
+            },
+            Theme {
+                name: "avit".to_string(),
+                description: "Clean theme with git status colors".to_string(),
+                preview: "Colored git indicators, clean layout".to_string(),
+            },
+        ]
     }
 }
 

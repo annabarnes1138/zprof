@@ -71,6 +71,40 @@ impl Manifest {
         }
     }
 
+    /// Create a new manifest from wizard state
+    ///
+    /// Used during profile creation wizard to generate a manifest from
+    /// user-selected configuration options.
+    ///
+    /// # Arguments
+    ///
+    /// * `profile_name` - The profile name
+    /// * `framework` - Selected framework type
+    /// * `plugins` - Selected plugins list
+    /// * `theme` - Selected theme name
+    pub fn from_wizard_state(
+        profile_name: &str,
+        framework: &crate::frameworks::FrameworkType,
+        plugins: &[String],
+        theme: &str,
+    ) -> Self {
+        let now = Utc::now();
+
+        Manifest {
+            profile: ProfileSection {
+                name: profile_name.to_string(),
+                framework: framework.name().to_string(),
+                theme: theme.to_string(),
+                created: now,
+                modified: now,
+            },
+            plugins: PluginsSection {
+                enabled: plugins.to_vec(),
+            },
+            env: HashMap::new(),
+        }
+    }
+
     /// Convert manifest to TOML string
     pub fn to_toml_string(&self) -> Result<String> {
         toml::to_string_pretty(self).context("Failed to serialize manifest to TOML format")

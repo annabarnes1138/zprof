@@ -159,7 +159,58 @@ impl Framework for Prezto {
     }
 
     fn get_themes() -> Vec<Theme> {
-        vec![]
+        vec![
+            Theme {
+                name: "sorin".to_string(),
+                description: "Default prezto theme, clean and lightweight".to_string(),
+                preview: "user@host in directory (git:branch) >".to_string(),
+            },
+            Theme {
+                name: "powerlevel10k".to_string(),
+                description: "Fast, customizable, feature-rich powerline theme".to_string(),
+                preview: "Extensive customization, speed, powerline glyphs".to_string(),
+            },
+            Theme {
+                name: "pure".to_string(),
+                description: "Minimal, asynchronous prompt".to_string(),
+                preview: "Clean single-line with git status".to_string(),
+            },
+            Theme {
+                name: "agnoster".to_string(),
+                description: "Powerline-inspired theme with context info".to_string(),
+                preview: "Segments: user, host, path, git status".to_string(),
+            },
+            Theme {
+                name: "paradox".to_string(),
+                description: "Two-line theme with git and time info".to_string(),
+                preview: "Top: path, git, time | Bottom: input".to_string(),
+            },
+            Theme {
+                name: "steeef".to_string(),
+                description: "Lightweight theme with colored output".to_string(),
+                preview: "user at host in directory on branch".to_string(),
+            },
+            Theme {
+                name: "cloud".to_string(),
+                description: "Minimalist cloud-inspired prompt".to_string(),
+                preview: "Simple hostname and path".to_string(),
+            },
+            Theme {
+                name: "minimal".to_string(),
+                description: "Ultra-minimal prompt with just essentials".to_string(),
+                preview: "path (branch) >".to_string(),
+            },
+            Theme {
+                name: "giddie".to_string(),
+                description: "Git-focused theme with detailed status".to_string(),
+                preview: "Extensive git information in prompt".to_string(),
+            },
+            Theme {
+                name: "powerline".to_string(),
+                description: "Classic powerline theme for zsh".to_string(),
+                preview: "Powerline arrows with segments".to_string(),
+            },
+        ]
     }
 }
 

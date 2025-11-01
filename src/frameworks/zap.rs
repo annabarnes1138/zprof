@@ -161,7 +161,58 @@ impl Framework for Zap {
     }
 
     fn get_themes() -> Vec<Theme> {
-        vec![]
+        vec![
+            Theme {
+                name: "starship".to_string(),
+                description: "Cross-shell Rust-powered prompt (recommended)".to_string(),
+                preview: "Minimal, fast, highly configurable".to_string(),
+            },
+            Theme {
+                name: "pure".to_string(),
+                description: "Minimal, asynchronous prompt".to_string(),
+                preview: "Clean single-line with git status".to_string(),
+            },
+            Theme {
+                name: "powerlevel10k".to_string(),
+                description: "Fast, feature-rich powerline theme".to_string(),
+                preview: "Instant prompt, rich customization".to_string(),
+            },
+            Theme {
+                name: "spaceship".to_string(),
+                description: "Modern developer-focused prompt".to_string(),
+                preview: "Git, versions, execution time".to_string(),
+            },
+            Theme {
+                name: "minimal".to_string(),
+                description: "Ultra-minimal prompt".to_string(),
+                preview: "Just path and git branch".to_string(),
+            },
+            Theme {
+                name: "typewritten".to_string(),
+                description: "Two-line informative prompt".to_string(),
+                preview: "Top: path, git | Bottom: input".to_string(),
+            },
+            Theme {
+                name: "geometry".to_string(),
+                description: "Minimal git-aware prompt with colors".to_string(),
+                preview: "Single-line, color-coded git info".to_string(),
+            },
+            Theme {
+                name: "robbyrussell".to_string(),
+                description: "Classic oh-my-zsh default theme".to_string(),
+                preview: "➜ user@host:~/dir (git:main)".to_string(),
+            },
+            Theme {
+                name: "agnoster".to_string(),
+                description: "Powerline theme with segments".to_string(),
+                preview: "User, path, git status segments".to_string(),
+            },
+            Theme {
+                name: "lambda".to_string(),
+                description: "Simple prompt with lambda symbol".to_string(),
+                preview: "λ path (branch) >".to_string(),
+            },
+        ]
     }
 }
 

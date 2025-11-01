@@ -160,7 +160,58 @@ impl Framework for Zimfw {
     }
 
     fn get_themes() -> Vec<Theme> {
-        vec![]
+        vec![
+            Theme {
+                name: "steeef".to_string(),
+                description: "Default zim theme, clean and informative".to_string(),
+                preview: "username at hostname in directory (git:branch)".to_string(),
+            },
+            Theme {
+                name: "pure".to_string(),
+                description: "Minimal, fast, asynchronous prompt".to_string(),
+                preview: "Clean single-line prompt with git status".to_string(),
+            },
+            Theme {
+                name: "powerlevel10k".to_string(),
+                description: "Fast, feature-rich, highly customizable theme".to_string(),
+                preview: "Extensive customization, git integration, speed".to_string(),
+            },
+            Theme {
+                name: "spaceship".to_string(),
+                description: "Modern prompt for developers".to_string(),
+                preview: "Git status, package versions, execution time".to_string(),
+            },
+            Theme {
+                name: "starship".to_string(),
+                description: "Cross-shell prompt with Rust performance".to_string(),
+                preview: "Minimal, fast, highly configurable".to_string(),
+            },
+            Theme {
+                name: "eriner".to_string(),
+                description: "Fork of agnoster with speed improvements".to_string(),
+                preview: "Powerline-style with git integration".to_string(),
+            },
+            Theme {
+                name: "lean".to_string(),
+                description: "Minimal and fast prompt".to_string(),
+                preview: "One-line, git status, exit code".to_string(),
+            },
+            Theme {
+                name: "asciiship".to_string(),
+                description: "ASCII-only variant of spaceship".to_string(),
+                preview: "Git info without Unicode symbols".to_string(),
+            },
+            Theme {
+                name: "minimal".to_string(),
+                description: "Ultra-minimal prompt".to_string(),
+                preview: "Just path and git branch".to_string(),
+            },
+            Theme {
+                name: "prompt-pwd".to_string(),
+                description: "Simple prompt with shortened path".to_string(),
+                preview: "~/d/project (branch) >".to_string(),
+            },
+        ]
     }
 }
 

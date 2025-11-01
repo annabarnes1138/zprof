@@ -14,7 +14,9 @@ use crate::core::config::Config;
 use crate::core::filesystem::{copy_dir_recursive, get_zprof_dir};
 use crate::core::manifest::Manifest;
 use crate::frameworks::detect_existing_framework;
-use crate::tui::{framework_select, plugin_browser};
+use crate::frameworks::installer::{self, WizardState};
+use crate::tui::{framework_select, plugin_browser, theme_select};
+use crate::shell::generate_shell_configs;
 
 /// Arguments for the create command
 #[derive(Debug, Args)]
@@ -49,7 +51,7 @@ pub fn execute(args: CreateArgs) -> Result<()> {
     let detected_framework = detect_existing_framework();
 
     // 3. Determine framework (from detection or TUI wizard)
-    let (selected_framework, should_import_files, wizard_plugins) = if let Some(info) = detected_framework.as_ref() {
+    let (selected_framework, selected_theme, should_import_files, wizard_plugins) = if let Some(info) = detected_framework.as_ref() {
         // Framework detected - prompt for import
         println!(
             "Detected {} with {} plugins ({}) and theme '{}'.",
@@ -66,7 +68,7 @@ pub fn execute(args: CreateArgs) -> Result<()> {
             .context("Failed to read user input for import confirmation")?;
 
         if should_import {
-            (info.framework_type.clone(), true, vec![])
+            (info.framework_type.clone(), info.theme.clone(), true, vec![])
         } else {
             // User declined import - launch TUI wizard
             println!("Import skipped. Launching TUI wizard...\n");
@@ -77,9 +79,28 @@ pub fn execute(args: CreateArgs) -> Result<()> {
             let plugins = plugin_browser::run_plugin_selection(selected.clone())
                 .context("Plugin selection cancelled. Profile creation aborted.")?;
 
-            log::info!("User selected {} plugins for {:?}", plugins.len(), selected);
+            // Launch theme selection (Story 1.8)
+            let theme = theme_select::run_theme_selection(selected.clone(), &plugins)
+                .context("Theme selection cancelled. Profile creation aborted.")?;
 
-            (selected, false, plugins)
+            // Show confirmation screen (Story 1.8)
+            let wizard_state = WizardState {
+                profile_name: args.name.clone(),
+                framework: selected.clone(),
+                plugins: plugins.clone(),
+                theme: theme.clone(),
+            };
+
+            let confirmed = theme_select::show_confirmation_screen(&wizard_state)
+                .context("Failed to show confirmation screen")?;
+
+            if !confirmed {
+                bail!("Profile creation cancelled by user.");
+            }
+
+            log::info!("User selected {} plugins, theme '{}' for {:?}", plugins.len(), theme, selected);
+
+            (selected, theme, false, plugins)
         }
     } else {
         // No framework detected - launch TUI wizard
@@ -92,9 +113,28 @@ pub fn execute(args: CreateArgs) -> Result<()> {
         let plugins = plugin_browser::run_plugin_selection(selected.clone())
             .context("Plugin selection cancelled. Profile creation aborted.")?;
 
-        log::info!("User selected {} plugins for {:?}", plugins.len(), selected);
+        // Launch theme selection (Story 1.8)
+        let theme = theme_select::run_theme_selection(selected.clone(), &plugins)
+            .context("Theme selection cancelled. Profile creation aborted.")?;
 
-        (selected, false, plugins)
+        // Show confirmation screen (Story 1.8)
+        let wizard_state = WizardState {
+            profile_name: args.name.clone(),
+            framework: selected.clone(),
+            plugins: plugins.clone(),
+            theme: theme.clone(),
+        };
+
+        let confirmed = theme_select::show_confirmation_screen(&wizard_state)
+            .context("Failed to show confirmation screen")?;
+
+        if !confirmed {
+            bail!("Profile creation cancelled by user.");
+        }
+
+        log::info!("User selected {} plugins, theme '{}' for {:?}", plugins.len(), theme, selected);
+
+        (selected, theme, false, plugins)
     };
 
     // Build framework info for profile creation
@@ -102,11 +142,11 @@ pub fn execute(args: CreateArgs) -> Result<()> {
         // Use detected framework info
         detected_framework.unwrap()
     } else {
-        // TUI was used - create framework info with wizard-selected plugins
+        // TUI was used - create framework info with wizard-selected plugins and theme
         crate::frameworks::FrameworkInfo {
-            framework_type: selected_framework,
+            framework_type: selected_framework.clone(),
             plugins: wizard_plugins,
-            theme: String::from("default"),
+            theme: selected_theme.clone(),
             config_path: std::path::PathBuf::new(),
             install_path: std::path::PathBuf::new(),
         }
@@ -120,8 +160,23 @@ pub fn execute(args: CreateArgs) -> Result<()> {
         )
     })?;
 
-    // 5. Copy framework files
-    copy_framework_files(&framework_info, &profile_dir)?;
+    // 5. Install framework and plugins (Story 1.8) or copy existing files
+    if should_import_files {
+        // Import path: copy existing framework files
+        copy_framework_files(&framework_info, &profile_dir)?;
+    } else {
+        // Wizard path: install framework and plugins (AC #4, #7)
+        let wizard_state = WizardState {
+            profile_name: args.name.clone(),
+            framework: selected_framework.clone(),
+            plugins: framework_info.plugins.clone(),
+            theme: selected_theme.clone(),
+        };
+
+        println!(); // Blank line before progress indicator
+        installer::install_profile(&wizard_state, &profile_dir)
+            .context("Failed to install framework and plugins")?;
+    }
 
     // 6. Generate TOML manifest
     let manifest = Manifest::from_framework_info(&args.name, &framework_info);
@@ -129,6 +184,15 @@ pub fn execute(args: CreateArgs) -> Result<()> {
     manifest
         .write_to_file(&manifest_path)
         .context("Failed to write profile manifest")?;
+
+    // 6.5. Generate shell configuration files (Story 1.8)
+    generate_shell_configs(
+        &profile_dir,
+        &framework_info.framework_type,
+        &framework_info.plugins,
+        &framework_info.theme,
+    )
+    .context("Failed to generate shell configuration files")?;
 
     // 7. Update global config (create if doesn't exist)
     update_global_config(&args.name)?;

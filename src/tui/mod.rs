@@ -5,6 +5,7 @@
 
 pub mod framework_select;
 pub mod plugin_browser;
+pub mod theme_select;
 
 use anyhow::Result;
 use crossterm::{
