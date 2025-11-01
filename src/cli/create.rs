@@ -14,6 +14,7 @@ use crate::core::config::Config;
 use crate::core::filesystem::{copy_dir_recursive, get_zprof_dir};
 use crate::core::manifest::Manifest;
 use crate::frameworks::detect_existing_framework;
+use crate::tui::framework_select;
 
 /// Arguments for the create command
 #[derive(Debug, Args)]
@@ -45,35 +46,57 @@ pub fn execute(args: CreateArgs) -> Result<()> {
     }
 
     // 2. Detect existing framework
-    let framework_info = match detect_existing_framework() {
-        Some(info) => info,
-        None => {
-            println!("No existing zsh framework detected.");
-            println!("  → Run the TUI wizard to create a profile from scratch (coming in Story 1.6)");
-            return Ok(());
+    let detected_framework = detect_existing_framework();
+
+    // 3. Determine framework (from detection or TUI wizard)
+    let (selected_framework, should_import_files) = if let Some(info) = detected_framework.as_ref() {
+        // Framework detected - prompt for import
+        println!(
+            "Detected {} with {} plugins ({}) and theme '{}'.",
+            info.framework_type.name(),
+            info.plugins.len(),
+            info.plugins.join(", "),
+            info.theme
+        );
+
+        let should_import = Confirm::new()
+            .with_prompt("Import current setup?")
+            .default(true)
+            .interact()
+            .context("Failed to read user input for import confirmation")?;
+
+        if should_import {
+            (info.framework_type.clone(), true)
+        } else {
+            // User declined import - launch TUI wizard
+            println!("Import skipped. Launching TUI wizard...\n");
+            let selected = framework_select::run_framework_selection(&args.name)
+                .context("Framework selection cancelled. Profile creation aborted.")?;
+            (selected, false)
         }
+    } else {
+        // No framework detected - launch TUI wizard
+        println!("No existing zsh framework detected.");
+        println!("Launching TUI wizard to create profile from scratch...\n");
+        let selected = framework_select::run_framework_selection(&args.name)
+            .context("Framework selection cancelled. Profile creation aborted.")?;
+        (selected, false)
     };
 
-    // 3. Prompt for import
-    println!(
-        "Detected {} with {} plugins ({}) and theme '{}'.",
-        framework_info.framework_type.name(),
-        framework_info.plugins.len(),
-        framework_info.plugins.join(", "),
-        framework_info.theme
-    );
-
-    let should_import = Confirm::new()
-        .with_prompt("Import current setup?")
-        .default(true)
-        .interact()
-        .context("Failed to read user input for import confirmation")?;
-
-    if !should_import {
-        println!("Import skipped.");
-        println!("  → Run the TUI wizard to create a profile from scratch (coming in Story 1.6)");
-        return Ok(());
-    }
+    // Build framework info for profile creation
+    let framework_info = if should_import_files {
+        // Use detected framework info
+        detected_framework.unwrap()
+    } else {
+        // TUI was used - create minimal framework info (no plugins/theme to import)
+        crate::frameworks::FrameworkInfo {
+            framework_type: selected_framework,
+            plugins: vec![],
+            theme: String::from("default"),
+            config_path: std::path::PathBuf::new(),
+            install_path: std::path::PathBuf::new(),
+        }
+    };
 
     // 4. Create profile directory
     fs::create_dir_all(&profile_dir).with_context(|| {

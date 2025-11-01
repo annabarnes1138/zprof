@@ -1,6 +1,7 @@
 mod cli;
 mod core;
 mod frameworks;
+mod tui;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -27,6 +28,9 @@ enum Commands {
 }
 
 fn main() -> Result<()> {
+    // Install panic hook to restore terminal on crashes
+    tui::install_panic_hook();
+
     let cli = Cli::parse();
 
     match cli.command {

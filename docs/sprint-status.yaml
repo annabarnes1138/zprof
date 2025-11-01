@@ -42,7 +42,7 @@ development_status:
   1-3-display-current-active-profile: done
   1-4-framework-detection-for-smart-profile-creation: done
   1-5-profile-creation-with-import-current-setup: done
-  1-6-tui-wizard-framework-selection: ready-for-dev
+  1-6-tui-wizard-framework-selection: done
   1-7-tui-wizard-plugin-browser: ready-for-dev
   1-8-tui-wizard-theme-selection-and-profile-generation: ready-for-dev
   1-9-switch-active-profile: ready-for-dev

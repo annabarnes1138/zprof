@@ -6,6 +6,7 @@
 pub mod cli;
 pub mod core;
 pub mod frameworks;
+pub mod tui;
 
 // Re-export commonly used items
 pub use frameworks::{detect_existing_framework, FrameworkInfo, FrameworkType};

@@ -72,14 +72,21 @@ fn test_create_profile_no_framework_detected() {
     // Initialize zprof structure
     create_zprof_structure().unwrap();
 
-    // No framework installed - should exit gracefully
+    // No framework installed - will attempt to launch TUI wizard
     let args = CreateArgs {
         name: "test-profile".to_string(),
     };
 
     let result = execute(args);
-    // Should succeed but not create profile (no framework to import)
-    assert!(result.is_ok());
+    // In test environment without a terminal, TUI initialization will fail
+    // This is expected behavior - in real usage, the TUI would launch successfully
+    assert!(result.is_err(), "Should fail when TUI cannot be initialized in test environment");
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        err_msg.contains("terminal") || err_msg.contains("TUI") || err_msg.contains("cancelled"),
+        "Error should be related to terminal/TUI: {}",
+        err_msg
+    );
 }
 
 #[test]
