@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{ensure, Context, Result};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -69,6 +69,121 @@ pub fn create_shared_history() -> Result<PathBuf> {
     Ok(history_file)
 }
 
+/// Recursively copy a directory and all its contents
+///
+/// This follows Pattern 3: Safe File Operations with the Check -> Backup -> Operate -> Verify flow.
+/// Critically important for NFR002 compliance - uses copy NOT move to preserve originals.
+///
+/// # Arguments
+///
+/// * `source` - Source directory path to copy from
+/// * `dest` - Destination directory path to copy to
+///
+/// # Errors
+///
+/// Returns error if:
+/// - Source does not exist
+/// - Permission denied during copy
+/// - Disk space exhausted
+/// - Original files are missing after copy (safety check)
+///
+/// # Examples
+///
+/// ```no_run
+/// use std::path::Path;
+/// use zprof::core::filesystem::copy_dir_recursive;
+///
+/// let source = Path::new("/home/user/.oh-my-zsh");
+/// let dest = Path::new("/home/user/.zsh-profiles/profiles/work/.oh-my-zsh");
+/// copy_dir_recursive(source, dest).unwrap();
+/// ```
+pub fn copy_dir_recursive(source: &Path, dest: &Path) -> Result<()> {
+    // Check: Verify source exists
+    ensure!(
+        source.exists(),
+        "Source directory does not exist: {}",
+        source.display()
+    );
+
+    // Create destination directory
+    fs::create_dir_all(dest)
+        .with_context(|| format!("Failed to create destination directory: {}", dest.display()))?;
+
+    // Operate: Copy directory contents recursively
+    for entry in fs::read_dir(source)
+        .with_context(|| format!("Failed to read source directory: {}", source.display()))?
+    {
+        let entry = entry.with_context(|| {
+            format!("Failed to read directory entry in: {}", source.display())
+        })?;
+        let file_type = entry
+            .file_type()
+            .with_context(|| format!("Failed to get file type for: {}", entry.path().display()))?;
+
+        let source_path = entry.path();
+        let dest_path = dest.join(entry.file_name());
+
+        if file_type.is_dir() {
+            // Recursively copy subdirectory
+            copy_dir_recursive(&source_path, &dest_path).with_context(|| {
+                format!(
+                    "Failed to copy subdirectory from {} to {}",
+                    source_path.display(),
+                    dest_path.display()
+                )
+            })?;
+        } else if file_type.is_file() {
+            // Copy file (NOT move - preserving originals per NFR002)
+            fs::copy(&source_path, &dest_path).with_context(|| {
+                format!(
+                    "Failed to copy file from {} to {}",
+                    source_path.display(),
+                    dest_path.display()
+                )
+            })?;
+        } else if file_type.is_symlink() {
+            // Copy symlink target
+            let target = fs::read_link(&source_path).with_context(|| {
+                format!("Failed to read symlink target: {}", source_path.display())
+            })?;
+
+            #[cfg(unix)]
+            {
+                std::os::unix::fs::symlink(&target, &dest_path).with_context(|| {
+                    format!(
+                        "Failed to create symlink from {} to {}",
+                        dest_path.display(),
+                        target.display()
+                    )
+                })?;
+            }
+
+            #[cfg(not(unix))]
+            {
+                // On non-Unix systems, copy the symlink target as a regular file
+                if target.is_file() {
+                    fs::copy(&target, &dest_path).with_context(|| {
+                        format!(
+                            "Failed to copy symlink target from {} to {}",
+                            target.display(),
+                            dest_path.display()
+                        )
+                    })?;
+                }
+            }
+        }
+    }
+
+    // Verify: Ensure source still exists (sanity check for NFR002)
+    ensure!(
+        source.exists(),
+        "Original source directory missing after copy! This should never happen. Source: {}",
+        source.display()
+    );
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -92,5 +207,52 @@ mod tests {
         create_directory(&nested_dir).unwrap();
         assert!(nested_dir.exists());
         assert!(nested_dir.is_dir());
+    }
+
+    #[test]
+    fn test_copy_dir_recursive() {
+        let temp = TempDir::new().unwrap();
+        let source = temp.path().join("source");
+        let dest = temp.path().join("dest");
+
+        // Create source directory structure
+        fs::create_dir_all(&source).unwrap();
+        fs::write(source.join("file1.txt"), "content1").unwrap();
+        fs::create_dir_all(source.join("subdir")).unwrap();
+        fs::write(source.join("subdir/file2.txt"), "content2").unwrap();
+
+        // Copy directory
+        copy_dir_recursive(&source, &dest).unwrap();
+
+        // Verify destination exists
+        assert!(dest.exists());
+        assert!(dest.join("file1.txt").exists());
+        assert!(dest.join("subdir").exists());
+        assert!(dest.join("subdir/file2.txt").exists());
+
+        // Verify contents
+        let content1 = fs::read_to_string(dest.join("file1.txt")).unwrap();
+        assert_eq!(content1, "content1");
+        let content2 = fs::read_to_string(dest.join("subdir/file2.txt")).unwrap();
+        assert_eq!(content2, "content2");
+
+        // CRITICAL: Verify source still exists (NFR002)
+        assert!(source.exists());
+        assert!(source.join("file1.txt").exists());
+        assert!(source.join("subdir/file2.txt").exists());
+    }
+
+    #[test]
+    fn test_copy_dir_recursive_source_not_exists() {
+        let temp = TempDir::new().unwrap();
+        let source = temp.path().join("nonexistent");
+        let dest = temp.path().join("dest");
+
+        let result = copy_dir_recursive(&source, &dest);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Source directory does not exist"));
     }
 }

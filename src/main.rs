@@ -16,6 +16,8 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
+    /// Create a new profile
+    Create(cli::create::CreateArgs),
     /// Display the currently active profile
     Current(cli::current::CurrentArgs),
     /// Initialize zprof directory structure
@@ -28,6 +30,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::Create(args) => cli::create::execute(args),
         Commands::Current(args) => cli::current::execute(args),
         Commands::Init(args) => cli::init::execute(args),
         Commands::List(args) => cli::list::execute(args),
