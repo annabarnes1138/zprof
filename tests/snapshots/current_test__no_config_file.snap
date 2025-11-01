@@ -1,0 +1,5 @@
+---
+source: tests/current_test.rs
+expression: stdout.trim()
+---
+No active profile. Use 'zprof use <name>' to activate a profile.

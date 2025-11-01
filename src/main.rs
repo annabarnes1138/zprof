@@ -15,6 +15,8 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
+    /// Display the currently active profile
+    Current(cli::current::CurrentArgs),
     /// Initialize zprof directory structure
     Init(cli::init::InitArgs),
     /// List all available zsh profiles
@@ -25,6 +27,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::Current(args) => cli::current::execute(args),
         Commands::Init(args) => cli::init::execute(args),
         Commands::List(args) => cli::list::execute(args),
     }

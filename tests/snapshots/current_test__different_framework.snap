@@ -1,0 +1,8 @@
+---
+source: tests/current_test.rs
+expression: stdout.trim()
+---
+Current profile: experimental
+
+Framework: zimfw
+Created: Jan 15, 2025

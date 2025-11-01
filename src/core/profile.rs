@@ -3,12 +3,22 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-/// Represents profile metadata for display
+/// Represents profile metadata for display (used by list command)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProfileInfo {
     pub name: String,
     pub framework: String,
     pub is_active: bool,
+}
+
+/// Full profile metadata including timestamps (used by current command)
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ProfileMetadataFull {
+    pub name: String,
+    pub framework: String,
+    pub theme: Option<String>,
+    pub created: Option<String>,
+    pub modified: Option<String>,
 }
 
 /// Profile manifest structure (profile.toml)
@@ -111,6 +121,31 @@ pub fn get_config_path() -> Result<PathBuf> {
     let home = dirs::home_dir()
         .context("Failed to determine home directory")?;
     Ok(home.join(".zsh-profiles").join("config.toml"))
+}
+
+/// Load full profile metadata for a specific profile
+pub fn load_profile_metadata(profile_name: &str) -> Result<ProfileMetadataFull> {
+    let profiles_dir = get_profiles_dir()?;
+    let profile_dir = profiles_dir.join(profile_name);
+    let manifest_path = profile_dir.join("profile.toml");
+
+    if !manifest_path.exists() {
+        anyhow::bail!(
+            "Active profile '{}' not found (may have been deleted)\n\n\
+             Suggestion: Run 'zprof list' to see available profiles, then 'zprof use <name>' to activate one",
+            profile_name
+        );
+    }
+
+    let manifest = read_profile_manifest(&manifest_path)?;
+
+    Ok(ProfileMetadataFull {
+        name: manifest.profile.name,
+        framework: manifest.profile.framework,
+        theme: manifest.profile.theme,
+        created: manifest.profile.created,
+        modified: manifest.profile.modified,
+    })
 }
 
 #[cfg(test)]

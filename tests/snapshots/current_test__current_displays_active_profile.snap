@@ -1,0 +1,8 @@
+---
+source: tests/current_test.rs
+expression: stdout.trim()
+---
+Current profile: work
+
+Framework: oh-my-zsh
+Created: Oct 31, 2025
