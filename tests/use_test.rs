@@ -1,6 +1,5 @@
 use anyhow::Result;
 use std::fs;
-use std::path::PathBuf;
 use tempfile::TempDir;
 
 // Helper function to create a test profile
@@ -56,8 +55,8 @@ fn test_profile_validation_with_valid_profile() -> Result<()> {
 
 #[test]
 fn test_profile_switching_updates_config() -> Result<()> {
-    use std::env;
-    use zprof::core::config::{load_config, update_active_profile, Config};
+    
+    use zprof::core::config::Config;
 
     let temp_dir = TempDir::new()?;
     let config_path = temp_dir.path().join("config.toml");

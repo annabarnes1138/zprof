@@ -291,6 +291,9 @@ pub mod test_utils {
     }
 
     impl MockUserInput {
+        // NOTE: These methods are currently unused but kept for future test re-enablement
+        // See tests/init_test.rs for disabled tests that use this mock
+        #[allow(dead_code)]
         pub fn new() -> Self {
             Self {
                 confirm_response: RefCell::new(None),
@@ -300,11 +303,13 @@ pub mod test_utils {
             }
         }
 
+        #[allow(dead_code)]
         pub fn with_confirm(mut self, response: bool) -> Self {
             self.confirm_response = RefCell::new(Some(response));
             self
         }
 
+        #[allow(dead_code)]
         pub fn with_input(mut self, response: String) -> Self {
             self.input_response = RefCell::new(Some(response));
             self

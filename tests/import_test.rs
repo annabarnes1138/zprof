@@ -2,7 +2,7 @@ use anyhow::Result;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use serde_json;
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 use tar::Builder;
@@ -14,6 +14,7 @@ mod test_helpers {
     use chrono::Utc;
 
     /// Create a test archive with valid contents
+    #[allow(dead_code)]
     pub fn create_test_archive(archive_path: &PathBuf, profile_name: &str) -> Result<()> {
         // Create archive metadata
         let metadata = serde_json::json!({

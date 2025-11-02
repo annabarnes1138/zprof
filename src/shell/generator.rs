@@ -821,7 +821,7 @@ mod tests {
 
     #[test]
     fn test_write_generated_files_creates_directory() -> Result<()> {
-        let temp_dir = TempDir::new()?;
+        let _temp_dir = TempDir::new()?;
 
         // Override home dir for testing (if possible) or use temp dir structure
         // For now, we'll just test the generation functions individually

@@ -1,6 +1,6 @@
 # Story 2.4: Export Profile to Archive
 
-Status: review
+Status: done
 
 ## Story
 

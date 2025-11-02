@@ -132,7 +132,7 @@ mod tests {
     fn test_detect_no_frameworks() {
         // This test will pass when no frameworks are installed on the test system
         // In CI, we'd use a clean environment
-        let result = detect_existing_framework();
+        let _result = detect_existing_framework();
         // Don't assert on result since it depends on test environment
         // Real tests are in integration tests with mocked file systems
     }

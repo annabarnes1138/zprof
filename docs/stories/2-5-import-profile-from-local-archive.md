@@ -1,6 +1,6 @@
 # Story 2.5: Import Profile from Local Archive
 
-Status: review
+Status: done
 
 ## Story
 

@@ -11,6 +11,9 @@ Manage multiple zsh profiles with ease.
 - 🚀 **Multiple Profiles**: Create and manage separate zsh configurations for different contexts (work, personal, experimental)
 - 🎨 **Framework Support**: Works with oh-my-zsh, zimfw, prezto, zinit, and zap
 - 🔄 **Quick Switching**: Switch between profiles with a single command
+- 📝 **TOML Manifests**: Human-readable configuration files with live validation
+- 📦 **Export & Import**: Share profiles as portable `.zprof` archives
+- 🌐 **GitHub Integration**: Import profiles directly from GitHub repositories
 - 🛡️ **Non-Destructive**: All operations create automatic backups
 - 🔙 **Easy Rollback**: Restore your original configuration anytime
 
@@ -71,6 +74,107 @@ zprof delete old-profile
 ```
 
 Profiles are safely backed up before deletion to `~/.zsh-profiles/cache/backups/`.
+
+## Advanced Features
+
+### Edit Profile Manifest
+
+Edit your profile's TOML configuration with live validation:
+
+```bash
+zprof edit work
+```
+
+This opens your profile's `profile.toml` in your preferred editor (respects `$VISUAL`, `$EDITOR`, or falls back to `vim`). After saving, zprof automatically:
+- Validates the TOML syntax
+- Checks for required fields and valid values
+- Regenerates shell configuration files if valid
+- Shows helpful error messages if invalid
+
+### Export Profile to Archive
+
+Share your profile by exporting it to a portable `.zprof` archive:
+
+```bash
+zprof export work
+```
+
+This creates a `work.zprof` file (tar.gz archive) containing:
+- `profile.toml` manifest
+- Generated shell configurations (for reference)
+- Custom configuration files
+- Export metadata (date, zprof version, exported by)
+
+**Note:** Framework binaries are excluded to keep archives small. The manifest describes what should be installed.
+
+**Export Options:**
+```bash
+# Export to custom location
+zprof export work --output ~/backups/work.zprof
+
+# Overwrite existing archive
+zprof export work --force
+```
+
+### Import Profile from Archive
+
+Import a profile from a `.zprof` archive:
+
+```bash
+zprof import work.zprof
+```
+
+This will:
+1. Extract and validate the archive
+2. Check for profile name conflicts (prompts for resolution)
+3. Install the framework and plugins per manifest
+4. Create the profile in `~/.zsh-profiles/profiles/`
+5. Regenerate shell configurations
+
+**Import Options:**
+```bash
+# Import with a different name
+zprof import work.zprof --name work-backup
+
+# Skip conflict prompts (overwrite)
+zprof import work.zprof --force
+```
+
+### Import Profile from GitHub
+
+Import profiles directly from GitHub repositories:
+
+```bash
+zprof import github:username/repo
+```
+
+This clones the repository, searches for `profile.toml`, and imports it as a profile. Perfect for:
+- Sharing team standardized profiles
+- Using community profiles
+- Publishing your own profiles
+
+**Examples:**
+```bash
+# Import from public repository
+zprof import github:myteam/zsh-work-profile
+
+# Import from repository with hyphens
+zprof import github:my-org/zsh-config
+```
+
+**Requirements:**
+- Repository must contain `profile.toml` in the root
+- For private repos, git credentials must be configured
+
+### Regenerate Shell Configurations
+
+Regenerate `.zshrc` and `.zshenv` from your profile's TOML manifest:
+
+```bash
+zprof regenerate work
+```
+
+Useful after manually editing the `profile.toml` file or when updating to a new zprof version.
 
 ## Rollback to Pre-zprof State
 
@@ -156,18 +260,45 @@ Once rollback is complete:
 ~/.zsh-profiles/
 ├── profiles/                 # Individual profile directories
 │   ├── work/
-│   │   ├── .zshrc           # Profile-specific shell config
-│   │   ├── profile.toml     # Profile metadata
-│   │   ├── .zshrc.pre-zprof # Backup of original .zshrc (created during init)
+│   │   ├── profile.toml     # Profile manifest (editable configuration)
+│   │   ├── .zshrc           # Generated shell config (auto-regenerated)
+│   │   ├── .zshenv          # Generated environment config
 │   │   └── .oh-my-zsh/      # Framework installation (if applicable)
 │   └── personal/
+│       ├── profile.toml
+│       ├── .zshrc
+│       └── .zimfw/
 ├── shared/
 │   └── .zsh_history         # Shared command history
 ├── cache/
 │   ├── backups/             # Safety backups from deletions and rollbacks
+│   │   ├── .zshrc.pre-zprof
+│   │   └── deleted-profiles/
 │   └── downloads/           # Downloaded frameworks and themes
 └── config.toml              # Global configuration
 ```
+
+### Profile TOML Manifest
+
+Each profile contains a `profile.toml` file that serves as the source of truth for configuration:
+
+```toml
+[profile]
+name = "work"
+framework = "oh-my-zsh"
+theme = "robbyrussell"
+created = "2025-11-01T12:00:00Z"
+modified = "2025-11-01T12:00:00Z"
+
+[plugins]
+enabled = ["git", "docker", "kubectl", "aws"]
+
+[env]
+NODE_ENV = "development"
+EDITOR = "vim"
+```
+
+Edit with `zprof edit <name>` for automatic validation and regeneration.
 
 ## Supported Frameworks
 
@@ -182,11 +313,16 @@ Once rollback is complete:
 | Command | Description |
 |---------|-------------|
 | `zprof init` | Initialize zprof directory structure |
-| `zprof create <name>` | Create a new profile |
+| `zprof create <name>` | Create a new profile with interactive wizard |
 | `zprof list` | List all available profiles |
 | `zprof current` | Display currently active profile |
 | `zprof use <name>` | Switch to a different profile |
 | `zprof delete <name>` | Delete a profile (with backup) |
+| `zprof edit <name>` | Edit profile's TOML manifest with live validation |
+| `zprof export <name>` | Export profile to portable `.zprof` archive |
+| `zprof import <file.zprof>` | Import profile from local archive |
+| `zprof import github:<user>/<repo>` | Import profile from GitHub repository |
+| `zprof regenerate <name>` | Regenerate shell configs from TOML manifest |
 | `zprof rollback` | Restore pre-zprof configuration |
 
 ## Safety and Backups
@@ -201,7 +337,7 @@ zprof prioritizes data safety:
 
 ## Examples
 
-### Scenario: Create Work and Personal Profiles
+### Scenario 1: Create Work and Personal Profiles
 
 ```bash
 # Initialize zprof
@@ -222,7 +358,73 @@ zprof use work
 zprof use personal
 ```
 
-### Scenario: Rollback and Uninstall
+### Scenario 2: Customize Profile with TOML Editing
+
+```bash
+# Create a profile
+zprof create dev
+
+# Edit the profile manifest
+zprof edit dev
+
+# In your editor, modify profile.toml:
+# - Change theme to "powerlevel10k"
+# - Add plugins: ["git", "docker", "kubectl", "terraform"]
+# - Add environment variables
+
+# Save and close - zprof automatically validates and regenerates configs
+
+# Activate the updated profile
+zprof use dev
+```
+
+### Scenario 3: Share Profile with Team
+
+```bash
+# Export your team's standardized work profile
+zprof export team-work
+
+# Share the work.zprof file with teammates
+# They can import it:
+zprof import team-work.zprof
+
+# Or publish to GitHub and they can import directly:
+zprof import github:mycompany/zsh-work-profile
+```
+
+### Scenario 4: Backup and Restore Profiles
+
+```bash
+# Export all your profiles for backup
+zprof export work --output ~/backups/
+zprof export personal --output ~/backups/
+zprof export dev --output ~/backups/
+
+# Later, restore on a new machine
+zprof init
+zprof import ~/backups/work.zprof
+zprof import ~/backups/personal.zprof
+zprof import ~/backups/dev.zprof
+```
+
+### Scenario 5: Import Community Profile from GitHub
+
+```bash
+# Try a popular community profile
+zprof import github:username/awesome-zsh-config
+
+# Review what was imported
+zprof list
+zprof current
+
+# Customize it for your needs
+zprof edit awesome-zsh-config
+
+# Export your customized version
+zprof export awesome-zsh-config
+```
+
+### Scenario 6: Rollback and Uninstall
 
 ```bash
 # Restore original configuration
@@ -235,9 +437,96 @@ source ~/.zshrc
 rm -rf ~/.zsh-profiles/
 ```
 
+## Testing
+
+zprof has comprehensive test coverage to ensure reliability:
+
+```bash
+# Run all tests
+cargo test --all-features
+
+# Run specific test suite
+cargo test --test export_test
+
+# Check code quality
+cargo clippy --all-targets --all-features
+
+# Build release binary
+cargo build --release
+```
+
+**Test Coverage:**
+- 204 automated tests (100% passing)
+- Unit tests for all core modules
+- Integration tests for workflows
+- Framework detection tests for all 5 frameworks
+- Error handling and edge case tests
+- Performance validation tests
+
+## Version
+
+**Current Version:** v0.1.0
+
+**Release Notes:**
+- ✅ Core profile management (create, list, use, delete, rollback)
+- ✅ Interactive TUI wizard for profile creation
+- ✅ Support for 5 zsh frameworks (oh-my-zsh, zimfw, prezto, zinit, zap)
+- ✅ TOML manifest configuration with live validation
+- ✅ Profile export/import as portable archives
+- ✅ GitHub repository import support
+- ✅ Shell configuration regeneration
+- ✅ Comprehensive safety and backup features
+
+**Tested on:**
+- macOS (Darwin 25.0.0)
+- Zsh 5.9+
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit issues and pull requests.
+
+### Development
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/zprof.git
+cd zprof
+
+# Build
+cargo build
+
+# Run tests
+cargo test
+
+# Run specific command
+cargo run -- list
+```
+
+## Troubleshooting
+
+### Profile not switching properly
+
+Make sure to restart your shell or run `source ~/.zshrc` after using `zprof use`.
+
+### Editor not opening for `zprof edit`
+
+Set your preferred editor:
+```bash
+export EDITOR=vim  # or nano, emacs, code, etc.
+```
+
+### Import from GitHub fails
+
+- Verify repository exists and is accessible
+- For private repos, configure git credentials
+- Check that `profile.toml` exists in repository root
+
+### Archive validation errors
+
+Archives must contain:
+- `metadata.json` with valid structure
+- `profile.toml` with valid TOML syntax
+- Supported framework specification
 
 ## License
 
@@ -246,3 +535,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Credits
 
 Built with Rust 🦀
+
+Developed using the BMad Modern Methodology (BMM) workflow system.

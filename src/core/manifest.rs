@@ -85,40 +85,6 @@ impl Manifest {
         }
     }
 
-    /// Create a new manifest from wizard state
-    ///
-    /// Used during profile creation wizard to generate a manifest from
-    /// user-selected configuration options.
-    ///
-    /// # Arguments
-    ///
-    /// * `profile_name` - The profile name
-    /// * `framework` - Selected framework type
-    /// * `plugins` - Selected plugins list
-    /// * `theme` - Selected theme name
-    pub fn from_wizard_state(
-        profile_name: &str,
-        framework: &crate::frameworks::FrameworkType,
-        plugins: &[String],
-        theme: &str,
-    ) -> Self {
-        let now = Utc::now();
-
-        Manifest {
-            profile: ProfileSection {
-                name: profile_name.to_string(),
-                framework: framework.name().to_string(),
-                theme: theme.to_string(),
-                created: now,
-                modified: now,
-            },
-            plugins: PluginsSection {
-                enabled: plugins.to_vec(),
-            },
-            env: HashMap::new(),
-        }
-    }
-
     /// Convert manifest to TOML string
     pub fn to_toml_string(&self) -> Result<String> {
         toml::to_string_pretty(self).context("Failed to serialize manifest to TOML format")
@@ -130,15 +96,6 @@ impl Manifest {
         std::fs::write(path, content)
             .with_context(|| format!("Failed to write manifest to {}", path.display()))?;
         Ok(())
-    }
-
-    /// Load manifest from profile.toml file
-    pub fn load_from_file(path: &Path) -> Result<Self> {
-        let content = std::fs::read_to_string(path)
-            .with_context(|| format!("Failed to read manifest from {}", path.display()))?;
-        let manifest: Manifest = toml::from_str(&content)
-            .with_context(|| format!("Failed to parse manifest at {}", path.display()))?;
-        Ok(manifest)
     }
 
     /// Validate the manifest schema and values
@@ -224,11 +181,6 @@ pub fn get_manifest_path(profile_name: &str) -> PathBuf {
         .join("profile.toml")
 }
 
-/// Check if profile has a manifest file
-pub fn manifest_exists(profile_name: &str) -> bool {
-    get_manifest_path(profile_name).exists()
-}
-
 /// Load and validate a profile manifest
 ///
 /// This is the main entry point for loading and validating manifests.
@@ -260,26 +212,18 @@ pub fn load_and_validate(profile_name: &str) -> Result<Manifest> {
     Ok(manifest)
 }
 
-/// Save manifest to profile directory
-pub fn save_manifest(manifest: &Manifest, profile_name: &str) -> Result<()> {
-    let manifest_path = get_manifest_path(profile_name);
-
-    let toml_string = toml::to_string_pretty(manifest)
-        .context("Failed to serialize manifest to TOML")?;
-
-    std::fs::write(&manifest_path, toml_string)
-        .with_context(|| format!("Failed to write profile.toml to {:?}", manifest_path))?;
-
-    log::debug!("Saved manifest to {:?}", manifest_path);
-    Ok(())
+// Test-only helper functions
+#[cfg(test)]
+pub fn manifest_exists(profile_name: &str) -> bool {
+    get_manifest_path(profile_name).exists()
 }
 
-/// Get list of supported frameworks
+#[cfg(test)]
 pub fn get_supported_frameworks() -> Vec<&'static str> {
     SUPPORTED_FRAMEWORKS.to_vec()
 }
 
-/// Validate framework name is supported
+#[cfg(test)]
 pub fn validate_framework(framework: &str) -> Result<()> {
     if !SUPPORTED_FRAMEWORKS.contains(&framework) {
         bail!(

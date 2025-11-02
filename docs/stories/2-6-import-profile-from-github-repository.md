@@ -1,6 +1,6 @@
 # Story 2.6: Import Profile from GitHub Repository
 
-Status: review
+Status: done
 
 ## Story
 

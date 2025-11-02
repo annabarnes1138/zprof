@@ -20,8 +20,13 @@ use std::path::{Path, PathBuf};
 
 /// Framework trait defining the standard interface for all zsh framework implementations
 ///
-/// Each framework must implement this trait to provide consistent detection,
+/// NOTE: This trait is currently unused as the implementation uses FrameworkType enum
+/// and free functions instead. It's kept for potential future refactoring to a
+/// trait-based architecture.
+///
+/// Each framework would implement this trait to provide consistent detection,
 /// installation, and configuration capabilities.
+#[allow(dead_code)]
 pub trait Framework {
     /// Returns the human-readable name of the framework
     fn name(&self) -> &str;
@@ -47,6 +52,8 @@ pub trait Framework {
 pub struct Plugin {
     pub name: String,
     pub description: String,
+    // NOTE: Category is currently unused but kept for future plugin filtering/organization
+    #[allow(dead_code)]
     pub category: PluginCategory,
 }
 

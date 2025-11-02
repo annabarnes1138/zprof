@@ -8,7 +8,6 @@
 
 use anyhow::Result;
 use std::fs;
-use std::path::PathBuf;
 use tempfile::TempDir;
 
 // Note: Full integration tests with actual editor invocation are difficult to automate
@@ -112,7 +111,7 @@ name = "test"
 
 #[test]
 fn test_profile_dir_path_construction() {
-    use std::env;
+    
 
     // Test profile directory path construction logic
     let home = dirs::home_dir().expect("Could not find home directory");
