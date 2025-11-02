@@ -55,7 +55,7 @@ development_status:
   2-1-parse-and-validate-toml-manifests: done
   2-2-generate-shell-configuration-from-toml: done
   2-3-manual-toml-editing-with-live-validation: done
-  2-4-export-profile-to-archive: ready-for-dev
+  2-4-export-profile-to-archive: done
   2-5-import-profile-from-local-archive: ready-for-dev
   2-6-import-profile-from-github-repository: ready-for-dev
   epic-2-retrospective: optional
