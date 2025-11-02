@@ -1,0 +1,13 @@
+[profile]
+name = "test-invalid-env"
+framework = "zinit"
+theme = "default"
+created = "2025-11-01T10:00:00Z"
+modified = "2025-11-01T10:00:00Z"
+
+[plugins]
+enabled = ["git"]
+
+[env]
+MY-VAR = "invalid-key-with-hyphen"
+EDITOR = "vim"

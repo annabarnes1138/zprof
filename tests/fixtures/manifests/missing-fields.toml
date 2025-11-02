@@ -1,0 +1,10 @@
+[profile]
+name = "test-missing-framework"
+theme = "robbyrussell"
+created = "2025-11-01T10:00:00Z"
+modified = "2025-11-01T10:00:00Z"
+
+[plugins]
+enabled = ["git"]
+
+[env]

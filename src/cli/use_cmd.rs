@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use clap::Args;
 use std::os::unix::process::CommandExt; // For exec()
 
-use crate::core::{config, profile};
+use crate::core::{config, manifest, profile};
 use crate::shell::zdotdir;
 
 #[derive(Debug, Args)]
@@ -15,6 +15,11 @@ pub fn execute(args: UseArgs) -> Result<()> {
     // Step 1: Validate profile exists and is complete (AC: #6)
     let profile_path = profile::get_profile_path(&args.profile_name)?;
     profile::validate_profile(&profile_path)?;
+
+    // Step 1b: Validate manifest schema (Story 2.1 AC#5)
+    // Ensures invalid manifests prevent profile activation
+    manifest::load_and_validate(&args.profile_name)
+        .context("Cannot switch to profile with invalid manifest")?;
 
     // Step 2: Update config.toml with new active profile (AC: #5)
     config::update_active_profile(&args.profile_name)

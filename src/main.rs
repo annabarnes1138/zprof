@@ -24,10 +24,14 @@ enum Commands {
     Current(cli::current::CurrentArgs),
     /// Delete a profile
     Delete(cli::delete::DeleteArgs),
+    /// Edit a profile's TOML manifest
+    Edit(cli::edit::EditArgs),
     /// Initialize zprof directory structure
     Init(cli::init::InitArgs),
     /// List all available zsh profiles
     List(cli::list::ListArgs),
+    /// Regenerate shell configuration files from profile.toml
+    Regenerate(cli::regenerate::RegenerateArgs),
     /// Restore original shell configuration (rollback zprof)
     Rollback(cli::rollback::RollbackArgs),
     /// Switch to a different profile
@@ -44,8 +48,10 @@ fn main() -> Result<()> {
         Commands::Create(args) => cli::create::execute(args),
         Commands::Current(args) => cli::current::execute(args),
         Commands::Delete(args) => cli::delete::execute(args),
+        Commands::Edit(args) => cli::edit::execute(args),
         Commands::Init(args) => cli::init::execute(args),
         Commands::List(args) => cli::list::execute(args),
+        Commands::Regenerate(args) => cli::regenerate::execute(args),
         Commands::Rollback(args) => cli::rollback::execute(args),
         Commands::Use(args) => cli::use_cmd::execute(args),
     }

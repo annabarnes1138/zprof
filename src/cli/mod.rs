@@ -1,7 +1,9 @@
 pub mod create;
 pub mod current;
 pub mod delete;
+pub mod edit;
 pub mod init;
 pub mod list;
+pub mod regenerate;
 pub mod rollback;
 pub mod use_cmd;

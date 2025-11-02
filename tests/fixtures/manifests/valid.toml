@@ -1,0 +1,13 @@
+[profile]
+name = "test-valid"
+framework = "oh-my-zsh"
+theme = "robbyrussell"
+created = "2025-11-01T10:00:00Z"
+modified = "2025-11-01T10:00:00Z"
+
+[plugins]
+enabled = ["git", "docker", "kubectl"]
+
+[env]
+EDITOR = "vim"
+GOPATH = "$HOME/go"

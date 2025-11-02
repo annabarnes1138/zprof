@@ -1,0 +1,11 @@
+[profile]
+name = "test-invalid-framework"
+framework = "bash-it"
+theme = "default"
+created = "2025-11-01T10:00:00Z"
+modified = "2025-11-01T10:00:00Z"
+
+[plugins]
+enabled = []
+
+[env]
