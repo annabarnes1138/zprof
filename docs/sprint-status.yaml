@@ -52,8 +52,8 @@ development_status:
   epic-1-retrospective: optional
 
   epic-2: backlog
-  2-1-parse-and-validate-toml-manifests: ready-for-dev
-  2-2-generate-shell-configuration-from-toml: ready-for-dev
+  2-1-parse-and-validate-toml-manifests: done
+  2-2-generate-shell-configuration-from-toml: done
   2-3-manual-toml-editing-with-live-validation: ready-for-dev
   2-4-export-profile-to-archive: ready-for-dev
   2-5-import-profile-from-local-archive: ready-for-dev
