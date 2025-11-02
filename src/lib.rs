@@ -3,6 +3,7 @@
 //! This library provides functionality for managing zsh profiles,
 //! including framework detection, profile management, and configuration.
 
+pub mod archive;
 pub mod cli;
 pub mod core;
 pub mod frameworks;

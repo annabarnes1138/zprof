@@ -1,3 +1,4 @@
+mod archive;
 mod cli;
 mod core;
 mod frameworks;
@@ -26,6 +27,10 @@ enum Commands {
     Delete(cli::delete::DeleteArgs),
     /// Edit a profile's TOML manifest
     Edit(cli::edit::EditArgs),
+    /// Export a profile to a .zprof archive
+    Export(cli::export::ExportArgs),
+    /// Import a profile from a .zprof archive
+    Import(cli::import::ImportArgs),
     /// Initialize zprof directory structure
     Init(cli::init::InitArgs),
     /// List all available zsh profiles
@@ -49,6 +54,8 @@ fn main() -> Result<()> {
         Commands::Current(args) => cli::current::execute(args),
         Commands::Delete(args) => cli::delete::execute(args),
         Commands::Edit(args) => cli::edit::execute(args),
+        Commands::Export(args) => cli::export::execute(args),
+        Commands::Import(args) => cli::import::execute(args),
         Commands::Init(args) => cli::init::execute(args),
         Commands::List(args) => cli::list::execute(args),
         Commands::Regenerate(args) => cli::regenerate::execute(args),
