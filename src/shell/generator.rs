@@ -239,6 +239,10 @@ fn generate_oh_my_zsh_config(output: &mut String, manifest: &Manifest) -> Result
     // Source oh-my-zsh
     output.push_str("source $ZSH/oh-my-zsh.sh\n");
 
+    // Source shared customizations
+    output.push_str("\n# Source shared customizations (edit ~/.zsh-profiles/shared/custom.zsh)\n");
+    output.push_str("[ -f \"$HOME/.zsh-profiles/shared/custom.zsh\" ] && source \"$HOME/.zsh-profiles/shared/custom.zsh\"\n");
+
     Ok(())
 }
 
@@ -267,6 +271,10 @@ fn generate_zimfw_config(output: &mut String, manifest: &Manifest) -> Result<()>
 
     // Source zimfw
     output.push_str("source $ZIM_HOME/init.zsh\n");
+
+    // Source shared customizations
+    output.push_str("\n# Source shared customizations (edit ~/.zsh-profiles/shared/custom.zsh)\n");
+    output.push_str("[ -f \"$HOME/.zsh-profiles/shared/custom.zsh\" ] && source \"$HOME/.zsh-profiles/shared/custom.zsh\"\n");
 
     Ok(())
 }
@@ -302,6 +310,10 @@ fn generate_prezto_config(output: &mut String, manifest: &Manifest) -> Result<()
     // Source prezto
     output.push_str("source $PREZTO_DIR/init.zsh\n");
 
+    // Source shared customizations
+    output.push_str("\n# Source shared customizations (edit ~/.zsh-profiles/shared/custom.zsh)\n");
+    output.push_str("[ -f \"$HOME/.zsh-profiles/shared/custom.zsh\" ] && source \"$HOME/.zsh-profiles/shared/custom.zsh\"\n");
+
     Ok(())
 }
 
@@ -331,6 +343,10 @@ fn generate_zinit_config(output: &mut String, manifest: &Manifest) -> Result<()>
         output.push_str(&format!("zinit light {}\n", manifest.profile.theme));
         output.push_str("\n");
     }
+
+    // Source shared customizations
+    output.push_str("# Source shared customizations (edit ~/.zsh-profiles/shared/custom.zsh)\n");
+    output.push_str("[ -f \"$HOME/.zsh-profiles/shared/custom.zsh\" ] && source \"$HOME/.zsh-profiles/shared/custom.zsh\"\n");
 
     Ok(())
 }
@@ -365,6 +381,10 @@ fn generate_zap_config(output: &mut String, manifest: &Manifest) -> Result<()> {
         output.push_str(&format!("plug \"{}\"\n", manifest.profile.theme));
         output.push_str("\n");
     }
+
+    // Source shared customizations
+    output.push_str("# Source shared customizations (edit ~/.zsh-profiles/shared/custom.zsh)\n");
+    output.push_str("[ -f \"$HOME/.zsh-profiles/shared/custom.zsh\" ] && source \"$HOME/.zsh-profiles/shared/custom.zsh\"\n");
 
     Ok(())
 }
@@ -482,6 +502,10 @@ fn generate_zshrc(
             content.push_str(&format!("plug \"{}\"\n", theme));
         }
     }
+
+    // Source shared customizations
+    content.push_str("\n# Source shared customizations (edit ~/.zsh-profiles/shared/custom.zsh)\n");
+    content.push_str("[ -f \"$HOME/.zsh-profiles/shared/custom.zsh\" ] && source \"$HOME/.zsh-profiles/shared/custom.zsh\"\n");
 
     let zshrc_path = profile_path.join(".zshrc");
     std::fs::write(&zshrc_path, content)

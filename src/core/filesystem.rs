@@ -99,6 +99,120 @@ pub fn create_shared_history() -> Result<PathBuf> {
     Ok(history_file)
 }
 
+/// Create shared custom.zsh file with user's environment customizations
+///
+/// This function is idempotent - safe to call multiple times.
+/// If the file already exists, it will not be modified.
+/// Extracts user customizations from ~/.zshrc and saves to shared location.
+pub fn create_shared_customizations() -> Result<PathBuf> {
+    let base_dir = get_zprof_dir()?;
+    let shared_dir = base_dir.join("shared");
+    let custom_file = shared_dir.join("custom.zsh");
+
+    // Ensure shared directory exists
+    fs::create_dir_all(&shared_dir)
+        .with_context(|| format!("Failed to create shared directory at {}", shared_dir.display()))?;
+
+    // Only create if it doesn't exist (idempotent)
+    if !custom_file.exists() {
+        let content = extract_user_customizations_from_zshrc()?;
+        fs::write(&custom_file, content)
+            .with_context(|| format!("Failed to create custom.zsh at {}", custom_file.display()))?;
+
+        log::info!("Created shared custom.zsh with user's environment customizations");
+    }
+
+    Ok(custom_file)
+}
+
+/// Extract user customizations from ~/.zshrc
+///
+/// Looks for common patterns like cargo, nvm, custom sourced files, etc.
+/// Returns the custom content to save to shared/custom.zsh
+fn extract_user_customizations_from_zshrc() -> Result<String> {
+    let home_dir = dirs::home_dir().context("Failed to get home directory")?;
+    let user_zshrc = home_dir.join(".zshrc");
+
+    if !user_zshrc.exists() {
+        return Ok(create_default_custom_zsh_header());
+    }
+
+    let content = fs::read_to_string(&user_zshrc)
+        .context("Failed to read user's .zshrc")?;
+
+    let mut custom_lines = Vec::new();
+    let mut in_custom_section = false;
+
+    for line in content.lines() {
+        let trimmed = line.trim();
+
+        // Skip framework-specific lines (oh-my-zsh, zimfw, etc.)
+        if trimmed.starts_with("export ZSH=")
+            || trimmed.starts_with("ZSH_THEME=")
+            || trimmed.starts_with("plugins=(")
+            || trimmed.contains("oh-my-zsh.sh")
+            || trimmed.contains("zimfw")
+            || trimmed.contains("zprezto")
+            || trimmed.contains("zinit")
+        {
+            continue;
+        }
+
+        // Detect important user customizations
+        if trimmed.contains(".cargo/env")
+            || trimmed.contains(".local/bin/env")
+            || trimmed.contains("NVM_DIR")
+            || trimmed.contains("nvm.sh")
+            || trimmed.contains("gvm")
+            || trimmed.contains("google-cloud-sdk")
+            || trimmed.starts_with("export PATH=")
+            || trimmed.starts_with("export DOCKER_HOST=")
+            || trimmed.contains("/.rd/")
+            || trimmed.contains("_aliases")
+        {
+            in_custom_section = true;
+            custom_lines.push(line.to_string());
+        } else if in_custom_section && (trimmed.is_empty() || trimmed.starts_with("#")) {
+            // Keep related comments and blank lines
+            custom_lines.push(line.to_string());
+        } else if trimmed.starts_with("source ") || trimmed.starts_with(". ") {
+            // Keep other source/dot commands
+            custom_lines.push(line.to_string());
+        }
+    }
+
+    let mut result = create_default_custom_zsh_header();
+
+    if !custom_lines.is_empty() {
+        result.push_str("# Extracted from your original ~/.zshrc\n\n");
+        result.push_str(&custom_lines.join("\n"));
+        result.push('\n');
+    } else {
+        result.push_str("# No customizations found in original ~/.zshrc\n");
+        result.push_str("# Add your custom environment setup below\n\n");
+    }
+
+    Ok(result)
+}
+
+/// Create default header for custom.zsh file
+fn create_default_custom_zsh_header() -> String {
+    let mut content = String::new();
+    content.push_str("# Shared Custom Configuration\n");
+    content.push_str("# =============================\n");
+    content.push_str("#\n");
+    content.push_str("# This file is sourced by ALL profiles.\n");
+    content.push_str("# Use this for environment setup that should be available everywhere:\n");
+    content.push_str("#   - PATH modifications\n");
+    content.push_str("#   - Language version managers (nvm, cargo, gvm, etc.)\n");
+    content.push_str("#   - Tool configurations (docker, kubectl, etc.)\n");
+    content.push_str("#   - Shared aliases\n");
+    content.push_str("#\n");
+    content.push_str("# For profile-specific configuration, edit the profile's .zshrc directly.\n");
+    content.push_str("#\n\n");
+    content
+}
+
 /// Recursively copy a directory and all its contents
 ///
 /// This follows Pattern 3: Safe File Operations with the Check -> Backup -> Operate -> Verify flow.

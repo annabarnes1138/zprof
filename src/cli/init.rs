@@ -69,6 +69,11 @@ pub fn execute_with_input(_args: InitArgs, input: &dyn UserInput) -> Result<()> 
         .context("Failed to create shared history file")?;
     println!("✓ Created shared history file: {}", history_file.display());
 
+    // Create shared customizations file
+    let custom_file = filesystem::create_shared_customizations()
+        .context("Failed to create shared customizations file")?;
+    println!("✓ Created shared customizations: {}", custom_file.display());
+
     // Create default config.toml
     let config_file = base_dir.join("config.toml");
     let mut config = Config::new();
