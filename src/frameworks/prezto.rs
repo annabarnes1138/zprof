@@ -74,8 +74,9 @@ impl Framework for Prezto {
         })
     }
 
-    fn install(_profile_path: &Path) -> Result<()> {
-        unimplemented!("prezto installation not yet implemented")
+    fn install(profile_path: &Path) -> Result<()> {
+        // Forward to the installer module for actual implementation
+        crate::frameworks::installer::install_framework(&FrameworkType::Prezto, profile_path)
     }
 
     fn get_plugins() -> Vec<Plugin> {

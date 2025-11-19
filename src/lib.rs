@@ -7,6 +7,7 @@ pub mod archive;
 pub mod cli;
 pub mod core;
 pub mod frameworks;
+pub mod git;
 pub mod shell;
 pub mod tui;
 

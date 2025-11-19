@@ -345,6 +345,10 @@ fn generate_zap_config(output: &mut String, manifest: &Manifest) -> Result<()> {
 
     // Source zap
     output.push_str("source $ZAP_DIR/zap.zsh\n");
+    
+    // Override ZAP_DIR after sourcing to ensure our path is used
+    output.push_str("export ZAP_DIR=\"$ZDOTDIR/.zap\"\n");
+    output.push_str("export ZAP_PLUGIN_DIR=\"$ZAP_DIR/plugins\"\n");
     output.push_str("\n");
 
     // Load plugins
@@ -467,7 +471,11 @@ fn generate_zshrc(
         }
         FrameworkType::Zap => {
             content.push_str("# zap initialization\n");
-            content.push_str("[ -f $ZDOTDIR/.local/share/zap/zap.zsh ] && source $ZDOTDIR/.local/share/zap/zap.zsh\n");
+            content.push_str("export ZAP_DIR=\"$ZDOTDIR/.zap\"\n");
+            content.push_str("[ -f $ZAP_DIR/zap.zsh ] && source $ZAP_DIR/zap.zsh\n");
+            // Override ZAP_DIR after sourcing to ensure our path is used
+            content.push_str("export ZAP_DIR=\"$ZDOTDIR/.zap\"\n");
+            content.push_str("export ZAP_PLUGIN_DIR=\"$ZAP_DIR/plugins\"\n");
             for plugin in plugins {
                 content.push_str(&format!("plug \"{}\"\n", plugin));
             }
@@ -775,6 +783,7 @@ mod tests {
         // AC #1: zap-specific configuration
         assert!(content.contains("export ZAP_DIR=\"$ZDOTDIR/.zap\""));
         assert!(content.contains("source $ZAP_DIR/zap.zsh"));
+        assert!(content.contains("export ZAP_PLUGIN_DIR=\"$ZAP_DIR/plugins\""));
         assert!(content.contains("plug \"zsh-users/zsh-syntax-highlighting\""));
         assert!(content.contains("plug \"robbyrussell\""));
 

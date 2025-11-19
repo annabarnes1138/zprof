@@ -80,8 +80,9 @@ impl Framework for Zinit {
         })
     }
 
-    fn install(_profile_path: &Path) -> Result<()> {
-        unimplemented!("zinit installation not yet implemented")
+    fn install(profile_path: &Path) -> Result<()> {
+        // Forward to the installer module for actual implementation
+        crate::frameworks::installer::install_framework(&FrameworkType::Zinit, profile_path)
     }
 
     fn get_plugins() -> Vec<Plugin> {

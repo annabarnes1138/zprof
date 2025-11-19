@@ -76,8 +76,9 @@ impl Framework for Zap {
         })
     }
 
-    fn install(_profile_path: &Path) -> Result<()> {
-        unimplemented!("zap installation not yet implemented")
+    fn install(profile_path: &Path) -> Result<()> {
+        // Forward to the installer module for actual implementation
+        crate::frameworks::installer::install_framework(&FrameworkType::Zap, profile_path)
     }
 
     fn get_plugins() -> Vec<Plugin> {

@@ -78,9 +78,9 @@ impl Framework for OhMyZsh {
         })
     }
 
-    fn install(_profile_path: &Path) -> Result<()> {
-        // Not implemented in this story
-        unimplemented!("oh-my-zsh installation not yet implemented")
+    fn install(profile_path: &Path) -> Result<()> {
+        // Forward to the installer module for actual implementation
+        crate::frameworks::installer::install_framework(&FrameworkType::OhMyZsh, profile_path)
     }
 
     fn get_plugins() -> Vec<Plugin> {

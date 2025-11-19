@@ -2,6 +2,7 @@ mod archive;
 mod cli;
 mod core;
 mod frameworks;
+mod git;
 mod shell;
 mod tui;
 
