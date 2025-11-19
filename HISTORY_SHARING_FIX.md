@@ -94,18 +94,20 @@ filesystem::create_shared_history()
 1. **Profile Creation** (`zprof create <name>`):
    - Creates profile directory
    - **Ensures shared history directory and file exist**
+   - **Copies existing ~/.zsh_history to shared location (preserves command history)**
    - Installs framework
    - Generates `.zshenv` with `HISTFILE="$HOME/.zsh-profiles/shared/.zsh_history"`
 
 2. **Profile Switching** (`zprof use <name>`):
    - Validates profile
    - **Ensures shared history directory and file exist**
+   - **Copies existing ~/.zsh_history to shared location if needed**
    - Updates active profile in config
    - Sets ZDOTDIR to point to the profile
 
 3. **Initialization** (`zprof init`):
    - Creates directory structure including `shared/`
-   - Creates shared history file
+   - Creates shared history file (with existing history if available)
    - (Already worked correctly)
 
 ## Testing
@@ -170,4 +172,5 @@ cargo build
 2. **No manual setup**: Users don't need to run `zprof init` first
 3. **Idempotent**: Safe to call multiple times, won't break existing setups
 4. **Automatic migration**: Switching to any profile ensures shared history exists
-5. **Maintains user data**: Never overwrites existing history file
+5. **Preserves existing history**: Copies ~/.zsh_history to shared location on first creation
+6. **Never loses data**: Won't overwrite existing shared history file

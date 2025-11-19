@@ -52,6 +52,8 @@ pub fn create_zprof_structure() -> Result<PathBuf> {
 ///
 /// This function is idempotent - safe to call multiple times.
 /// If the history file already exists, it will not be modified.
+/// If creating a new shared history file, it will attempt to copy
+/// the user's existing ~/.zsh_history to preserve command history.
 pub fn create_shared_history() -> Result<PathBuf> {
     let base_dir = get_zprof_dir()?;
     let shared_dir = base_dir.join("shared");
@@ -61,10 +63,28 @@ pub fn create_shared_history() -> Result<PathBuf> {
     fs::create_dir_all(&shared_dir)
         .with_context(|| format!("Failed to create shared directory at {}", shared_dir.display()))?;
 
-    // Create empty history file if it doesn't exist
+    // Create history file if it doesn't exist
     if !history_file.exists() {
-        fs::write(&history_file, "")
-            .with_context(|| format!("Failed to create history file at {}", history_file.display()))?;
+        // Try to copy existing ~/.zsh_history to preserve user's command history
+        let home_dir = dirs::home_dir()
+            .context("Failed to get home directory")?;
+        let user_history = home_dir.join(".zsh_history");
+
+        if user_history.exists() {
+            // Copy existing history to shared location
+            fs::copy(&user_history, &history_file)
+                .with_context(|| format!(
+                    "Failed to copy history from {} to {}",
+                    user_history.display(),
+                    history_file.display()
+                ))?;
+            log::info!("Copied existing history from {} to shared location", user_history.display());
+        } else {
+            // No existing history - create empty file
+            fs::write(&history_file, "")
+                .with_context(|| format!("Failed to create history file at {}", history_file.display()))?;
+            log::info!("Created new empty shared history file");
+        }
 
         // Set permissions to 0600 (user read/write only)
         #[cfg(unix)]
