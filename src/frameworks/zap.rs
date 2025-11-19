@@ -217,6 +217,58 @@ impl Framework for Zap {
     }
 }
 
+/// Map plugin names to their GitHub repository URLs for zap
+///
+/// Zap only supports direct GitHub repository clones.
+/// This function maps common plugin names to zap-compatible repositories.
+/// Returns an empty string for plugins without zap equivalents.
+pub fn map_plugin_to_repo(plugin_name: &str) -> String {
+    match plugin_name {
+        // zsh-users plugins (widely supported)
+        "zsh-autosuggestions" => "zsh-users/zsh-autosuggestions".to_string(),
+        "zsh-syntax-highlighting" => "zsh-users/zsh-syntax-highlighting".to_string(),
+        "zsh-vi-mode" => "jeffreytse/zsh-vi-mode".to_string(),
+
+        // Zap-specific plugin alternatives
+        "git" => "chivalryq/git-alias".to_string(), // Git aliases plugin
+        "kubectl" => "chrishrb/zsh-kubectl".to_string(), // Kubectl completions
+        "fzf" => "zap-zsh/fzf".to_string(), // FZF helper
+        "eza" => "zap-zsh/exa".to_string(), // Exa/LS override plugin
+        "rust" => "wintermi/zsh-rust".to_string(), // Rust toolchain plugin
+        "node" => "zap-zsh/nvm".to_string(), // NVM plugin for Node
+        "zoxide" => String::new(), // Zoxide auto-inits, no plugin needed
+
+        // Tools without zap plugins (users install the tools directly)
+        "docker" => String::new(), // Docker CLI provides its own completions
+        "python" => String::new(), // Python completions built-in to zsh
+        "bat" => String::new(), // Bat doesn't need a plugin
+        "ripgrep" => String::new(), // Ripgrep doesn't need a plugin
+
+        // Starship should be used as a theme, not a plugin
+        "starship" => String::new(),
+
+        // If no mapping exists, assume it's already a GitHub repo format
+        _ => plugin_name.to_string(),
+    }
+}
+
+/// Map theme names to their GitHub repository URLs for zap
+pub fn map_theme_to_repo(theme_name: &str) -> String {
+    match theme_name {
+        "starship" => "wintermi/zsh-starship".to_string(), // Zap-compatible starship plugin
+        "pure" => "sindresorhus/pure".to_string(),
+        "powerlevel10k" => "romkatv/powerlevel10k".to_string(),
+        "spaceship" => "spaceship-prompt/spaceship-prompt".to_string(),
+        "minimal" => "subnixr/minimal".to_string(),
+        "typewritten" => "reobin/typewritten".to_string(),
+        "geometry" => "geometry-zsh/geometry".to_string(),
+        "robbyrussell" => "zap-zsh/zap-prompt".to_string(), // Zap default prompt
+        "agnoster" => String::new(), // No direct zap equivalent
+        "lambda" => "halfo/lambda-mod-zsh-theme".to_string(),
+        _ => theme_name.to_string(),
+    }
+}
+
 /// Extracts plugins and theme from zap .zshrc content
 ///
 /// Looks for patterns like:

@@ -363,25 +363,41 @@ fn generate_zap_config(output: &mut String, manifest: &Manifest) -> Result<()> {
 
     // Source zap
     output.push_str("source $ZAP_DIR/zap.zsh\n");
-    
+
     // Override ZAP_DIR after sourcing to ensure our path is used
     output.push_str("export ZAP_DIR=\"$ZDOTDIR/.zap\"\n");
     output.push_str("export ZAP_PLUGIN_DIR=\"$ZAP_DIR/plugins\"\n");
+    output.push_str("\n");
+
+    // Initialize completion system before loading plugins to prevent compdef warnings
+    output.push_str("# Initialize completion system\n");
+    output.push_str("autoload -Uz compinit\n");
+    output.push_str("compinit\n");
     output.push_str("\n");
 
     // Load plugins
     if !manifest.plugins.enabled.is_empty() {
         output.push_str("# Plugins\n");
         for plugin in &manifest.plugins.enabled {
-            output.push_str(&format!("plug \"{}\"\n", plugin));
+            // Map plugin names to GitHub repos for zap
+            let plugin_repo = crate::frameworks::zap::map_plugin_to_repo(plugin);
+            // Skip plugins that don't have zap equivalents (empty string)
+            if !plugin_repo.is_empty() {
+                output.push_str(&format!("plug \"{}\"\n", plugin_repo));
+            }
         }
         output.push_str("\n");
     }
 
     // Load theme
     if !manifest.profile.theme.is_empty() {
-        output.push_str(&format!("plug \"{}\"\n", manifest.profile.theme));
-        output.push_str("\n");
+        // Map theme name to GitHub repo for zap
+        let theme_repo = crate::frameworks::zap::map_theme_to_repo(&manifest.profile.theme);
+        // Skip themes that don't have zap equivalents (empty string)
+        if !theme_repo.is_empty() {
+            output.push_str(&format!("plug \"{}\"\n", theme_repo));
+            output.push_str("\n");
+        }
     }
 
     // Source shared customizations
@@ -504,10 +520,23 @@ fn generate_zshrc(
             // Override ZAP_DIR after sourcing to ensure our path is used
             content.push_str("export ZAP_DIR=\"$ZDOTDIR/.zap\"\n");
             content.push_str("export ZAP_PLUGIN_DIR=\"$ZAP_DIR/plugins\"\n");
+            // Initialize completion system before loading plugins to prevent compdef warnings
+            content.push_str("autoload -Uz compinit\n");
+            content.push_str("compinit\n");
             for plugin in plugins {
-                content.push_str(&format!("plug \"{}\"\n", plugin));
+                // Map plugin names to GitHub repos for zap
+                let plugin_repo = crate::frameworks::zap::map_plugin_to_repo(plugin);
+                // Skip plugins that don't have zap equivalents (empty string)
+                if !plugin_repo.is_empty() {
+                    content.push_str(&format!("plug \"{}\"\n", plugin_repo));
+                }
             }
-            content.push_str(&format!("plug \"{}\"\n", theme));
+            // Map theme name to GitHub repo for zap
+            let theme_repo = crate::frameworks::zap::map_theme_to_repo(theme);
+            // Skip themes that don't have zap equivalents (empty string)
+            if !theme_repo.is_empty() {
+                content.push_str(&format!("plug \"{}\"\n", theme_repo));
+            }
         }
     }
 
@@ -803,7 +832,7 @@ mod tests {
     fn test_generate_zshrc_from_manifest_zap() -> Result<()> {
         let manifest = create_test_manifest(
             "zap",
-            vec!["zsh-users/zsh-syntax-highlighting".to_string()],
+            vec!["zsh-syntax-highlighting".to_string()],
             HashMap::new(),
         );
         let content = generate_zshrc_from_manifest(&manifest)?;
@@ -812,8 +841,10 @@ mod tests {
         assert!(content.contains("export ZAP_DIR=\"$ZDOTDIR/.zap\""));
         assert!(content.contains("source $ZAP_DIR/zap.zsh"));
         assert!(content.contains("export ZAP_PLUGIN_DIR=\"$ZAP_DIR/plugins\""));
+        // Plugin should be mapped to zap-compatible GitHub URL
         assert!(content.contains("plug \"zsh-users/zsh-syntax-highlighting\""));
-        assert!(content.contains("plug \"robbyrussell\""));
+        // Theme should be mapped to zap-compatible prompt (robbyrussell -> zap-prompt)
+        assert!(content.contains("plug \"zap-zsh/zap-prompt\""));
 
         Ok(())
     }
