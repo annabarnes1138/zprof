@@ -11,7 +11,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use crate::core::config::Config;
-use crate::core::filesystem::{copy_dir_recursive, get_zprof_dir};
+use crate::core::filesystem::{copy_dir_recursive, create_shared_history, get_zprof_dir};
 use crate::core::manifest::Manifest;
 use crate::frameworks::detect_existing_framework;
 use crate::frameworks::installer::{self, WizardState};
@@ -152,13 +152,17 @@ pub fn execute(args: CreateArgs) -> Result<()> {
         }
     };
 
-    // 4. Create profile directory
+    // 4. Create profile directory and ensure shared history exists
     fs::create_dir_all(&profile_dir).with_context(|| {
         format!(
             "Failed to create profile directory at {}",
             profile_dir.display()
         )
     })?;
+
+    // Ensure shared history file exists for cross-profile history sharing
+    create_shared_history()
+        .context("Failed to create shared history file")?;
 
     // 5. Install framework and plugins (Story 1.8) or copy existing files
     if should_import_files {

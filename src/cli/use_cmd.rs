@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use clap::Args;
 
-use crate::core::{config, manifest, profile};
+use crate::core::{config, filesystem, manifest, profile};
 use crate::shell::zdotdir;
 
 #[derive(Debug, Args)]
@@ -19,6 +19,10 @@ pub fn execute(args: UseArgs) -> Result<()> {
     // Ensures invalid manifests prevent profile activation
     manifest::load_and_validate(&args.profile_name)
         .context("Cannot switch to profile with invalid manifest")?;
+
+    // Step 1c: Ensure shared history file exists for cross-profile history sharing
+    filesystem::create_shared_history()
+        .context("Failed to create shared history file")?;
 
     // Step 2: Update config.toml with new active profile (AC: #5)
     config::update_active_profile(&args.profile_name)

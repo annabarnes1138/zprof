@@ -49,21 +49,31 @@ pub fn create_zprof_structure() -> Result<PathBuf> {
 }
 
 /// Create the shared history file with appropriate permissions
+///
+/// This function is idempotent - safe to call multiple times.
+/// If the history file already exists, it will not be modified.
 pub fn create_shared_history() -> Result<PathBuf> {
     let base_dir = get_zprof_dir()?;
-    let history_file = base_dir.join("shared/.zsh_history");
+    let shared_dir = base_dir.join("shared");
+    let history_file = shared_dir.join(".zsh_history");
 
-    // Create empty file
-    fs::write(&history_file, "")
-        .with_context(|| format!("Failed to create history file at {}", history_file.display()))?;
+    // Ensure shared directory exists
+    fs::create_dir_all(&shared_dir)
+        .with_context(|| format!("Failed to create shared directory at {}", shared_dir.display()))?;
 
-    // Set permissions to 0600 (user read/write only)
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let permissions = fs::Permissions::from_mode(0o600);
-        fs::set_permissions(&history_file, permissions)
-            .with_context(|| format!("Failed to set permissions on history file at {}", history_file.display()))?;
+    // Create empty history file if it doesn't exist
+    if !history_file.exists() {
+        fs::write(&history_file, "")
+            .with_context(|| format!("Failed to create history file at {}", history_file.display()))?;
+
+        // Set permissions to 0600 (user read/write only)
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let permissions = fs::Permissions::from_mode(0o600);
+            fs::set_permissions(&history_file, permissions)
+                .with_context(|| format!("Failed to set permissions on history file at {}", history_file.display()))?;
+        }
     }
 
     Ok(history_file)
