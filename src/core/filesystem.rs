@@ -141,7 +141,8 @@ fn extract_user_customizations_from_zshrc() -> Result<String> {
         .context("Failed to read user's .zshrc")?;
 
     let mut custom_lines = Vec::new();
-    let mut in_custom_section = false;
+    let mut in_managed_section = false;
+    let mut if_depth = 0; // Track if/fi nesting
 
     for line in content.lines() {
         let trimmed = line.trim();
@@ -158,25 +159,59 @@ fn extract_user_customizations_from_zshrc() -> Result<String> {
             continue;
         }
 
-        // Detect important user customizations
+        // Track managed sections to extract them completely
+        if trimmed.contains("BEGIN JH-MANAGED") || trimmed.contains("MANAGED BY RANCHER DESKTOP START") {
+            in_managed_section = true;
+            custom_lines.push(line.to_string());
+            continue;
+        }
+
+        if trimmed.contains("END JH-MANAGED") || trimmed.contains("MANAGED BY RANCHER DESKTOP END") {
+            custom_lines.push(line.to_string());
+            in_managed_section = false;
+            continue;
+        }
+
+        // Extract entire managed sections
+        if in_managed_section {
+            custom_lines.push(line.to_string());
+            continue;
+        }
+
+        // Detect important user customizations (individual lines)
         if trimmed.contains(".cargo/env")
             || trimmed.contains(".local/bin/env")
-            || trimmed.contains("NVM_DIR")
-            || trimmed.contains("nvm.sh")
-            || trimmed.contains("gvm")
-            || trimmed.contains("google-cloud-sdk")
-            || trimmed.starts_with("export PATH=")
+            || (trimmed.contains("NVM_DIR") && !in_managed_section)
+            || (trimmed.contains("nvm.sh") && !in_managed_section)
+            || (trimmed.contains("gvm") && !in_managed_section)
+            || (trimmed.contains("google-cloud-sdk") && trimmed.contains("source"))
+            || (trimmed.starts_with("export PATH=") && !trimmed.contains("$PATH"))
             || trimmed.starts_with("export DOCKER_HOST=")
-            || trimmed.contains("/.rd/")
-            || trimmed.contains("_aliases")
+            || (trimmed.contains("/.rd/") && trimmed.starts_with("export"))
+            || (trimmed.contains("_aliases") && !in_managed_section)
         {
-            in_custom_section = true;
             custom_lines.push(line.to_string());
-        } else if in_custom_section && (trimmed.is_empty() || trimmed.starts_with("#")) {
-            // Keep related comments and blank lines
+            // Track if we're starting an if statement
+            if trimmed.starts_with("if ") || trimmed.starts_with("if[") {
+                if_depth += 1;
+            }
+            continue;
+        }
+
+        // If we're inside an if block from customizations, keep collecting until fi
+        if if_depth > 0 {
             custom_lines.push(line.to_string());
-        } else if trimmed.starts_with("source ") || trimmed.starts_with(". ") {
-            // Keep other source/dot commands
+            // Track nested if statements
+            if trimmed.starts_with("if ") || trimmed.starts_with("if[") {
+                if_depth += 1;
+            } else if trimmed == "fi" {
+                if_depth -= 1;
+            }
+            continue;
+        }
+
+        // Keep other source/dot commands
+        if trimmed.starts_with("source ") || trimmed.starts_with(". ") {
             custom_lines.push(line.to_string());
         }
     }
@@ -211,6 +246,122 @@ fn create_default_custom_zsh_header() -> String {
     content.push_str("# For profile-specific configuration, edit the profile's .zshrc directly.\n");
     content.push_str("#\n\n");
     content
+}
+
+/// Remove customizations from .zshrc content that have been extracted to shared/custom.zsh
+///
+/// This removes the same lines that `extract_user_customizations_from_zshrc` identifies,
+/// preventing duplication between profile .zshrc and shared/custom.zsh
+pub fn remove_extracted_customizations(zshrc_content: &str) -> String {
+    let mut cleaned_lines = Vec::new();
+    let mut in_managed_section = false;
+    let mut skip_if_depth = 0; // Track if/fi blocks we're skipping
+    let lines: Vec<&str> = zshrc_content.lines().collect();
+    let mut i = 0;
+
+    while i < lines.len() {
+        let line = lines[i];
+        let trimmed = line.trim();
+
+        // Check for section markers first
+        if trimmed.contains("BEGIN JH-MANAGED") || trimmed.contains("MANAGED BY RANCHER DESKTOP START") {
+            in_managed_section = true;
+            i += 1;
+            continue;
+        }
+
+        if trimmed.contains("END JH-MANAGED") || trimmed.contains("MANAGED BY RANCHER DESKTOP END") {
+            in_managed_section = false;
+            i += 1;
+            continue;
+        }
+
+        // Skip all lines within managed sections
+        if in_managed_section {
+            i += 1;
+            continue;
+        }
+
+        // If we're inside an if block that we're skipping, continue until we close it
+        if skip_if_depth > 0 {
+            // Track nested if statements
+            if trimmed.starts_with("if ") || trimmed.starts_with("if[") {
+                skip_if_depth += 1;
+            } else if trimmed == "fi" {
+                skip_if_depth -= 1;
+            }
+            i += 1;
+            continue; // Skip this line
+        }
+
+        // Check if this is an if statement that contains customization patterns
+        // Look ahead to see if the if block contains patterns we want to remove
+        if trimmed.starts_with("if ") || trimmed.starts_with("if[") {
+            // Look ahead to check if this if block should be skipped
+            let mut look_ahead = i + 1;
+            let mut depth = 1;
+            let mut should_skip_block = false;
+
+            while look_ahead < lines.len() && depth > 0 {
+                let ahead_trimmed = lines[look_ahead].trim();
+
+                if ahead_trimmed.starts_with("if ") || ahead_trimmed.starts_with("if[") {
+                    depth += 1;
+                } else if ahead_trimmed == "fi" {
+                    depth -= 1;
+                    if depth == 0 {
+                        break;
+                    }
+                }
+
+                // Check if this line contains patterns we're removing
+                if ahead_trimmed.contains(".cargo/env")
+                    || ahead_trimmed.contains(".local/bin/env")
+                    || (ahead_trimmed.contains("NVM_DIR") && !ahead_trimmed.starts_with("#"))
+                    || (ahead_trimmed.contains("nvm.sh") && !ahead_trimmed.starts_with("#"))
+                    || (ahead_trimmed.contains("gvm") && ahead_trimmed.contains("source"))
+                    || (ahead_trimmed.contains("google-cloud-sdk") && ahead_trimmed.contains("source"))
+                    || (ahead_trimmed.starts_with("export PATH=") && !ahead_trimmed.contains("$PATH"))
+                    || ahead_trimmed.starts_with("export DOCKER_HOST=")
+                    || (ahead_trimmed.contains("/.rd/") && ahead_trimmed.contains("export"))
+                    || (ahead_trimmed.contains("_aliases") && ahead_trimmed.contains("source"))
+                {
+                    should_skip_block = true;
+                    break;
+                }
+
+                look_ahead += 1;
+            }
+
+            if should_skip_block {
+                // Skip the entire if/fi block
+                skip_if_depth = 1;
+                i += 1;
+                continue;
+            }
+        }
+
+        // Remove individual lines that match extraction patterns (not in managed sections)
+        if trimmed.contains(".cargo/env")
+            || trimmed.contains(".local/bin/env")
+            || (trimmed.contains("NVM_DIR") && !trimmed.starts_with("#"))
+            || (trimmed.contains("nvm.sh") && !trimmed.starts_with("#"))
+            || (trimmed.contains("gvm") && trimmed.contains("source"))
+            || (trimmed.contains("google-cloud-sdk") && trimmed.contains("source"))
+            || (trimmed.starts_with("export PATH=") && !trimmed.contains("$PATH"))
+            || trimmed.starts_with("export DOCKER_HOST=")
+            || (trimmed.contains("/.rd/") && trimmed.contains("export"))
+            || (trimmed.contains("_aliases") && trimmed.contains("source"))
+        {
+            i += 1;
+            continue;
+        }
+
+        cleaned_lines.push(line);
+        i += 1;
+    }
+
+    cleaned_lines.join("\n")
 }
 
 /// Recursively copy a directory and all its contents

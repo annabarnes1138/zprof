@@ -197,6 +197,9 @@ fn import_framework(
         let original_content = fs::read_to_string(&zshrc_source)
             .with_context(|| format!("Failed to read .zshrc from {}", zshrc_source.display()))?;
 
+        // Remove customizations that were extracted to shared/custom.zsh
+        let cleaned_content = filesystem::remove_extracted_customizations(&original_content);
+
         // Prepend HISTFILE configuration to override system /etc/zshrc
         let histfile_header = "# zprof: Shared history configuration (must be before framework initialization)\n\
                                export HISTFILE=\"$HOME/.zsh-profiles/shared/.zsh_history\"\n\
@@ -204,14 +207,18 @@ fn import_framework(
                                export SAVEHIST=10000\n\
                                \n";
 
-        let modified_content = format!("{}{}", histfile_header, original_content);
+        // Append shared customizations source at the end
+        let custom_source = "\n# Source shared customizations (edit ~/.zsh-profiles/shared/custom.zsh)\n\
+                             [ -f \"$HOME/.zsh-profiles/shared/custom.zsh\" ] && source \"$HOME/.zsh-profiles/shared/custom.zsh\"\n";
+
+        let modified_content = format!("{}{}{}", histfile_header, cleaned_content, custom_source);
 
         let zshrc_dest = profile_dir.join(".zshrc");
 
         fs::write(&zshrc_dest, modified_content)
             .with_context(|| format!("Failed to write .zshrc to {}", zshrc_dest.display()))?;
 
-        info!("Copied .zshrc to profile with shared history configuration");
+        info!("Copied .zshrc to profile with shared history configuration and extracted customizations removed");
 
         // Verify original .zshrc is untouched (AC: #7 - NFR002)
         if !zshrc_source.exists() {
