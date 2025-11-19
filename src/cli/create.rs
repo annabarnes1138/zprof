@@ -275,17 +275,25 @@ fn copy_framework_files(
         })?;
     }
 
-    // Copy .zshrc
+    // Copy .zshrc with prepended histfile configuration
     let zshrc_source = home_dir.join(".zshrc");
     if zshrc_source.exists() {
+        // Read the original .zshrc content
+        let original_content = fs::read_to_string(&zshrc_source)
+            .with_context(|| format!("Failed to read .zshrc from {}", zshrc_source.display()))?;
+
+        // Prepend HISTFILE configuration to override system /etc/zshrc
+        let histfile_header = "# zprof: Shared history configuration (must be before framework initialization)\n\
+                               export HISTFILE=\"$HOME/.zsh-profiles/shared/.zsh_history\"\n\
+                               export HISTSIZE=10000\n\
+                               export SAVEHIST=10000\n\
+                               \n";
+
+        let modified_content = format!("{}{}", histfile_header, original_content);
+
         let zshrc_dest = profile_dir.join(".zshrc");
-        fs::copy(&zshrc_source, &zshrc_dest).with_context(|| {
-            format!(
-                "Failed to copy .zshrc from {} to {}",
-                zshrc_source.display(),
-                zshrc_dest.display()
-            )
-        })?;
+        fs::write(&zshrc_dest, modified_content)
+            .with_context(|| format!("Failed to write .zshrc to {}", zshrc_dest.display()))?;
 
         // Verify original .zshrc still exists (NFR002)
         if !zshrc_source.exists() {

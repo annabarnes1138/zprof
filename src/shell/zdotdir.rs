@@ -67,25 +67,41 @@ pub fn set_active_profile(profile_path: &Path) -> Result<()> {
     // Remove any existing zprof-managed section to avoid duplication
     let user_content = remove_zprof_section(&existing_content);
 
-    // Operate: Create/update ~/.zshenv with ZDOTDIR export
+    // Operate: Create/update ~/.zshenv with ZDOTDIR and HISTFILE exports
     log::debug!("Setting ZDOTDIR to: {}", profile_path.display());
 
     let zdotdir_line = format!("export ZDOTDIR=\"{}\"", profile_path.display());
+
+    // Set HISTFILE here (in root .zshenv) to ensure it's set before zsh initializes history
+    // This is more reliable than setting it in $ZDOTDIR/.zshenv
+    // Also set history options to enable immediate append and sharing
+    let histfile_lines = "# Shared command history across all profiles\n\
+                          export HISTFILE=\"$HOME/.zsh-profiles/shared/.zsh_history\"\n\
+                          export HISTSIZE=10000\n\
+                          export SAVEHIST=10000\n\
+                          setopt INC_APPEND_HISTORY    # Immediately append to history file\n\
+                          setopt SHARE_HISTORY         # Share history between all sessions\n\
+                          setopt HIST_IGNORE_DUPS      # Don't record duplicates";
+
     let zprof_section = if let Some(backup) = backup_path {
         format!(
             "# ========== Managed by zprof - DO NOT EDIT THIS SECTION ==========\n\
              # Original .zshenv backed up to: {}\n\
              {}\n\
+             {}\n\
              # ===================================================================\n",
             backup.display(),
-            zdotdir_line
+            zdotdir_line,
+            histfile_lines
         )
     } else {
         format!(
             "# ========== Managed by zprof - DO NOT EDIT THIS SECTION ==========\n\
              {}\n\
+             {}\n\
              # ===================================================================\n",
-            zdotdir_line
+            zdotdir_line,
+            histfile_lines
         )
     };
 

@@ -7,6 +7,7 @@ expression: normalized
   ├── shared/
   └── cache/
 ✓ Created shared history file: $HOME/.zsh-profiles/shared/.zsh_history
+✓ Created shared customizations: $HOME/.zsh-profiles/shared/custom.zsh
 ✓ Created configuration file: $HOME/.zsh-profiles/config.toml
 
 No existing framework detected.

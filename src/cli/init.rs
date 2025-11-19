@@ -8,7 +8,7 @@ use crate::core::config::Config;
 use crate::core::filesystem;
 use crate::core::manifest::Manifest;
 use crate::frameworks::{detect_existing_framework, FrameworkInfo};
-use crate::shell::zdotdir;
+use crate::shell::{generator, zdotdir};
 
 /// Trait for user interaction - allows mocking in tests
 pub trait UserInput {
@@ -193,11 +193,25 @@ fn import_framework(
     let zshrc_source = home_dir.join(".zshrc");
 
     if zshrc_source.exists() {
-        let zshrc_dest = profile_dir.join(".zshrc");
-        fs::copy(&zshrc_source, &zshrc_dest)
-            .with_context(|| format!("Failed to copy .zshrc to {}", zshrc_dest.display()))?;
+        // Read the original .zshrc content
+        let original_content = fs::read_to_string(&zshrc_source)
+            .with_context(|| format!("Failed to read .zshrc from {}", zshrc_source.display()))?;
 
-        info!("Copied .zshrc to profile");
+        // Prepend HISTFILE configuration to override system /etc/zshrc
+        let histfile_header = "# zprof: Shared history configuration (must be before framework initialization)\n\
+                               export HISTFILE=\"$HOME/.zsh-profiles/shared/.zsh_history\"\n\
+                               export HISTSIZE=10000\n\
+                               export SAVEHIST=10000\n\
+                               \n";
+
+        let modified_content = format!("{}{}", histfile_header, original_content);
+
+        let zshrc_dest = profile_dir.join(".zshrc");
+
+        fs::write(&zshrc_dest, modified_content)
+            .with_context(|| format!("Failed to write .zshrc to {}", zshrc_dest.display()))?;
+
+        info!("Copied .zshrc to profile with shared history configuration");
 
         // Verify original .zshrc is untouched (AC: #7 - NFR002)
         if !zshrc_source.exists() {
@@ -210,14 +224,19 @@ fn import_framework(
     }
 
     // Copy framework-specific config files (AC: #4)
+    // Note: Skip .zshrc as it's already handled above with histfile prepending
     if framework_info.config_path.exists() {
         let config_name = framework_info.config_path.file_name()
             .context("Invalid framework config path")?;
-        let config_dest = profile_dir.join(config_name);
-        fs::copy(&framework_info.config_path, &config_dest)
-            .with_context(|| format!("Failed to copy framework config to {}", config_dest.display()))?;
 
-        info!("Copied framework config file");
+        // Skip .zshrc - already copied with histfile header prepended above
+        if config_name.to_str() != Some(".zshrc") {
+            let config_dest = profile_dir.join(config_name);
+            fs::copy(&framework_info.config_path, &config_dest)
+                .with_context(|| format!("Failed to copy framework config to {}", config_dest.display()))?;
+
+            info!("Copied framework config file: {:?}", config_name);
+        }
     }
 
     // Generate profile.toml manifest (AC: #8)
@@ -229,6 +248,16 @@ fn import_framework(
         .with_context(|| format!("Failed to write manifest to {}", manifest_path.display()))?;
 
     info!("Generated profile.toml manifest");
+
+    // Generate .zshenv file to set HISTFILE and other environment variables
+    // Note: We don't regenerate .zshrc as it was already copied from the user's original
+    let zshenv_content = generator::generate_zshenv_from_manifest(&manifest)
+        .context("Failed to generate .zshenv content")?;
+    let zshenv_path = profile_dir.join(".zshenv");
+    fs::write(&zshenv_path, zshenv_content)
+        .with_context(|| format!("Failed to write .zshenv to {}", zshenv_path.display()))?;
+
+    info!("Generated .zshenv file with shared history configuration");
 
     // Check for existing ZDOTDIR conflicts (AC: #7 - edge case)
     if zdotdir::has_existing_zdotdir()? {
