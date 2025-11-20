@@ -3,7 +3,7 @@
 //! Detects zimfw installations by looking for ~/.zim or ~/.zimfw directory
 //! and parsing ~/.zimrc for module configuration.
 
-use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, PluginCategory, Theme};
+use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, Theme};
 use anyhow::Result;
 use std::fs;
 use std::path::Path;

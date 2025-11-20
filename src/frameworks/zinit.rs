@@ -3,7 +3,7 @@
 //! Detects zinit installations by looking for ~/.zinit or ~/.local/share/zinit directory
 //! and parsing ~/.zshrc for zinit plugin declarations.
 
-use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, PluginCategory, Theme};
+use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, Theme};
 use anyhow::Result;
 use std::fs;
 use std::path::Path;

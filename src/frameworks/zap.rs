@@ -3,7 +3,7 @@
 //! Detects zap installations by looking for ~/.local/share/zap directory
 //! and parsing ~/.zshrc for zap plugin declarations.
 
-use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, PluginCategory, Theme};
+use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, Theme};
 use anyhow::Result;
 use std::fs;
 use std::path::Path;

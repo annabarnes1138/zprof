@@ -3,7 +3,7 @@
 //! Detects oh-my-zsh installations by looking for ~/.oh-my-zsh directory
 //! and parsing ~/.zshrc for plugin and theme configuration.
 
-use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, PluginCategory, Theme};
+use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, Theme};
 use anyhow::Result;
 use std::fs;
 use std::path::Path;

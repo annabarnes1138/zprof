@@ -3,7 +3,7 @@
 //! Detects prezto installations by looking for ~/.zprezto directory
 //! and parsing ~/.zpreztorc for module and theme configuration.
 
-use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, PluginCategory, Theme};
+use super::{get_home_dir, Framework, FrameworkInfo, FrameworkType, Plugin, Theme};
 use anyhow::Result;
 use std::fs;
 use std::path::Path;
