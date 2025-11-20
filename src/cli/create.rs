@@ -63,7 +63,7 @@ pub fn execute(args: CreateArgs) -> Result<()> {
 
         let should_import = Confirm::new()
             .with_prompt("Import current setup?")
-            .default(true)
+            .default(false)
             .interact()
             .context("Failed to read user input for import confirmation")?;
 
@@ -359,7 +359,7 @@ fn update_global_config(profile_name: &str) -> Result<()> {
     Ok(())
 }
 
-/// Display success message with profile details
+/// Display success message with profile details and optionally switch to the profile
 fn display_success(
     name: &str,
     framework_info: &crate::frameworks::FrameworkInfo,
@@ -370,7 +370,23 @@ fn display_success(
     println!("  Plugins: {} ({})", framework_info.plugins.len(), framework_info.plugins.join(", "));
     println!("  Theme: {}", framework_info.theme);
     println!("  Location: {}", profile_dir.display());
-    println!("\n  → Use 'zprof use {}' to switch to this profile", name);
+    println!();
+
+    // Ask if user wants to switch to the new profile
+    let should_switch = Confirm::new()
+        .with_prompt(format!("Switch to '{}' now?", name))
+        .default(true)
+        .interact()
+        .context("Failed to read user input for profile switch confirmation")?;
+
+    if should_switch {
+        // Use the use_cmd module to switch profiles
+        crate::cli::use_cmd::execute(crate::cli::use_cmd::UseArgs {
+            profile_name: name.to_string(),
+        })?;
+    } else {
+        println!("\n  → Use 'zprof use {}' to switch to this profile later", name);
+    }
 
     Ok(())
 }
