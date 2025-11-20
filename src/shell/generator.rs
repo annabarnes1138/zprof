@@ -379,11 +379,14 @@ fn generate_zap_config(output: &mut String, manifest: &Manifest) -> Result<()> {
     if !manifest.plugins.enabled.is_empty() {
         output.push_str("# Plugins\n");
         for plugin in &manifest.plugins.enabled {
-            // Map plugin names to GitHub repos for zap
-            let plugin_repo = crate::frameworks::zap::map_plugin_to_repo(plugin);
-            // Skip plugins that don't have zap equivalents (empty string)
-            if !plugin_repo.is_empty() {
-                output.push_str(&format!("plug \"{}\"\n", plugin_repo));
+            // Look up plugin repo URL from registry metadata
+            if let Some(p) = crate::frameworks::plugin::PLUGIN_REGISTRY
+                .iter()
+                .find(|p| p.name == plugin.as_str())
+            {
+                if let Some(repo_url) = p.compatibility.repo_url_for(&crate::frameworks::FrameworkType::Zap) {
+                    output.push_str(&format!("plug \"{}\"\n", repo_url));
+                }
             }
         }
         output.push_str("\n");
@@ -391,12 +394,15 @@ fn generate_zap_config(output: &mut String, manifest: &Manifest) -> Result<()> {
 
     // Load theme
     if !manifest.profile.theme.is_empty() {
-        // Map theme name to GitHub repo for zap
-        let theme_repo = crate::frameworks::zap::map_theme_to_repo(&manifest.profile.theme);
-        // Skip themes that don't have zap equivalents (empty string)
-        if !theme_repo.is_empty() {
-            output.push_str(&format!("plug \"{}\"\n", theme_repo));
-            output.push_str("\n");
+        // Look up theme repo URL from registry metadata
+        if let Some(theme) = crate::frameworks::theme::THEME_REGISTRY
+            .iter()
+            .find(|t| t.name == manifest.profile.theme.as_str())
+        {
+            if let Some(repo_url) = theme.compatibility.repo_url_for(&crate::frameworks::FrameworkType::Zap) {
+                output.push_str(&format!("plug \"{}\"\n", repo_url));
+                output.push_str("\n");
+            }
         }
     }
 
@@ -524,18 +530,24 @@ fn generate_zshrc(
             content.push_str("autoload -Uz compinit\n");
             content.push_str("compinit\n");
             for plugin in plugins {
-                // Map plugin names to GitHub repos for zap
-                let plugin_repo = crate::frameworks::zap::map_plugin_to_repo(plugin);
-                // Skip plugins that don't have zap equivalents (empty string)
-                if !plugin_repo.is_empty() {
-                    content.push_str(&format!("plug \"{}\"\n", plugin_repo));
+                // Look up plugin repo URL from registry metadata
+                if let Some(p) = crate::frameworks::plugin::PLUGIN_REGISTRY
+                    .iter()
+                    .find(|p| p.name == plugin.as_str())
+                {
+                    if let Some(repo_url) = p.compatibility.repo_url_for(&crate::frameworks::FrameworkType::Zap) {
+                        content.push_str(&format!("plug \"{}\"\n", repo_url));
+                    }
                 }
             }
-            // Map theme name to GitHub repo for zap
-            let theme_repo = crate::frameworks::zap::map_theme_to_repo(theme);
-            // Skip themes that don't have zap equivalents (empty string)
-            if !theme_repo.is_empty() {
-                content.push_str(&format!("plug \"{}\"\n", theme_repo));
+            // Look up theme repo URL from registry metadata
+            if let Some(theme_obj) = crate::frameworks::theme::THEME_REGISTRY
+                .iter()
+                .find(|t| t.name == theme)
+            {
+                if let Some(repo_url) = theme_obj.compatibility.repo_url_for(&crate::frameworks::FrameworkType::Zap) {
+                    content.push_str(&format!("plug \"{}\"\n", repo_url));
+                }
             }
         }
     }

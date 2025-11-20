@@ -6,7 +6,9 @@
 mod detector;
 pub mod installer;
 pub mod oh_my_zsh;
+pub mod plugin;
 pub mod prezto;
+pub mod theme;
 pub mod zap;
 pub mod zimfw;
 pub mod zinit;
@@ -50,11 +52,12 @@ pub trait Framework {
 /// Plugin data model for framework plugins
 #[derive(Debug, Clone)]
 pub struct Plugin {
-    pub name: String,
-    pub description: String,
+    pub name: &'static str,
+    pub description: &'static str,
     // NOTE: Category is currently unused but kept for future plugin filtering/organization
     #[allow(dead_code)]
     pub category: PluginCategory,
+    pub compatibility: PluginCompatibility,
 }
 
 /// Plugin categories for organizing plugins
@@ -70,9 +73,87 @@ pub enum PluginCategory {
 /// Theme data model for framework themes
 #[derive(Debug, Clone)]
 pub struct Theme {
-    pub name: String,
-    pub description: String,
-    pub preview: String,
+    pub name: &'static str,
+    pub description: &'static str,
+    pub preview: &'static str,
+    pub compatibility: ThemeCompatibility,
+}
+
+/// Plugin compatibility metadata
+#[derive(Debug, Clone)]
+pub struct PluginCompatibility {
+    /// Which managers can install this plugin
+    pub supported_managers: &'static [ManagerSupport],
+}
+
+/// Theme compatibility metadata
+#[derive(Debug, Clone)]
+pub struct ThemeCompatibility {
+    /// Which managers can install this theme
+    pub supported_managers: &'static [ManagerSupport],
+}
+
+/// Framework-specific support information
+#[derive(Debug, Clone)]
+pub struct ManagerSupport {
+    /// The framework that supports this plugin/theme
+    pub framework: FrameworkType,
+    /// Repository URL (required for Zap, optional for others)
+    pub repo_url: Option<&'static str>,
+    /// Whether this plugin/theme is recommended for this framework
+    pub recommended: bool,
+}
+
+impl PluginCompatibility {
+    /// Check if this plugin supports the given framework
+    pub fn supports_framework(&self, framework: &FrameworkType) -> bool {
+        self.supported_managers
+            .iter()
+            .any(|m| &m.framework == framework)
+    }
+
+    /// Get the repository URL for a specific framework (if available)
+    pub fn repo_url_for(&self, framework: &FrameworkType) -> Option<&str> {
+        self.supported_managers
+            .iter()
+            .find(|m| &m.framework == framework)
+            .and_then(|m| m.repo_url.as_deref())
+    }
+
+    /// Check if this plugin is recommended for the given framework
+    pub fn is_recommended_for(&self, framework: &FrameworkType) -> bool {
+        self.supported_managers
+            .iter()
+            .find(|m| &m.framework == framework)
+            .map(|m| m.recommended)
+            .unwrap_or(false)
+    }
+}
+
+impl ThemeCompatibility {
+    /// Check if this theme supports the given framework
+    pub fn supports_framework(&self, framework: &FrameworkType) -> bool {
+        self.supported_managers
+            .iter()
+            .any(|m| &m.framework == framework)
+    }
+
+    /// Get the repository URL for a specific framework (if available)
+    pub fn repo_url_for(&self, framework: &FrameworkType) -> Option<&str> {
+        self.supported_managers
+            .iter()
+            .find(|m| &m.framework == framework)
+            .and_then(|m| m.repo_url.as_deref())
+    }
+
+    /// Check if this theme is recommended for the given framework
+    pub fn is_recommended_for(&self, framework: &FrameworkType) -> bool {
+        self.supported_managers
+            .iter()
+            .find(|m| &m.framework == framework)
+            .map(|m| m.recommended)
+            .unwrap_or(false)
+    }
 }
 
 /// Helper to get home directory, respecting HOME env var for testing

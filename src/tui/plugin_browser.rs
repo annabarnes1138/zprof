@@ -180,7 +180,7 @@ fn get_selected_plugins(plugins: &[Plugin], selected: &[bool]) -> Vec<String> {
         .iter()
         .zip(selected.iter())
         .filter(|(_, &is_selected)| is_selected)
-        .map(|(plugin, _)| plugin.name.clone())
+        .map(|(plugin, _)| plugin.name.to_string())
         .collect()
 }
 
@@ -273,12 +273,19 @@ fn render_plugin_browser(
             let checkbox = if is_selected { "[x]" } else { "[ ]" };
             let indicator = if is_current { "▸ " } else { "  " };
 
-            // Truncate description if too long (max 60 chars for 80-width terminal)
-            let max_desc_len = 60;
-            let description = if plugin.description.len() > max_desc_len {
-                format!("{}...", &plugin.description[..max_desc_len - 3])
+            // Add (recommended) suffix if applicable, then truncate if too long
+            let is_recommended = plugin.compatibility.is_recommended_for(framework);
+            let base_desc = if is_recommended {
+                format!("{} (recommended)", plugin.description)
             } else {
-                plugin.description.clone()
+                plugin.description.to_string()
+            };
+
+            let max_desc_len = 60;
+            let description = if base_desc.len() > max_desc_len {
+                format!("{}...", &base_desc[..max_desc_len - 3])
+            } else {
+                base_desc
             };
 
             let line = Line::from(vec![
@@ -296,7 +303,7 @@ fn render_plugin_browser(
                 ),
                 Span::raw(" "),
                 Span::styled(
-                    &plugin.name,
+                    plugin.name,
                     if is_current {
                         Style::default()
                             .fg(Color::Yellow)
@@ -374,6 +381,13 @@ fn select_next(state: &mut ListState, len: usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    
+    // Dummy compatibility for test fixtures
+    const DUMMY_COMPAT: crate::frameworks::PluginCompatibility = crate::frameworks::PluginCompatibility {
+        supported_managers: &[],
+    };
+
+    use super::*;
 
     #[test]
     fn test_toggle_selection() {
@@ -391,21 +405,9 @@ mod tests {
     #[test]
     fn test_get_selected_plugins() {
         let plugins = vec![
-            Plugin {
-                name: "git".to_string(),
-                description: "Git plugin".to_string(),
-                category: crate::frameworks::PluginCategory::Git,
-            },
-            Plugin {
-                name: "docker".to_string(),
-                description: "Docker plugin".to_string(),
-                category: crate::frameworks::PluginCategory::Docker,
-            },
-            Plugin {
-                name: "kubectl".to_string(),
-                description: "Kubectl plugin".to_string(),
-                category: crate::frameworks::PluginCategory::Kubernetes,
-            },
+            Plugin { name: "git", description: "Git plugin", category: crate::frameworks::PluginCategory::Git, compatibility: DUMMY_COMPAT },
+            Plugin { name: "docker", description: "Docker plugin", category: crate::frameworks::PluginCategory::Docker, compatibility: DUMMY_COMPAT },
+            Plugin { name: "kubectl", description: "Kubectl plugin", category: crate::frameworks::PluginCategory::Kubernetes, compatibility: DUMMY_COMPAT },
         ];
 
         let selected = vec![true, false, true];
@@ -417,11 +419,7 @@ mod tests {
     #[test]
     fn test_get_selected_plugins_empty() {
         let plugins = vec![
-            Plugin {
-                name: "git".to_string(),
-                description: "Git plugin".to_string(),
-                category: crate::frameworks::PluginCategory::Git,
-            },
+            Plugin { name: "git", description: "Git plugin", category: crate::frameworks::PluginCategory::Git, compatibility: DUMMY_COMPAT },
         ];
 
         let selected = vec![false];
@@ -433,21 +431,9 @@ mod tests {
     #[test]
     fn test_filter_plugins_by_name() {
         let plugins = vec![
-            Plugin {
-                name: "git".to_string(),
-                description: "Version control".to_string(),
-                category: crate::frameworks::PluginCategory::Git,
-            },
-            Plugin {
-                name: "docker".to_string(),
-                description: "Containerization".to_string(),
-                category: crate::frameworks::PluginCategory::Docker,
-            },
-            Plugin {
-                name: "kubectl".to_string(),
-                description: "Kubernetes control".to_string(),
-                category: crate::frameworks::PluginCategory::Kubernetes,
-            },
+            Plugin { name: "git", description: "Version control", category: crate::frameworks::PluginCategory::Git, compatibility: DUMMY_COMPAT },
+            Plugin { name: "docker", description: "Containerization", category: crate::frameworks::PluginCategory::Docker, compatibility: DUMMY_COMPAT },
+            Plugin { name: "kubectl", description: "Kubernetes control", category: crate::frameworks::PluginCategory::Kubernetes, compatibility: DUMMY_COMPAT },
         ];
 
         let result = filter_plugins(&plugins, "git");
@@ -457,16 +443,8 @@ mod tests {
     #[test]
     fn test_filter_plugins_by_description() {
         let plugins = vec![
-            Plugin {
-                name: "git".to_string(),
-                description: "Version control".to_string(),
-                category: crate::frameworks::PluginCategory::Git,
-            },
-            Plugin {
-                name: "docker".to_string(),
-                description: "Container platform".to_string(),
-                category: crate::frameworks::PluginCategory::Docker,
-            },
+            Plugin { name: "git", description: "Version control", category: crate::frameworks::PluginCategory::Git, compatibility: DUMMY_COMPAT },
+            Plugin { name: "docker", description: "Container platform", category: crate::frameworks::PluginCategory::Docker, compatibility: DUMMY_COMPAT },
         ];
 
         let result = filter_plugins(&plugins, "container");
@@ -476,11 +454,7 @@ mod tests {
     #[test]
     fn test_filter_plugins_case_insensitive() {
         let plugins = vec![
-            Plugin {
-                name: "Docker".to_string(),
-                description: "Container platform".to_string(),
-                category: crate::frameworks::PluginCategory::Docker,
-            },
+            Plugin { name: "Docker", description: "Container platform", category: crate::frameworks::PluginCategory::Docker, compatibility: DUMMY_COMPAT },
         ];
 
         let result = filter_plugins(&plugins, "docker");
@@ -493,16 +467,8 @@ mod tests {
     #[test]
     fn test_filter_plugins_empty_query() {
         let plugins = vec![
-            Plugin {
-                name: "git".to_string(),
-                description: "VCS".to_string(),
-                category: crate::frameworks::PluginCategory::Git,
-            },
-            Plugin {
-                name: "docker".to_string(),
-                description: "Containers".to_string(),
-                category: crate::frameworks::PluginCategory::Docker,
-            },
+            Plugin { name: "git", description: "VCS", category: crate::frameworks::PluginCategory::Git, compatibility: DUMMY_COMPAT },
+            Plugin { name: "docker", description: "Containers", category: crate::frameworks::PluginCategory::Docker, compatibility: DUMMY_COMPAT },
         ];
 
         let result = filter_plugins(&plugins, "");

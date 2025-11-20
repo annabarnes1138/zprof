@@ -97,7 +97,7 @@ fn run_selection_loop(
                 KeyCode::Down => select_next(&mut state, themes.len()),
                 KeyCode::Enter => {
                     if let Some(selected) = state.selected() {
-                        return Ok(themes[selected].name.clone());
+                        return Ok(themes[selected].name.to_string());
                     }
                 }
                 KeyCode::Esc => {
@@ -142,6 +142,14 @@ fn render_ui(
             let is_selected = i == selected_idx;
             let indicator = if is_selected { "▸ " } else { "  " };
 
+            // Add (recommended) suffix if applicable
+            let is_recommended = theme.compatibility.is_recommended_for(framework);
+            let description = if is_recommended {
+                format!("{} (recommended)", theme.description)
+            } else {
+                theme.description.to_string()
+            };
+
             let lines = vec![
                 Line::from(vec![
                     Span::styled(
@@ -149,7 +157,7 @@ fn render_ui(
                         Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
                     ),
                     Span::styled(
-                        &theme.name,
+                        theme.name,
                         if is_selected {
                             Style::default()
                                 .fg(Color::Yellow)
@@ -160,7 +168,7 @@ fn render_ui(
                     ),
                 ]),
                 Line::from(vec![Span::styled(
-                    format!("    {}", theme.description),
+                    format!("    {}", description),
                     Style::default().fg(Color::Gray),
                 )]),
                 Line::from(vec![Span::styled(
