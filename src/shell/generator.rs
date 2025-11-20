@@ -161,6 +161,25 @@ fn escape_shell_value(value: &str) -> String {
         .replace('`', "\\`")
 }
 
+/// Add auto-installation check for starship binary
+///
+/// Generates shell code that checks if starship is installed and attempts
+/// to install it using brew or cargo if not found.
+fn add_starship_installation_check(output: &mut String) {
+    output.push_str("# Auto-install starship if not present\n");
+    output.push_str("if ! command -v starship &> /dev/null; then\n");
+    output.push_str("  echo \"Installing starship...\"\n");
+    output.push_str("  if command -v brew &> /dev/null; then\n");
+    output.push_str("    brew install starship\n");
+    output.push_str("  elif command -v cargo &> /dev/null; then\n");
+    output.push_str("    cargo install starship --locked\n");
+    output.push_str("  else\n");
+    output.push_str("    echo \"Warning: Neither brew nor cargo found. Please install starship manually: https://starship.rs/\"\n");
+    output.push_str("  fi\n");
+    output.push_str("fi\n");
+    output.push_str("\n");
+}
+
 /// Generate .zshrc content from manifest (Story 2.2)
 ///
 /// Creates framework-specific .zshrc file with:
@@ -197,6 +216,11 @@ pub fn generate_zshrc_from_manifest(manifest: &Manifest) -> Result<String> {
     output.push_str("export HISTFILE=\"$HOME/.zsh-profiles/shared/.zsh_history\"\n");
     output.push_str("export HISTSIZE=10000\n");
     output.push_str("export SAVEHIST=10000\n\n");
+
+    // Auto-install external binary dependencies for selected theme
+    if manifest.profile.theme == "starship" {
+        add_starship_installation_check(&mut output);
+    }
 
     // Generate framework-specific initialization (AC #1)
     match manifest.profile.framework.as_str() {

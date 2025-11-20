@@ -550,7 +550,7 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
     // === Zap-Specific Plugins ===
     Plugin {
         name: "supercharge",
-        description: "Zap supercharge plugin for enhanced features",
+        description: "Zap supercharge plugin (optional: exa for color ls)",
         category: PluginCategory::Utility,
         compatibility: PluginCompatibility {
             supported_managers: &[
