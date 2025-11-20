@@ -476,4 +476,81 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
             dependencies: &[],
         },
     },
+
+    // === Zap-Specific Plugins ===
+    Plugin {
+        name: "supercharge",
+        description: "Zap supercharge plugin for enhanced features",
+        category: PluginCategory::Utility,
+        compatibility: PluginCompatibility {
+            supported_managers: &[
+                ManagerSupport {
+                    framework: FrameworkType::Zap,
+                    repo_url: Some("zap-zsh/supercharge"),
+                    recommended: true,
+                },
+            ],
+            dependencies: &[],
+        },
+    },
+    Plugin {
+        name: "completions",
+        description: "Enhanced completion system for Zsh",
+        category: PluginCategory::Utility,
+        compatibility: PluginCompatibility {
+            supported_managers: &[
+                ManagerSupport {
+                    framework: FrameworkType::Zap,
+                    repo_url: Some("zap-zsh/completions"),
+                    recommended: false,
+                },
+            ],
+            dependencies: &[],
+        },
+    },
+    Plugin {
+        name: "vim",
+        description: "Better Vi mode for Zsh",
+        category: PluginCategory::Utility,
+        compatibility: PluginCompatibility {
+            supported_managers: &[
+                ManagerSupport {
+                    framework: FrameworkType::Zap,
+                    repo_url: Some("zap-zsh/vim"),
+                    recommended: false,
+                },
+            ],
+            dependencies: &[],
+        },
+    },
+    Plugin {
+        name: "sudo",
+        description: "Press ESC twice to add sudo to previous command",
+        category: PluginCategory::Utility,
+        compatibility: PluginCompatibility {
+            supported_managers: &[
+                ManagerSupport {
+                    framework: FrameworkType::Zap,
+                    repo_url: Some("zap-zsh/sudo"),
+                    recommended: false,
+                },
+            ],
+            dependencies: &[],
+        },
+    },
+    Plugin {
+        name: "magic-enter",
+        description: "Make your enter key magical by running commands on empty prompt",
+        category: PluginCategory::Utility,
+        compatibility: PluginCompatibility {
+            supported_managers: &[
+                ManagerSupport {
+                    framework: FrameworkType::Zap,
+                    repo_url: Some("zap-zsh/magic-enter"),
+                    recommended: false,
+                },
+            ],
+            dependencies: &[],
+        },
+    },
 ];
