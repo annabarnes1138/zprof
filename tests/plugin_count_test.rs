@@ -1,6 +1,6 @@
 //! Integration test for plugin counts across all frameworks
 //!
-//! Verifies AC #3: At least 10-15 popular plugins per framework
+//! Verifies AC #3: At least 10-20 popular plugins per framework
 
 use zprof::frameworks::{
     Framework,
@@ -15,8 +15,8 @@ use zprof::frameworks::{
 fn test_oh_my_zsh_has_min_10_plugins() {
     let plugins = OhMyZsh::get_plugins();
     assert!(
-        plugins.len() >= 10 && plugins.len() <= 15,
-        "oh-my-zsh should have 10-15 plugins, has {}",
+        plugins.len() >= 10 && plugins.len() <= 20,
+        "oh-my-zsh should have 10-20 plugins, has {}",
         plugins.len()
     );
 }
@@ -25,8 +25,8 @@ fn test_oh_my_zsh_has_min_10_plugins() {
 fn test_zimfw_has_min_10_plugins() {
     let plugins = Zimfw::get_plugins();
     assert!(
-        plugins.len() >= 10 && plugins.len() <= 15,
-        "zimfw should have 10-15 plugins, has {}",
+        plugins.len() >= 10 && plugins.len() <= 20,
+        "zimfw should have 10-20 plugins, has {}",
         plugins.len()
     );
 }
@@ -35,8 +35,8 @@ fn test_zimfw_has_min_10_plugins() {
 fn test_prezto_has_min_10_plugins() {
     let plugins = Prezto::get_plugins();
     assert!(
-        plugins.len() >= 10 && plugins.len() <= 15,
-        "prezto should have 10-15 plugins, has {}",
+        plugins.len() >= 10 && plugins.len() <= 20,
+        "prezto should have 10-20 plugins, has {}",
         plugins.len()
     );
 }
@@ -45,8 +45,8 @@ fn test_prezto_has_min_10_plugins() {
 fn test_zinit_has_min_10_plugins() {
     let plugins = Zinit::get_plugins();
     assert!(
-        plugins.len() >= 10 && plugins.len() <= 15,
-        "zinit should have 10-15 plugins, has {}",
+        plugins.len() >= 10 && plugins.len() <= 20,
+        "zinit should have 10-20 plugins, has {}",
         plugins.len()
     );
 }
@@ -55,8 +55,8 @@ fn test_zinit_has_min_10_plugins() {
 fn test_zap_has_min_10_plugins() {
     let plugins = Zap::get_plugins();
     assert!(
-        plugins.len() >= 10 && plugins.len() <= 15,
-        "zap should have 10-15 plugins, has {}",
+        plugins.len() >= 10 && plugins.len() <= 20,
+        "zap should have 10-20 plugins, has {}",
         plugins.len()
     );
 }

@@ -362,15 +362,14 @@ fn update_global_config(profile_name: &str) -> Result<()> {
 /// Display success message with profile details and optionally switch to the profile
 fn display_success(
     name: &str,
-    framework_info: &crate::frameworks::FrameworkInfo,
+    _framework_info: &crate::frameworks::FrameworkInfo,
     profile_dir: &PathBuf,
 ) -> Result<()> {
     println!("\n✓ Profile '{}' created successfully", name);
-    println!("  Framework: {}", framework_info.framework_type.name());
-    println!("  Plugins: {} ({})", framework_info.plugins.len(), framework_info.plugins.join(", "));
-    println!("  Theme: {}", framework_info.theme);
     println!("  Location: {}", profile_dir.display());
-    println!();
+
+    // Display profile details using shared function
+    crate::cli::show::display_profile_details(name)?;
 
     // Ask if user wants to switch to the new profile
     let should_switch = Confirm::new()
@@ -385,7 +384,7 @@ fn display_success(
             profile_name: name.to_string(),
         })?;
     } else {
-        println!("\n  → Use 'zprof use {}' to switch to this profile later", name);
+        println!("  → Use 'zprof use {}' to switch to this profile later", name);
     }
 
     Ok(())

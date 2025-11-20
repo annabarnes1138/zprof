@@ -8,4 +8,5 @@ pub mod init;
 pub mod list;
 pub mod regenerate;
 pub mod rollback;
+pub mod show;
 pub mod use_cmd;

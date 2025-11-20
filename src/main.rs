@@ -40,6 +40,8 @@ enum Commands {
     Regenerate(cli::regenerate::RegenerateArgs),
     /// Restore original shell configuration (rollback zprof)
     Rollback(cli::rollback::RollbackArgs),
+    /// Show detailed information about a profile
+    Show(cli::show::ShowArgs),
     /// Switch to a different profile
     Use(cli::use_cmd::UseArgs),
 }
@@ -61,6 +63,7 @@ fn main() -> Result<()> {
         Commands::List(args) => cli::list::execute(args),
         Commands::Regenerate(args) => cli::regenerate::execute(args),
         Commands::Rollback(args) => cli::rollback::execute(args),
+        Commands::Show(args) => cli::show::execute(args),
         Commands::Use(args) => cli::use_cmd::execute(args),
     }
 }
