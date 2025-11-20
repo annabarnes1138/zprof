@@ -393,13 +393,12 @@ fn select_next(state: &mut ListState, len: usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     // Dummy compatibility for test fixtures
     const DUMMY_COMPAT: crate::frameworks::PluginCompatibility = crate::frameworks::PluginCompatibility {
         supported_managers: &[],
+        dependencies: &[],
     };
-
-    use super::*;
 
     #[test]
     fn test_toggle_selection() {

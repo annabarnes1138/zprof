@@ -634,11 +634,14 @@ mod tests {
 
     #[test]
     fn test_generate_zshrc_from_manifest_zap() -> Result<()> {
-        let manifest = create_test_manifest(
+        // Create test manifest with zap-prompt theme (Zap's default)
+        let mut manifest = create_test_manifest(
             "zap",
             vec!["zsh-syntax-highlighting".to_string()],
             HashMap::new(),
         );
+        manifest.profile.theme = "zap-prompt".to_string();
+
         let content = generate_zshrc_from_manifest(&manifest)?;
 
         // AC #1: zap-specific configuration
@@ -647,7 +650,7 @@ mod tests {
         assert!(content.contains("export ZAP_PLUGIN_DIR=\"$ZAP_DIR/plugins\""));
         // Plugin should be mapped to zap-compatible GitHub URL
         assert!(content.contains("plug \"zsh-users/zsh-syntax-highlighting\""));
-        // Theme should be mapped to zap-compatible prompt (robbyrussell -> zap-prompt)
+        // Theme should use zap-prompt
         assert!(content.contains("plug \"zap-zsh/zap-prompt\""));
 
         Ok(())

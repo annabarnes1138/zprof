@@ -185,6 +185,17 @@ pub const THEME_REGISTRY: &[Theme] = &[
                     repo_url: None,
                     recommended: false,
                 },
+                // Zap: No direct equivalent, use zap-prompt instead
+            ],
+            dependencies: &[],
+        },
+    },
+    Theme {
+        name: "zap-prompt",
+        description: "Zap's default lightning bolt prompt",
+        preview: "⚡ ➜ ~/dir (git:main)",
+        compatibility: ThemeCompatibility {
+            supported_managers: &[
                 ManagerSupport {
                     framework: FrameworkType::Zap,
                     repo_url: Some("zap-zsh/zap-prompt"),

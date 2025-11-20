@@ -4,8 +4,7 @@
 //! structural consistency and follow the required metadata rules.
 
 use zprof::frameworks::{
-    plugin::PLUGIN_REGISTRY, theme::THEME_REGISTRY, FrameworkType, PluginCompatibility,
-    ThemeCompatibility,
+    plugin::PLUGIN_REGISTRY, theme::THEME_REGISTRY, FrameworkType,
 };
 
 /// Property 1: No plugin appears in TUI if unsupported
