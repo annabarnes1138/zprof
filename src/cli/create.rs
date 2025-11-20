@@ -16,7 +16,7 @@ use crate::core::manifest::Manifest;
 use crate::frameworks::detect_existing_framework;
 use crate::frameworks::installer::{self, WizardState};
 use crate::tui::{framework_select, plugin_browser, theme_select};
-use crate::shell::generate_shell_configs;
+use crate::shell::generator;
 
 /// Arguments for the create command
 #[derive(Debug, Args)]
@@ -194,13 +194,8 @@ pub fn execute(args: CreateArgs) -> Result<()> {
         .context("Failed to write profile manifest")?;
 
     // 6.5. Generate shell configuration files (Story 1.8)
-    generate_shell_configs(
-        &profile_dir,
-        &framework_info.framework_type,
-        &framework_info.plugins,
-        &framework_info.theme,
-    )
-    .context("Failed to generate shell configuration files")?;
+    generator::write_generated_files(&args.name, &manifest)
+        .context("Failed to generate shell configuration files")?;
 
     // 7. Update global config (create if doesn't exist)
     update_global_config(&args.name)?;
