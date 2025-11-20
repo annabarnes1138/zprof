@@ -200,7 +200,7 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
     },
     Plugin {
         name: "kubectl",
-        description: "Kubernetes kubectl completion",
+        description: "Kubernetes kubectl with 100+ aliases and completions",
         category: PluginCategory::Kubernetes,
         compatibility: PluginCompatibility {
             supported_managers: &[
@@ -227,6 +227,76 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
                 ManagerSupport {
                     framework: FrameworkType::Zap,
                     repo_url: Some("chrishrb/zsh-kubectl"),
+                    recommended: false,
+                },
+            ],
+            dependencies: &[],
+        },
+    },
+    Plugin {
+        name: "kubectx",
+        description: "Fast way to switch between Kubernetes clusters and namespaces",
+        category: PluginCategory::Kubernetes,
+        compatibility: PluginCompatibility {
+            supported_managers: &[
+                ManagerSupport {
+                    framework: FrameworkType::OhMyZsh,
+                    repo_url: None,
+                    recommended: true,
+                },
+                ManagerSupport {
+                    framework: FrameworkType::Zimfw,
+                    repo_url: None,
+                    recommended: true,
+                },
+                ManagerSupport {
+                    framework: FrameworkType::Prezto,
+                    repo_url: None,
+                    recommended: true,
+                },
+                ManagerSupport {
+                    framework: FrameworkType::Zinit,
+                    repo_url: None,
+                    recommended: true,
+                },
+                ManagerSupport {
+                    framework: FrameworkType::Zap,
+                    repo_url: Some("unixorn/kubectx-zshplugin"),
+                    recommended: true,
+                },
+            ],
+            dependencies: &[],
+        },
+    },
+    Plugin {
+        name: "kube-ps1",
+        description: "Display current Kubernetes context and namespace in prompt",
+        category: PluginCategory::Kubernetes,
+        compatibility: PluginCompatibility {
+            supported_managers: &[
+                ManagerSupport {
+                    framework: FrameworkType::OhMyZsh,
+                    repo_url: None,
+                    recommended: false,
+                },
+                ManagerSupport {
+                    framework: FrameworkType::Zimfw,
+                    repo_url: None,
+                    recommended: false,
+                },
+                ManagerSupport {
+                    framework: FrameworkType::Prezto,
+                    repo_url: None,
+                    recommended: false,
+                },
+                ManagerSupport {
+                    framework: FrameworkType::Zinit,
+                    repo_url: None,
+                    recommended: false,
+                },
+                ManagerSupport {
+                    framework: FrameworkType::Zap,
+                    repo_url: Some("jonmosco/kube-ps1"),
                     recommended: false,
                 },
             ],
