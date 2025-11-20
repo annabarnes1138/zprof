@@ -1,0 +1,144 @@
+# v0.2.0 Workflow Status
+# This file tracks the overall progress through the v0.2.0 release cycle
+
+project:
+  name: "zprof v0.2.0"
+  track: "BMM Method"
+  level: "Standard"
+
+workflow:
+  current_phase: "Phase 1: Planning"
+  current_step: "Epic Planning Complete"
+
+phases:
+  - name: "Phase 1: Planning"
+    status: "IN_PROGRESS"
+    steps:
+      - name: "Requirements Gathering"
+        status: "DONE"
+        completed_at: "2025-01-20"
+      - name: "Epic Planning"
+        status: "DONE"
+        completed_at: "2025-01-20"
+        artifacts:
+          - "docs/planning/v0.2.0/epic-1-smart-tui.md"
+          - "docs/planning/v0.2.0/epic-2-presets.md"
+          - "docs/planning/v0.2.0/epic-3-uninstall.md"
+          - "docs/planning/v0.2.0/epic-4-nerd-fonts.md"
+          - "docs/planning/v0.2.0/epic-5-remove-rollback.md"
+          - "docs/planning/v0.2.0/epic-6-init-cleanup.md"
+      - name: "Story Breakdown"
+        status: "TODO"
+        note: "Stories are defined within epic files; individual story files optional"
+      - name: "Architecture Review"
+        status: "TODO"
+
+  - name: "Phase 2: Design"
+    status: "TODO"
+    steps:
+      - name: "UX Design"
+        status: "TODO"
+      - name: "Technical Design"
+        status: "TODO"
+        note: "Technical designs included in epic files"
+      - name: "API Design"
+        status: "TODO"
+
+  - name: "Phase 3: Development Setup"
+    status: "TODO"
+    steps:
+      - name: "Create Feature Branch"
+        status: "TODO"
+      - name: "Setup Development Environment"
+        status: "TODO"
+      - name: "Create Sprint Tracking"
+        status: "TODO"
+
+  - name: "Phase 4: Implementation"
+    status: "TODO"
+    epics:
+      - epic_id: "epic-1"
+        name: "Smart TUI (Prompt Mode Branching)"
+        priority: "P0"
+        status: "TODO"
+        stories: 7
+      - epic_id: "epic-2"
+        name: "Quick Setup Presets"
+        priority: "P0"
+        status: "TODO"
+        stories: 8
+      - epic_id: "epic-6"
+        name: "Init Cleanup and Enhancement"
+        priority: "P0"
+        status: "TODO"
+        stories: 7
+      - epic_id: "epic-3"
+        name: "Complete Uninstall System"
+        priority: "P0"
+        status: "TODO"
+        stories: 8
+      - epic_id: "epic-4"
+        name: "Nerd Font Auto-Installation"
+        priority: "P1"
+        status: "TODO"
+        stories: 10
+      - epic_id: "epic-5"
+        name: "Remove Deprecated Rollback"
+        priority: "P2"
+        status: "TODO"
+        stories: 7
+
+  - name: "Phase 5: Testing & QA"
+    status: "TODO"
+    steps:
+      - name: "Unit Testing"
+        status: "TODO"
+      - name: "Integration Testing"
+        status: "TODO"
+      - name: "Manual QA"
+        status: "TODO"
+
+  - name: "Phase 6: Release"
+    status: "TODO"
+    steps:
+      - name: "Documentation Review"
+        status: "TODO"
+      - name: "Release Notes"
+        status: "TODO"
+      - name: "Version Bump"
+        status: "TODO"
+      - name: "Release Build"
+        status: "TODO"
+
+next_steps:
+  - "Review and commit epic planning artifacts"
+  - "Decide: Start implementation OR create detailed story files"
+  - "If starting implementation: Create feature branch and begin Epic 1"
+  - "If creating stories: Break down epics into individual story files"
+
+decisions_needed:
+  - question: "Start implementation now or create individual story files first?"
+    context: "Stories are well-defined in epic files; separate files optional"
+    options:
+      - "Start Epic 1 implementation directly from epic file"
+      - "Create individual story .md files for tracking"
+
+  - question: "Implementation order for epics?"
+    recommendation: "Epic 1 → Epic 2 → Epic 6 → Epic 3 → Epic 4 → Epic 5"
+    rationale: "Epic 1 is foundational; Epic 2 depends on it; Epics 6+3 share backup logic"
+
+metrics:
+  total_epics: 6
+  total_stories: 47
+  estimated_days: 16
+  p0_epics: 4
+  p1_epics: 1
+  p2_epics: 1
+
+artifacts:
+  planning:
+    - "docs/planning/v0.2.0/README.md"
+    - "docs/planning/v0.2.0/epic-*.md (6 files)"
+  documentation:
+    - "docs/README.md (updated)"
+    - "docs/planning/roadmap.md (updated)"
