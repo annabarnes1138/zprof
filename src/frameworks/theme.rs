@@ -130,66 +130,6 @@ pub const THEME_REGISTRY: &[Theme] = &[
             dependencies: &["mafredri/zsh-async"],
         },
     },
-    Theme {
-        name: "minimal",
-        description: "Ultra-minimal prompt",
-        preview: "Just path and git branch",
-        compatibility: ThemeCompatibility {
-            supported_managers: &[
-                ManagerSupport {
-                    framework: FrameworkType::OhMyZsh,
-                    repo_url: None,
-                    recommended: false,
-                },
-                ManagerSupport {
-                    framework: FrameworkType::Zimfw,
-                    repo_url: None,
-                    recommended: false,
-                },
-                ManagerSupport {
-                    framework: FrameworkType::Zinit,
-                    repo_url: None,
-                    recommended: false,
-                },
-                ManagerSupport {
-                    framework: FrameworkType::Zap,
-                    repo_url: Some("subnixr/minimal"),
-                    recommended: false,
-                },
-            ],
-            dependencies: &[],
-        },
-    },
-    Theme {
-        name: "geometry",
-        description: "Minimal git-aware prompt with colors",
-        preview: "Single-line, color-coded git info",
-        compatibility: ThemeCompatibility {
-            supported_managers: &[
-                ManagerSupport {
-                    framework: FrameworkType::OhMyZsh,
-                    repo_url: None,
-                    recommended: false,
-                },
-                ManagerSupport {
-                    framework: FrameworkType::Zimfw,
-                    repo_url: None,
-                    recommended: false,
-                },
-                ManagerSupport {
-                    framework: FrameworkType::Zinit,
-                    repo_url: None,
-                    recommended: false,
-                },
-                ManagerSupport {
-                    framework: FrameworkType::Zap,
-                    repo_url: Some("geometry-zsh/geometry"),
-                    recommended: false,
-                },
-            ],
-            dependencies: &[],
-        },
-    },
 
     // === Feature-Rich Themes ===
     Theme {
@@ -216,36 +156,6 @@ pub const THEME_REGISTRY: &[Theme] = &[
                 ManagerSupport {
                     framework: FrameworkType::Zap,
                     repo_url: Some("spaceship-prompt/spaceship-prompt"),
-                    recommended: false,
-                },
-            ],
-            dependencies: &[],
-        },
-    },
-    Theme {
-        name: "typewritten",
-        description: "Two-line informative prompt",
-        preview: "Top: path, git | Bottom: input",
-        compatibility: ThemeCompatibility {
-            supported_managers: &[
-                ManagerSupport {
-                    framework: FrameworkType::OhMyZsh,
-                    repo_url: None,
-                    recommended: false,
-                },
-                ManagerSupport {
-                    framework: FrameworkType::Zimfw,
-                    repo_url: None,
-                    recommended: false,
-                },
-                ManagerSupport {
-                    framework: FrameworkType::Zinit,
-                    repo_url: None,
-                    recommended: false,
-                },
-                ManagerSupport {
-                    framework: FrameworkType::Zap,
-                    repo_url: Some("reobin/typewritten"),
                     recommended: false,
                 },
             ],
@@ -284,36 +194,12 @@ pub const THEME_REGISTRY: &[Theme] = &[
             dependencies: &[],
         },
     },
+
+    // === Modern Alternatives ===
     Theme {
-        name: "agnoster",
-        description: "Powerline theme with segments",
-        preview: "User, path, git status segments",
-        compatibility: ThemeCompatibility {
-            supported_managers: &[
-                ManagerSupport {
-                    framework: FrameworkType::OhMyZsh,
-                    repo_url: None,
-                    recommended: false,
-                },
-                ManagerSupport {
-                    framework: FrameworkType::Zimfw,
-                    repo_url: None,
-                    recommended: false,
-                },
-                ManagerSupport {
-                    framework: FrameworkType::Zinit,
-                    repo_url: None,
-                    recommended: false,
-                },
-                // Zap: No direct zap equivalent
-            ],
-            dependencies: &[],
-        },
-    },
-    Theme {
-        name: "lambda",
-        description: "Simple prompt with lambda symbol",
-        preview: "λ path (branch) >",
+        name: "oh-my-posh",
+        description: "Cross-platform customizable prompt engine",
+        preview: "Highly configurable, theme support",
         compatibility: ThemeCompatibility {
             supported_managers: &[
                 ManagerSupport {
@@ -333,7 +219,67 @@ pub const THEME_REGISTRY: &[Theme] = &[
                 },
                 ManagerSupport {
                     framework: FrameworkType::Zap,
-                    repo_url: Some("halfo/lambda-mod-zsh-theme"),
+                    repo_url: Some("JanDeDobbeleer/oh-my-posh"),
+                    recommended: false,
+                },
+            ],
+            dependencies: &[],
+        },
+    },
+    Theme {
+        name: "zsh2000",
+        description: "Fast powerline-like theme with git status",
+        preview: "Powerline segments, git integration",
+        compatibility: ThemeCompatibility {
+            supported_managers: &[
+                ManagerSupport {
+                    framework: FrameworkType::OhMyZsh,
+                    repo_url: None,
+                    recommended: false,
+                },
+                ManagerSupport {
+                    framework: FrameworkType::Zimfw,
+                    repo_url: None,
+                    recommended: false,
+                },
+                ManagerSupport {
+                    framework: FrameworkType::Zinit,
+                    repo_url: None,
+                    recommended: false,
+                },
+                ManagerSupport {
+                    framework: FrameworkType::Zap,
+                    repo_url: Some("consolemaverick/zsh2000"),
+                    recommended: false,
+                },
+            ],
+            dependencies: &[],
+        },
+    },
+    Theme {
+        name: "refined",
+        description: "Minimal, elegant, modern prompt",
+        preview: "Clean design, git status",
+        compatibility: ThemeCompatibility {
+            supported_managers: &[
+                ManagerSupport {
+                    framework: FrameworkType::OhMyZsh,
+                    repo_url: None,
+                    recommended: false,
+                },
+                ManagerSupport {
+                    framework: FrameworkType::Zimfw,
+                    repo_url: None,
+                    recommended: false,
+                },
+                ManagerSupport {
+                    framework: FrameworkType::Zinit,
+                    repo_url: None,
+                    recommended: false,
+                },
+                ManagerSupport {
+                    framework: FrameworkType::Zap,
+                    repo_url: Some("denysdovhan/refined"),
                     recommended: false,
                 },
             ],
