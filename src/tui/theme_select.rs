@@ -410,7 +410,7 @@ mod tests {
     fn test_get_themes_for_framework_zimfw() {
         let themes = get_themes_for_framework(&FrameworkType::Zimfw);
         assert!(!themes.is_empty());
-        assert!(themes.iter().any(|t| t.name == "steeef"));
+        assert!(themes.iter().any(|t| t.name == "powerlevel10k"));
     }
 
     #[test]

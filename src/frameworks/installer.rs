@@ -203,12 +203,19 @@ fn install_plugin(
     plugin_name: &str,
     profile_path: &Path,
 ) -> Result<()> {
+    // Zap handles plugin installation automatically on first shell load
+    // Don't create empty directories as they prevent zap from cloning the repos
+    if matches!(framework, FrameworkType::Zap) {
+        log::info!("Skipping plugin directory creation for Zap (handles automatically): {}", plugin_name);
+        return Ok(());
+    }
+
     let plugins_dir = match framework {
         FrameworkType::OhMyZsh => profile_path.join(".oh-my-zsh/custom/plugins"),
         FrameworkType::Zimfw => profile_path.join(".zim/modules"),
         FrameworkType::Prezto => profile_path.join(".zprezto/modules"),
         FrameworkType::Zinit => profile_path.join(".zinit/plugins"),
-        FrameworkType::Zap => profile_path.join(".zap/plugins"),
+        FrameworkType::Zap => unreachable!("Zap case handled above"),
     };
 
     // Create plugins directory if it doesn't exist

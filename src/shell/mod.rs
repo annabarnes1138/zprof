@@ -4,5 +4,3 @@
 
 pub mod generator;
 pub mod zdotdir;
-
-pub use generator::generate_shell_configs;
