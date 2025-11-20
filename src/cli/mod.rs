@@ -1,3 +1,4 @@
+pub mod available;
 pub mod create;
 pub mod current;
 pub mod delete;
@@ -10,3 +11,4 @@ pub mod regenerate;
 pub mod rollback;
 pub mod show;
 pub mod use_cmd;
+pub mod version;

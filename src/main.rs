@@ -20,6 +20,8 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
+    /// List available frameworks, plugins, and themes
+    Available(cli::available::AvailableArgs),
     /// Create a new profile
     Create(cli::create::CreateArgs),
     /// Display the currently active profile
@@ -44,6 +46,8 @@ enum Commands {
     Show(cli::show::ShowArgs),
     /// Switch to a different profile
     Use(cli::use_cmd::UseArgs),
+    /// Display version information
+    Version(cli::version::VersionArgs),
 }
 
 fn main() -> Result<()> {
@@ -53,6 +57,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::Available(args) => cli::available::execute(args),
         Commands::Create(args) => cli::create::execute(args),
         Commands::Current(args) => cli::current::execute(args),
         Commands::Delete(args) => cli::delete::execute(args),
@@ -65,5 +70,6 @@ fn main() -> Result<()> {
         Commands::Rollback(args) => cli::rollback::execute(args),
         Commands::Show(args) => cli::show::execute(args),
         Commands::Use(args) => cli::use_cmd::execute(args),
+        Commands::Version(args) => cli::version::execute(args),
     }
 }
