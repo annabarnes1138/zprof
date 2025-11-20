@@ -398,6 +398,12 @@ fn generate_zap_config(output: &mut String, manifest: &Manifest) -> Result<()> {
             .iter()
             .find(|t| t.name == manifest.profile.theme.as_str())
         {
+            // Install theme dependencies first
+            for dep in theme.compatibility.dependencies {
+                output.push_str(&format!("plug \"{}\"\n", dep));
+            }
+
+            // Install the theme itself
             if let Some(repo_url) = theme.compatibility.repo_url_for(&crate::frameworks::FrameworkType::Zap) {
                 output.push_str(&format!("plug \"{}\"\n", repo_url));
                 output.push_str("\n");

@@ -55,6 +55,7 @@ pub const THEME_REGISTRY: &[Theme] = &[
                     recommended: true,
                 },
             ],
+            dependencies: &[],
         },
     },
     Theme {
@@ -89,6 +90,7 @@ pub const THEME_REGISTRY: &[Theme] = &[
                     recommended: true,
                 },
             ],
+            dependencies: &[],
         },
     },
 
@@ -125,6 +127,7 @@ pub const THEME_REGISTRY: &[Theme] = &[
                     recommended: false,
                 },
             ],
+            dependencies: &["mafredri/zsh-async"],
         },
     },
     Theme {
@@ -154,6 +157,7 @@ pub const THEME_REGISTRY: &[Theme] = &[
                     recommended: false,
                 },
             ],
+            dependencies: &[],
         },
     },
     Theme {
@@ -183,6 +187,7 @@ pub const THEME_REGISTRY: &[Theme] = &[
                     recommended: false,
                 },
             ],
+            dependencies: &[],
         },
     },
 
@@ -214,6 +219,7 @@ pub const THEME_REGISTRY: &[Theme] = &[
                     recommended: false,
                 },
             ],
+            dependencies: &[],
         },
     },
     Theme {
@@ -243,6 +249,7 @@ pub const THEME_REGISTRY: &[Theme] = &[
                     recommended: false,
                 },
             ],
+            dependencies: &[],
         },
     },
 
@@ -274,6 +281,7 @@ pub const THEME_REGISTRY: &[Theme] = &[
                     recommended: false,
                 },
             ],
+            dependencies: &[],
         },
     },
     Theme {
@@ -299,6 +307,7 @@ pub const THEME_REGISTRY: &[Theme] = &[
                 },
                 // Zap: No direct zap equivalent
             ],
+            dependencies: &[],
         },
     },
     Theme {
@@ -328,6 +337,7 @@ pub const THEME_REGISTRY: &[Theme] = &[
                     recommended: false,
                 },
             ],
+            dependencies: &[],
         },
     },
 ];

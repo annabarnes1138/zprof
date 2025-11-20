@@ -55,6 +55,7 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
                     recommended: true,
                 },
             ],
+            dependencies: &[],
         },
     },
     Plugin {
@@ -89,6 +90,7 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
                     recommended: true,
                 },
             ],
+            dependencies: &[],
         },
     },
     Plugin {
@@ -123,6 +125,7 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
                     recommended: true,
                 },
             ],
+            dependencies: &[],
         },
     },
 
@@ -159,6 +162,7 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
                     recommended: true,
                 },
             ],
+            dependencies: &[],
         },
     },
 
@@ -191,6 +195,7 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
                 },
                 // Zap: Docker CLI provides its own completions, no plugin needed
             ],
+            dependencies: &[],
         },
     },
     Plugin {
@@ -225,6 +230,7 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
                     recommended: false,
                 },
             ],
+            dependencies: &[],
         },
     },
 
@@ -256,6 +262,7 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
                     recommended: false,
                 },
             ],
+            dependencies: &[],
         },
     },
     Plugin {
@@ -290,6 +297,7 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
                     recommended: false,
                 },
             ],
+            dependencies: &[],
         },
     },
     Plugin {
@@ -320,6 +328,7 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
                 },
                 // Zap: Python completions built-in to zsh, no plugin needed
             ],
+            dependencies: &[],
         },
     },
 
@@ -351,6 +360,7 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
                     recommended: false,
                 },
             ],
+            dependencies: &[],
         },
     },
     Plugin {
@@ -380,6 +390,7 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
                     recommended: false,
                 },
             ],
+            dependencies: &[],
         },
     },
     Plugin {
@@ -405,6 +416,7 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
                 },
                 // Zap: Bat doesn't need a plugin, tool installed directly
             ],
+            dependencies: &[],
         },
     },
     Plugin {
@@ -430,6 +442,7 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
                 },
                 // Zap: Ripgrep doesn't need a plugin
             ],
+            dependencies: &[],
         },
     },
     Plugin {
@@ -460,6 +473,7 @@ pub const PLUGIN_REGISTRY: &[Plugin] = &[
                 },
                 // Zap: Zoxide auto-inits, no plugin needed
             ],
+            dependencies: &[],
         },
     },
 ];

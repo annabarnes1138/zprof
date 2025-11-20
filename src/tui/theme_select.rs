@@ -74,12 +74,24 @@ fn run_selection_loop(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
     framework: FrameworkType,
 ) -> Result<String> {
-    let themes = get_themes_for_framework(&framework);
+    let mut themes = get_themes_for_framework(&framework);
 
     // Handle framework with no themes (edge case)
     if themes.is_empty() {
         return Ok("default".to_string());
     }
+
+    // Sort themes: recommended first, then alphabetically
+    themes.sort_by(|a, b| {
+        let a_recommended = a.compatibility.is_recommended_for(&framework);
+        let b_recommended = b.compatibility.is_recommended_for(&framework);
+
+        match (a_recommended, b_recommended) {
+            (true, false) => std::cmp::Ordering::Less,    // a first
+            (false, true) => std::cmp::Ordering::Greater, // b first
+            _ => a.name.cmp(b.name),                      // alphabetical
+        }
+    });
 
     let mut state = ListState::default();
     state.select(Some(0)); // Start with first item selected

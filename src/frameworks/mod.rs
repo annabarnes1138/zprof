@@ -84,6 +84,9 @@ pub struct Theme {
 pub struct PluginCompatibility {
     /// Which managers can install this plugin
     pub supported_managers: &'static [ManagerSupport],
+    /// External dependencies required for this plugin (e.g., other plugins/libraries)
+    #[allow(dead_code)]
+    pub dependencies: &'static [&'static str],
 }
 
 /// Theme compatibility metadata
@@ -91,6 +94,9 @@ pub struct PluginCompatibility {
 pub struct ThemeCompatibility {
     /// Which managers can install this theme
     pub supported_managers: &'static [ManagerSupport],
+    /// External dependencies required for this theme (e.g., other plugins/libraries)
+    #[allow(dead_code)]
+    pub dependencies: &'static [&'static str],
 }
 
 /// Framework-specific support information

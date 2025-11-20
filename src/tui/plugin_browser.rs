@@ -70,7 +70,7 @@ pub fn run_plugin_selection(framework: FrameworkType) -> Result<Vec<String>> {
     }
 
     // Get plugins for framework
-    let plugins = get_plugins_for_framework(&framework);
+    let mut plugins = get_plugins_for_framework(&framework);
 
     // If no plugins available, show warning and return empty vec (AC: #6)
     if plugins.is_empty() {
@@ -78,6 +78,18 @@ pub fn run_plugin_selection(framework: FrameworkType) -> Result<Vec<String>> {
         log::warn!("No plugins defined for framework: {:?}", framework);
         return Ok(vec![]);
     }
+
+    // Sort plugins: recommended first, then alphabetically
+    plugins.sort_by(|a, b| {
+        let a_recommended = a.compatibility.is_recommended_for(&framework);
+        let b_recommended = b.compatibility.is_recommended_for(&framework);
+
+        match (a_recommended, b_recommended) {
+            (true, false) => std::cmp::Ordering::Less,    // a first
+            (false, true) => std::cmp::Ordering::Greater, // b first
+            _ => a.name.cmp(b.name),                      // alphabetical
+        }
+    });
 
     // Run selection loop
     let result = run_plugin_loop(&mut terminal, framework, plugins);
