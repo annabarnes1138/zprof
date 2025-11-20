@@ -1,0 +1,546 @@
+# Architecture Overview
+
+This document describes the high-level architecture of zprof for contributors and developers.
+
+## System Overview
+
+zprof is a Rust CLI tool for managing multiple zsh configurations through isolated profiles. It provides instant profile switching, safe experimentation, and portable profile sharing.
+
+**Key architectural principles:**
+- **Non-destructive**: Never modifies original user configs
+- **Safe**: Automatic backups, validation before operations
+- **Fast**: < 500ms profile switching
+- **Modular**: Clear separation between CLI, core logic, frameworks, TUI, and shell integration
+
+## Technology Stack
+
+| Component | Technology | Version | Purpose |
+|-----------|------------|---------|---------|
+| Language | Rust | 1.70+ | Performance, safety, single-binary distribution |
+| CLI Framework | Clap | 4.5+ | Type-safe argument parsing |
+| TUI Framework | Ratatui + Crossterm | 0.29.0 | Interactive wizards |
+| Config Format | TOML | 0.9 | Profile manifests |
+| Archives | tar + flate2 | 0.4 / 1.0 | Export/import |
+| Git Operations | git2 | 0.20 | GitHub imports |
+| Error Handling | anyhow | 2.0 | Rich error context |
+| Testing | insta | latest | Snapshot testing |
+
+## Project Structure
+
+```
+zprof/
+├── src/
+│   ├── cli/               # Command implementations
+│   │   ├── init.rs        # Initialize zprof
+│   │   ├── create.rs      # Create profiles
+│   │   ├── use_cmd.rs     # Switch profiles
+│   │   ├── list.rs        # List profiles
+│   │   ├── current.rs     # Show active profile
+│   │   ├── delete.rs      # Delete profiles
+│   │   ├── edit.rs        # Edit manifests
+│   │   ├── export.rs      # Export archives
+│   │   ├── import.rs      # Import archives
+│   │   └── rollback.rs    # Restore original config
+│   │
+│   ├── core/              # Core business logic
+│   │   ├── config.rs      # Global config management
+│   │   ├── profile.rs     # Profile CRUD operations
+│   │   ├── manifest.rs    # TOML manifest parsing/generation
+│   │   └── filesystem.rs  # Safe file operations
+│   │
+│   ├── frameworks/        # Framework support
+│   │   ├── detector.rs    # Detect existing frameworks
+│   │   ├── oh_my_zsh.rs   # oh-my-zsh support
+│   │   ├── zimfw.rs       # zimfw support
+│   │   ├── prezto.rs      # prezto support
+│   │   ├── zinit.rs       # zinit support
+│   │   ├── zap.rs         # zap support
+│   │   ├── plugin.rs      # Plugin registry
+│   │   └── theme.rs       # Theme registry
+│   │
+│   ├── tui/               # Terminal UI
+│   │   ├── framework_select.rs  # Framework picker
+│   │   ├── plugin_browser.rs    # Plugin multi-select
+│   │   └── theme_select.rs      # Theme picker
+│   │
+│   ├── archive/           # Import/export
+│   │   ├── export.rs      # Create .zprof archives
+│   │   ├── import.rs      # Extract archives
+│   │   └── github.rs      # GitHub imports
+│   │
+│   └── shell/             # Shell integration
+│       ├── generator.rs   # Generate .zshrc/.zshenv
+│       └── zdotdir.rs     # ZDOTDIR management
+│
+└── tests/                 # Integration tests
+    ├── init_test.rs
+    ├── create_test.rs
+    ├── use_test.rs
+    └── framework_detection_test.rs
+```
+
+## Data Flow
+
+### Profile Creation
+
+```
+User runs: zprof create work
+         ↓
+CLI (create.rs) parses args
+         ↓
+TUI wizard (framework_select → plugin_browser → theme_select)
+         ↓
+Manifest created (manifest.rs)
+         ↓
+Framework installed (frameworks/*.rs)
+         ↓
+Shell configs generated (generator.rs)
+         ↓
+Profile directory created (filesystem.rs)
+```
+
+### Profile Switching
+
+```
+User runs: zprof use work
+         ↓
+CLI (use_cmd.rs) validates profile exists
+         ↓
+Config updated (config.rs): active_profile = "work"
+         ↓
+ZDOTDIR set (zdotdir.rs): ~/.zshenv points to profile
+         ↓
+User runs: exec zsh
+         ↓
+zsh reads ~/.zshenv → sources $ZDOTDIR/.zshrc
+```
+
+### Configuration Generation
+
+```
+profile.toml (manifest)
+         ↓
+manifest.rs parses TOML
+         ↓
+generator.rs generates .zshrc/.zshenv
+         ↓
+Framework-specific config (e.g., .zimrc for zimfw)
+         ↓
+Files written to profile directory
+         ↓
+Validated with `zsh -n`
+```
+
+## Key Design Patterns
+
+### 1. CLI Command Structure
+
+All CLI commands follow this pattern:
+
+```rust
+use anyhow::Result;
+use clap::Args;
+
+#[derive(Debug, Args)]
+pub struct CommandArgs {
+    // Command-specific arguments
+}
+
+pub fn execute(args: CommandArgs) -> Result<()> {
+    // 1. Validate inputs
+    // 2. Load configuration
+    // 3. Perform operation
+    // 4. Display output
+    Ok(())
+}
+```
+
+### 2. Framework Trait
+
+All frameworks implement the `Framework` trait:
+
+```rust
+pub trait Framework {
+    fn name(&self) -> &str;
+    fn detect() -> Option<FrameworkInfo>;
+    fn install(profile_path: &Path) -> Result<()>;
+    fn get_plugins() -> Vec<Plugin>;
+    fn get_themes() -> Vec<Theme>;
+}
+```
+
+### 3. Safe File Operations
+
+All file modifications follow this pattern:
+
+```rust
+// 1. Check: Verify source exists, destination is valid
+// 2. Backup: Create backup if modifying existing file
+// 3. Operate: Perform the file operation (copy, move, write)
+// 4. Verify: Confirm operation succeeded
+```
+
+Example in `filesystem.rs`:
+```rust
+pub fn copy_with_backup(src: &Path, dest: &Path) -> Result<()> {
+    // Check
+    ensure!(src.exists(), "Source does not exist");
+
+    // Backup
+    if dest.exists() {
+        create_backup(dest)?;
+    }
+
+    // Operate
+    fs::copy(src, dest)?;
+
+    // Verify
+    ensure!(dest.exists(), "Copy verification failed");
+    Ok(())
+}
+```
+
+### 4. Manifest-Based Configuration
+
+**Single source of truth**: `profile.toml`
+
+Shell configs (`.zshrc`, `.zshenv`) are **generated artifacts**:
+- Generated from manifest using `generator.rs`
+- Include "DO NOT EDIT" warning header
+- Regenerated when manifest changes
+- Validated with `zsh -n` before writing
+
+### 5. ZDOTDIR-Based Profile Switching
+
+Profile activation uses zsh's `ZDOTDIR` mechanism:
+
+```bash
+# ~/.zshenv (managed by zprof)
+export ZDOTDIR="$HOME/.zsh-profiles/profiles/work"
+export HISTFILE="$HOME/.zsh-profiles/shared/.zsh_history"
+```
+
+When zsh starts, it sources `$ZDOTDIR/.zshrc` instead of `~/.zshrc`.
+
+**Benefits:**
+- Non-destructive (original `~/.zshrc` untouched)
+- Instant switching (just update `~/.zshenv`)
+- Native zsh feature (no hacks)
+
+## Module Responsibilities
+
+### CLI (`src/cli/`)
+
+**Purpose**: Parse commands, orchestrate operations, display output
+
+**Rules**:
+- Thin layer, delegates to core/frameworks/tui
+- Handles argument parsing (Clap)
+- Displays user-friendly output
+- No business logic
+
+### Core (`src/core/`)
+
+**Purpose**: Core business logic and data management
+
+**Modules**:
+- `config.rs`: Global config (`~/.zsh-profiles/config.toml`)
+- `profile.rs`: Profile CRUD operations
+- `manifest.rs`: TOML parsing/validation/generation
+- `filesystem.rs`: Safe file operations with backups
+
+**Rules**:
+- Framework-agnostic
+- All file operations go through `filesystem.rs`
+- Validates all inputs before operations
+
+### Frameworks (`src/frameworks/`)
+
+**Purpose**: Framework-specific detection, installation, and config generation
+
+**Modules**:
+- `detector.rs`: Detects existing frameworks
+- `{framework}.rs`: Framework-specific implementation
+- `plugin.rs`: Plugin registry (600+ plugins)
+- `theme.rs`: Theme registry
+
+**Rules**:
+- Each framework implements `Framework` trait
+- Detection is read-only (never modifies files)
+- Installation is idempotent
+
+### TUI (`src/tui/`)
+
+**Purpose**: Interactive terminal wizards
+
+**Uses**: Ratatui + Crossterm for full-screen TUIs
+
+**Rules**:
+- Keyboard-only navigation
+- Returns selected values (doesn't perform operations)
+- Graceful cancellation (Esc key)
+
+### Shell (`src/shell/`)
+
+**Purpose**: Shell configuration generation and ZDOTDIR management
+
+**Modules**:
+- `generator.rs`: Generate `.zshrc`, `.zshenv` from manifests
+- `zdotdir.rs`: Manage `~/.zshenv` for profile switching
+
+**Rules**:
+- Generates deterministic output (same manifest → same config)
+- Validates generated configs with `zsh -n`
+- Escapes shell values properly
+
+### Archive (`src/archive/`)
+
+**Purpose**: Import/export profiles as portable archives
+
+**Modules**:
+- `export.rs`: Create `.zprof` tar.gz archives
+- `import.rs`: Extract and validate archives
+- `github.rs`: Clone GitHub repos
+
+**Rules**:
+- Archives exclude framework binaries (too large)
+- Metadata includes zprof version, export date
+- Validates archives before extraction
+
+## Data Model
+
+### Global Config (`~/.zsh-profiles/config.toml`)
+
+```toml
+active_profile = "work"
+default_framework = "oh-my-zsh"
+```
+
+### Profile Manifest (`profiles/<name>/profile.toml`)
+
+```toml
+[profile]
+name = "work"
+framework = "oh-my-zsh"
+theme = "robbyrussell"
+created = "2025-11-01T10:00:00Z"
+modified = "2025-11-15T14:30:00Z"
+
+[plugins]
+enabled = ["git", "docker", "zsh-autosuggestions"]
+
+[env]
+EDITOR = "vim"
+NODE_ENV = "development"
+```
+
+### Framework Info (Runtime)
+
+```rust
+pub struct FrameworkInfo {
+    pub framework_type: FrameworkType,
+    pub plugins: Vec<String>,
+    pub theme: String,
+    pub config_path: PathBuf,    // e.g., ~/.zshrc
+    pub install_path: PathBuf,   // e.g., ~/.oh-my-zsh
+}
+```
+
+## Extension Points
+
+### Adding a New Framework
+
+1. Create `src/frameworks/newframework.rs`
+2. Implement `Framework` trait
+3. Add to `FrameworkType` enum
+4. Add detection in `detector.rs`
+5. Add generator in `shell/generator.rs`
+6. Update plugin/theme registries
+7. Add tests
+
+See [Adding Frameworks](adding-frameworks.md) for detailed guide.
+
+### Adding a New Plugin
+
+1. Add to `PLUGIN_REGISTRY` in `frameworks/plugin.rs`
+2. Specify framework compatibility
+3. Provide repo URL (for managers like zap)
+
+### Adding a New Command
+
+1. Create `src/cli/newcommand.rs`
+2. Define `CommandArgs` struct
+3. Implement `execute()` function
+4. Register in `src/main.rs`
+5. Add integration test
+
+## Testing Strategy
+
+### Unit Tests
+
+- In-module tests (`#[cfg(test)] mod tests`)
+- Test individual functions
+- Mock filesystem operations
+
+### Integration Tests
+
+- In `tests/` directory
+- Test complete command workflows
+- Use `tempfile` for isolated environments
+- `serial_test` for tests that modify HOME
+
+### Snapshot Tests
+
+- Using `insta` crate
+- Validate CLI output
+- Update snapshots with `cargo insta review`
+
+**Example**:
+```rust
+#[test]
+fn test_list_command_output() {
+    let output = run_command("list");
+    insta::assert_snapshot!(output);
+}
+```
+
+## Performance Considerations
+
+### Profile Switching Performance
+
+**Target**: < 500ms from `zprof use` to completion
+
+**Optimizations**:
+- Minimal file I/O (only update `config.toml` and `~/.zshenv`)
+- No validation unless `--validate` flag
+- Lazy framework installation (only when creating profile)
+
+### Shell Startup Performance
+
+**Not controlled by zprof**, depends on:
+- Framework choice (zinit > zimfw > oh-my-zsh)
+- Number of plugins
+- Theme complexity
+
+zprof provides:
+- Performance tips in docs
+- Recommendations during wizard
+- Future: startup time profiling
+
+## Security Considerations
+
+### Path Traversal Prevention
+
+All paths validated to prevent escaping `~/.zsh-profiles/`:
+
+```rust
+pub fn validate_profile_name(name: &str) -> Result<()> {
+    ensure!(!name.contains(".."), "Invalid profile name");
+    ensure!(!name.contains("/"), "Invalid profile name");
+    Ok(())
+}
+```
+
+### Shell Injection Prevention
+
+All values escaped before writing to shell configs:
+
+```rust
+pub fn escape_shell_value(value: &str) -> String {
+    value.replace("\"", "\\\"")
+         .replace("$", "\\$")
+         .replace("`", "\\`")
+}
+```
+
+### Backup Before Modification
+
+Every destructive operation creates a backup:
+- Profile deletion → backup to `cache/backups/`
+- ZDOTDIR change → backup `~/.zshenv`
+- Config regeneration → backup old `.zshrc`
+
+## Error Handling
+
+### Error Types
+
+Using `anyhow` for application errors:
+
+```rust
+use anyhow::{Context, Result};
+
+pub fn load_profile(name: &str) -> Result<Profile> {
+    let path = get_profile_path(name)?;
+
+    let content = fs::read_to_string(&path)
+        .with_context(|| format!("Failed to read profile at {}", path.display()))?;
+
+    // ...
+}
+```
+
+### User-Friendly Messages
+
+Errors include context for users:
+
+```
+Error: Failed to create profile 'work'
+
+Caused by:
+    0: Failed to install oh-my-zsh
+    1: Failed to clone repository
+    2: Network timeout
+
+Suggestion: Check your internet connection and try again
+```
+
+## Future Architecture Considerations
+
+### Plugin Version Management
+
+Currently: Install latest version of plugins
+
+Future: Support version pinning in manifest:
+
+```toml
+[plugins]
+enabled = [
+    { name = "git", version = "latest" },
+    { name = "docker", version = "1.2.3" }
+]
+```
+
+### Remote Profile Sync
+
+Currently: Manual export/import
+
+Future: Sync profiles to cloud storage:
+
+```bash
+zprof sync --remote s3://mybucket/zprof-profiles
+```
+
+### Performance Profiling
+
+Future: Built-in startup time profiling:
+
+```bash
+zprof profile startup
+# → Framework init: 200ms
+# → Plugin loading: 300ms
+# → Theme init: 50ms
+```
+
+## Development Workflow
+
+See [Contributing Guide](contributing.md) for:
+- Setting up development environment
+- Running tests
+- Code style guidelines
+- Submitting pull requests
+
+See [Testing Guide](testing.md) for:
+- Test organization
+- Writing integration tests
+- Using snapshot tests
+- Debugging test failures

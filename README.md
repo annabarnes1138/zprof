@@ -254,6 +254,14 @@ Once rollback is complete:
 - If the framework directory already exists in your home directory, rollback skips the move
 - Manually remove or rename the existing directory and run rollback again
 
+## Documentation
+
+**Full documentation is available in the [`docs/`](docs/) directory:**
+
+- **[User Guide](docs/user-guide/)** - Installation, usage, troubleshooting
+- **[Developer Guide](docs/developer/)** - Contributing, architecture, adding frameworks
+- **[Roadmap](docs/planning/roadmap.md)** - Future plans and releases
+
 ## Directory Structure
 
 ```
