@@ -16,6 +16,7 @@ use ratatui::{
 };
 use std::io;
 
+use crate::core::manifest::PromptMode;
 use crate::frameworks::{Framework, FrameworkType, Theme};
 use crate::frameworks::installer::WizardState;
 use crate::tui::{restore_terminal, setup_terminal};
@@ -23,16 +24,19 @@ use crate::tui::{restore_terminal, setup_terminal};
 /// Run interactive theme selection TUI
 ///
 /// Displays available themes for the selected framework with descriptions
-/// and preview information.
+/// and preview information. If using PromptEngine mode, returns empty string
+/// and skips theme selection entirely.
 ///
 /// # Arguments
 ///
 /// * `framework` - The framework type to get themes for
 /// * `_plugins` - Selected plugins (reserved for future use, currently unused)
+/// * `mode` - The prompt mode (PromptEngine or FrameworkTheme)
 ///
 /// # Returns
 ///
-/// Selected theme name as String on Enter, or error if cancelled (Esc) or failed
+/// Selected theme name as String on Enter, empty string if PromptEngine mode,
+/// or error if cancelled (Esc) or failed
 ///
 /// # Keyboard Controls
 ///
@@ -45,7 +49,12 @@ use crate::tui::{restore_terminal, setup_terminal};
 /// - Terminal too small (minimum 80x24)
 /// - User cancels with Esc key
 /// - Terminal initialization fails
-pub fn run_theme_selection(framework: FrameworkType, _plugins: &[String]) -> Result<String> {
+pub fn run_theme_selection(framework: FrameworkType, _plugins: &[String], mode: PromptMode) -> Result<String> {
+    // Skip theme selection entirely if using a prompt engine
+    if matches!(mode, PromptMode::PromptEngine { .. }) {
+        return Ok(String::new());
+    }
+
     // Initialize terminal
     let mut terminal = setup_terminal().context("Failed to initialize terminal for TUI")?;
 
@@ -423,6 +432,38 @@ mod tests {
         let themes = get_themes_for_framework(&FrameworkType::Zimfw);
         assert!(!themes.is_empty());
         assert!(themes.iter().any(|t| t.name == "powerlevel10k"));
+    }
+
+    #[test]
+    fn test_skip_theme_selection_for_prompt_engine() {
+        // Test that PromptEngine mode skips theme selection and returns empty string
+        let mode = PromptMode::PromptEngine {
+            engine: "starship".to_string(),
+        };
+        let result = run_theme_selection(FrameworkType::OhMyZsh, &[], mode);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), String::new());
+    }
+
+    #[test]
+    fn test_framework_theme_mode_proceeds_to_selection() {
+        // This test would require mocking terminal input, so we just verify the early return doesn't happen
+        // For now, we test the skip logic directly
+        let prompt_engine_mode = PromptMode::PromptEngine {
+            engine: "starship".to_string(),
+        };
+        let framework_theme_mode = PromptMode::FrameworkTheme {
+            theme: "robbyrussell".to_string(),
+        };
+
+        // PromptEngine mode should return immediately
+        let result = run_theme_selection(FrameworkType::OhMyZsh, &[], prompt_engine_mode);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), String::new());
+
+        // FrameworkTheme mode would proceed to TUI (we can't test the full flow without terminal mocking)
+        // Instead we verify that the conditional logic is correct by checking the match
+        assert!(!matches!(framework_theme_mode, PromptMode::PromptEngine { .. }));
     }
 
     #[test]

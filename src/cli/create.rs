@@ -12,10 +12,10 @@ use std::path::PathBuf;
 
 use crate::core::config::Config;
 use crate::core::filesystem::{self, copy_dir_recursive, create_shared_history, get_zprof_dir};
-use crate::core::manifest::Manifest;
+use crate::core::manifest::{Manifest, PromptMode};
 use crate::frameworks::detect_existing_framework;
 use crate::frameworks::installer::{self, WizardState};
-use crate::tui::{framework_select, plugin_browser, theme_select};
+use crate::tui::{framework_select, plugin_browser, prompt_mode_select, theme_select};
 use crate::shell::generator;
 
 /// Arguments for the create command
@@ -75,13 +75,33 @@ pub fn execute(args: CreateArgs) -> Result<()> {
             let selected = framework_select::run_framework_selection(&args.name)
                 .context("Framework selection cancelled. Profile creation aborted.")?;
 
+            // Launch prompt mode selection (Story 1.2)
+            let prompt_mode_type = prompt_mode_select::run_prompt_mode_selection()
+                .context("Prompt mode selection cancelled. Profile creation aborted.")?;
+
             // Launch plugin browser (Story 1.7)
             let plugins = plugin_browser::run_plugin_selection(selected.clone())
                 .context("Plugin selection cancelled. Profile creation aborted.")?;
 
-            // Launch theme selection (Story 1.8)
-            let theme = theme_select::run_theme_selection(selected.clone(), &plugins)
-                .context("Theme selection cancelled. Profile creation aborted.")?;
+            // Launch theme selection (Story 1.5) - conditional based on prompt mode
+            let prompt_mode = match prompt_mode_type {
+                prompt_mode_select::PromptModeType::PromptEngine => {
+                    // TODO: For now, we'll use a placeholder engine. Story 1.4 will implement engine selection.
+                    PromptMode::PromptEngine {
+                        engine: "starship".to_string(),
+                    }
+                }
+                prompt_mode_select::PromptModeType::FrameworkTheme => {
+                    let theme = theme_select::run_theme_selection(selected.clone(), &plugins, PromptMode::FrameworkTheme { theme: String::new() })
+                        .context("Theme selection cancelled. Profile creation aborted.")?;
+                    PromptMode::FrameworkTheme { theme }
+                }
+            };
+
+            let theme = match &prompt_mode {
+                PromptMode::FrameworkTheme { theme } => theme.clone(),
+                PromptMode::PromptEngine { .. } => String::new(),
+            };
 
             // Show confirmation screen (Story 1.8)
             let wizard_state = WizardState {
@@ -109,13 +129,33 @@ pub fn execute(args: CreateArgs) -> Result<()> {
         let selected = framework_select::run_framework_selection(&args.name)
             .context("Framework selection cancelled. Profile creation aborted.")?;
 
+        // Launch prompt mode selection (Story 1.2)
+        let prompt_mode_type = prompt_mode_select::run_prompt_mode_selection()
+            .context("Prompt mode selection cancelled. Profile creation aborted.")?;
+
         // Launch plugin browser (Story 1.7)
         let plugins = plugin_browser::run_plugin_selection(selected.clone())
             .context("Plugin selection cancelled. Profile creation aborted.")?;
 
-        // Launch theme selection (Story 1.8)
-        let theme = theme_select::run_theme_selection(selected.clone(), &plugins)
-            .context("Theme selection cancelled. Profile creation aborted.")?;
+        // Launch theme selection (Story 1.5) - conditional based on prompt mode
+        let prompt_mode = match prompt_mode_type {
+            prompt_mode_select::PromptModeType::PromptEngine => {
+                // TODO: For now, we'll use a placeholder engine. Story 1.4 will implement engine selection.
+                PromptMode::PromptEngine {
+                    engine: "starship".to_string(),
+                }
+            }
+            prompt_mode_select::PromptModeType::FrameworkTheme => {
+                let theme = theme_select::run_theme_selection(selected.clone(), &plugins, PromptMode::FrameworkTheme { theme: String::new() })
+                    .context("Theme selection cancelled. Profile creation aborted.")?;
+                PromptMode::FrameworkTheme { theme }
+            }
+        };
+
+        let theme = match &prompt_mode {
+            PromptMode::FrameworkTheme { theme } => theme.clone(),
+            PromptMode::PromptEngine { .. } => String::new(),
+        };
 
         // Show confirmation screen (Story 1.8)
         let wizard_state = WizardState {
