@@ -1,0 +1,115 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>3</storyId>
+    <title>Create Prompt Engine Registry</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-1-story-3.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a centralized registry of supported prompt engines</iWant>
+    <soThat>users can select from known working engines</soThat>
+    <tasks>
+      - Create prompts module structure
+      - Define PromptEngine enum with all supported engines
+      - Create metadata struct for engine properties
+      - Define metadata for each engine (Starship, Powerlevel10k, etc.)
+      - Add unit tests for registry
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Create `src/prompts/mod.rs` and `src/prompts/engine.rs`
+    - [ ] Define `PromptEngine` enum (Starship, Powerlevel10k, OhMyPosh, Pure, Spaceship)
+    - [ ] Add metadata for each engine: name, description, requires_nerd_font, installation method, init command, cross-shell compatibility
+    - [ ] Add unit tests
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-1-smart-tui.md</path>
+        <title>Epic 1: Smart TUI</title>
+        <section>Technical Design - Data Model</section>
+        <snippet>Defines PromptEngine enum with variants for Starship, Powerlevel10k, OhMyPosh, Pure, and Spaceship. Includes EngineMetadata struct with installation methods and init commands.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>src/frameworks/mod.rs</path>
+        <kind>module</kind>
+        <symbol>FrameworkType enum</symbol>
+        <lines>N/A</lines>
+        <reason>Reference for how framework types are modeled as enum with metadata - similar pattern needed for prompt engines.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <rust>
+        <package name="serde" version="1.0" purpose="Serialization for PromptEngine enum"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Follow pattern established by FrameworkType enum in frameworks module
+    - Use const arrays or lazy_static for engine registry metadata
+    - Each engine must have complete metadata (no optional fields)
+    - Installation methods should be enum: Binary, GitClone, FrameworkPlugin
+    - Cross-shell compatibility flag helps users understand limitations
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>PromptEngine</name>
+      <kind>enum</kind>
+      <signature>pub enum PromptEngine { Starship, Powerlevel10k, OhMyPosh, Pure, Spaceship }</signature>
+      <path>src/prompts/engine.rs</path>
+      <notes>Main enum representing supported prompt engines</notes>
+    </interface>
+    <interface>
+      <name>EngineMetadata</name>
+      <kind>struct</kind>
+      <signature>pub struct EngineMetadata { name: &amp;'static str, description: &amp;'static str, requires_nerd_font: bool, ... }</signature>
+      <path>src/prompts/engine.rs</path>
+      <notes>Metadata container for each prompt engine</notes>
+    </interface>
+    <interface>
+      <name>InstallMethod</name>
+      <kind>enum</kind>
+      <signature>pub enum InstallMethod { Binary { url: &amp;'static str }, GitClone { repo: &amp;'static str }, FrameworkPlugin { plugin_name: &amp;'static str } }</signature>
+      <path>src/prompts/engine.rs</path>
+      <notes>Enum defining how each engine is installed</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Unit tests should verify enum metadata completeness and accessor methods. Follow pattern from frameworks module tests.
+    </standards>
+    <locations>
+      - Unit tests: src/prompts/engine.rs #[cfg(test)] mod tests
+    </locations>
+    <ideas>
+      <test ac="PromptEngine enum defined">
+        <idea>Test all 5 engines are represented in enum</idea>
+        <idea>Test enum can be serialized/deserialized with serde</idea>
+      </test>
+      <test ac="Metadata complete">
+        <idea>Test each engine has non-empty name and description</idea>
+        <idea>Test each engine has valid installation method</idea>
+        <idea>Test each engine has init command string</idea>
+        <idea>Test metadata accessor methods return correct data for each engine</idea>
+      </test>
+      <test ac="Nerd Font requirements">
+        <idea>Test Starship, Powerlevel10k, Spaceship have requires_nerd_font=true</idea>
+        <idea>Test Pure has requires_nerd_font=false</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

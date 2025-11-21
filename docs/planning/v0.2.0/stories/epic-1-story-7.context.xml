@@ -1,0 +1,132 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>7</storyId>
+    <title>Integrate Prompt Mode into Create Workflow</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-1-story-7.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user running `zprof create`</asA>
+    <iWant>the new prompt mode flow to be seamless</iWant>
+    <soThat>profile creation is intuitive</soThat>
+    <tasks>
+      - Update create.rs to integrate new TUI flow
+      - Add prompt mode selection step after framework
+      - Branch to engine or theme selection based on mode
+      - Update confirmation screen to show prompt info
+      - Create integration test for full workflow
+      - Update user documentation
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Update `src/cli/create.rs` to use new TUI flow
+    - [ ] New flow order: Framework → Prompt mode → Engine/Theme → Plugins → Confirmation
+    - [ ] Update confirmation screen to show prompt info correctly
+    - [ ] Integration test for full workflow
+    - [ ] Update user-facing docs
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-1-smart-tui.md</path>
+        <title>Epic 1: Smart TUI</title>
+        <section>Story 1.7 - Workflow Integration</section>
+        <snippet>Shows new flow: Framework selection → Prompt mode selection → (IF engine: Prompt engine selection) OR (IF theme: Theme selection) → Plugin selection → Confirmation.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>src/cli/create.rs</path>
+        <kind>module</kind>
+        <symbol>N/A</symbol>
+        <lines>N/A</lines>
+        <reason>Main create command that orchestrates the wizard flow - needs updates to integrate all new TUI screens.</reason>
+      </artifact>
+      <artifact>
+        <path>src/tui/prompt_mode_select.rs</path>
+        <kind>module</kind>
+        <symbol>run_prompt_mode_selection</symbol>
+        <lines>N/A</lines>
+        <reason>Prompt mode selection TUI from Story 1.2.</reason>
+      </artifact>
+      <artifact>
+        <path>src/tui/prompt_engine_select.rs</path>
+        <kind>module</kind>
+        <symbol>run_prompt_engine_selection</symbol>
+        <lines>N/A</lines>
+        <reason>Engine selection TUI from Story 1.4.</reason>
+      </artifact>
+      <artifact>
+        <path>src/tui/theme_select.rs</path>
+        <kind>module</kind>
+        <symbol>run_theme_selection</symbol>
+        <lines>N/A</lines>
+        <reason>Modified theme selection from Story 1.5.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <rust>
+        <package name="anyhow" version="1.0" purpose="Error handling"/>
+        <package name="dialoguer" version="0.11" purpose="CLI prompts and confirmation"/>
+      </rust>
+      <dev-dependencies>
+        <package name="serial_test" version="3.0" purpose="Sequential integration tests"/>
+      </dev-dependencies>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Integrate all previous Epic 1 stories into cohesive flow
+    - Maintain existing wizard patterns where applicable
+    - Confirmation screen must show either engine or theme (not both)
+    - Handle user cancellation at any step (Esc key)
+    - Update manifest creation to use PromptMode enum
+    - All TUI screens must be called in correct order
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>execute (create command)</name>
+      <kind>function (modified)</kind>
+      <signature>pub fn execute(args: CreateArgs) -> Result&lt;()&gt;</signature>
+      <path>src/cli/create.rs</path>
+      <notes>Main create command execution - integrates full wizard flow</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Integration tests verify full end-to-end workflow. Test both engine and theme paths through the wizard.
+    </standards>
+    <locations>
+      - Integration: tests/create_workflow_test.rs (NEW)
+      - Existing: tests/create_test.rs (may need updates)
+    </locations>
+    <ideas>
+      <test ac="Full workflow - engine path">
+        <idea>Integration test: Framework → Prompt mode (engine) → Engine selection → Plugins → Confirmation → Profile created</idea>
+        <idea>Verify manifest has PromptMode::PromptEngine with selected engine</idea>
+        <idea>Verify generated config has engine initialization</idea>
+      </test>
+      <test ac="Full workflow - theme path">
+        <idea>Integration test: Framework → Prompt mode (theme) → Theme selection → Plugins → Confirmation → Profile created</idea>
+        <idea>Verify manifest has PromptMode::FrameworkTheme with selected theme</idea>
+      </test>
+      <test ac="Confirmation screen">
+        <idea>Test confirmation shows engine name when PromptEngine mode</idea>
+        <idea>Test confirmation shows theme name when FrameworkTheme mode</idea>
+      </test>
+      <test ac="Cancellation">
+        <idea>Test Esc at any step properly cleans up and exits</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

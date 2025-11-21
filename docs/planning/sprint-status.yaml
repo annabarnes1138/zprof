@@ -1,0 +1,102 @@
+# generated: 2025-11-20
+# project: zprof
+# project_key: zprof
+# tracking_system: file-system
+# story_location: docs/planning
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic exists in epic file but not contexted
+#   - contexted: Epic tech context created (required before drafting stories)
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - drafted: Story file created in stories folder
+#   - ready-for-dev: Draft approved and story context created
+#   - in-progress: Developer actively working on implementation
+#   - review: Implementation complete, ready for review
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - completed: Retrospective has been done
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epics should be 'contexted' before stories can be 'drafted'
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically drafts next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', SM reviews, then Dev moves to 'done'
+
+generated: 2025-11-20
+project: zprof
+project_key: zprof
+tracking_system: file-system
+story_location: docs/planning/v0.2.0/stories
+
+development_status:
+  epic-1: backlog
+  epic-1-story-1: ready-for-dev
+  epic-1-story-2: ready-for-dev
+  epic-1-story-3: ready-for-dev
+  epic-1-story-4: ready-for-dev
+  epic-1-story-5: ready-for-dev
+  epic-1-story-6: ready-for-dev
+  epic-1-story-7: ready-for-dev
+  epic-1-retrospective: optional
+
+  epic-2: backlog
+  epic-2-story-1: drafted
+  epic-2-story-2: drafted
+  epic-2-story-3: drafted
+  epic-2-story-4: drafted
+  epic-2-story-5: drafted
+  epic-2-story-6: drafted
+  epic-2-story-7: drafted
+  epic-2-story-8: drafted
+  epic-2-retrospective: optional
+
+  epic-3: backlog
+  epic-3-story-1: drafted
+  epic-3-story-2: drafted
+  epic-3-story-3: drafted
+  epic-3-story-4: drafted
+  epic-3-story-5: drafted
+  epic-3-story-6: drafted
+  epic-3-story-7: drafted
+  epic-3-story-8: drafted
+  epic-3-retrospective: optional
+
+  epic-4: backlog
+  epic-4-story-1: drafted
+  epic-4-story-2: drafted
+  epic-4-story-3: drafted
+  epic-4-story-4: drafted
+  epic-4-story-5: drafted
+  epic-4-story-6: drafted
+  epic-4-story-7: drafted
+  epic-4-story-8: drafted
+  epic-4-story-9: drafted
+  epic-4-story-10: drafted
+  epic-4-retrospective: optional
+
+  epic-5: backlog
+  epic-5-story-1: drafted
+  epic-5-story-2: drafted
+  epic-5-story-3: drafted
+  epic-5-story-4: drafted
+  epic-5-story-5: drafted
+  epic-5-story-6: drafted
+  epic-5-story-7: drafted
+  epic-5-retrospective: optional
+
+  epic-6: backlog
+  epic-6-story-1: drafted
+  epic-6-story-2: drafted
+  epic-6-story-3: drafted
+  epic-6-story-4: drafted
+  epic-6-story-5: drafted
+  epic-6-story-6: drafted
+  epic-6-story-7: drafted
+  epic-6-retrospective: optional

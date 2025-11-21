@@ -1,0 +1,121 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>2</storyId>
+    <title>Create Prompt Mode Selection TUI</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-1-story-2.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user creating a profile</asA>
+    <iWant>to choose how I want my prompt configured</iWant>
+    <soThat>I only see relevant options for my choice</soThat>
+    <tasks>
+      - Create new TUI module for prompt mode selection
+      - Implement binary choice UI (engine vs theme)
+      - Add help text and keyboard navigation
+      - Return PromptMode enum value
+      - Integrate with wizard flow
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Create `src/tui/prompt_mode_select.rs`
+    - [ ] Show binary choice screen after framework selection
+    - [ ] Include help text explaining the difference
+    - [ ] Return selected `PromptMode` enum value
+    - [ ] Keyboard navigation (↑↓, Enter, Esc)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-1-smart-tui.md</path>
+        <title>Epic 1: Smart TUI</title>
+        <section>Problem Statement</section>
+        <snippet>Users don't understand the difference between themes and prompt engines. Need clear mental model with smart branching that only shows relevant options based on mode.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>src/tui/theme_select.rs</path>
+        <kind>module</kind>
+        <symbol>run_theme_selection</symbol>
+        <lines>1-50</lines>
+        <reason>Reference implementation for TUI selection screen using ratatui. Shows patterns for keyboard navigation, list selection, and terminal setup/restore.</reason>
+      </artifact>
+      <artifact>
+        <path>src/tui/framework_select.rs</path>
+        <kind>module</kind>
+        <symbol>N/A</symbol>
+        <lines>N/A</lines>
+        <reason>Another TUI selection screen to reference for consistent UI patterns and interaction model.</reason>
+      </artifact>
+      <artifact>
+        <path>src/tui/mod.rs</path>
+        <kind>module</kind>
+        <symbol>setup_terminal, restore_terminal</symbol>
+        <lines>N/A</lines>
+        <reason>Terminal setup/restore utilities used by all TUI screens.</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/manifest.rs</path>
+        <kind>enum</kind>
+        <symbol>PromptMode</symbol>
+        <lines>N/A</lines>
+        <reason>PromptMode enum created in Story 1.1 that this screen needs to return.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <rust>
+        <package name="ratatui" version="0.29.0" purpose="Terminal UI framework"/>
+        <package name="crossterm" version="0.29.0" purpose="Terminal control and event handling"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Follow existing TUI patterns in theme_select.rs and framework_select.rs
+    - Use ratatui for consistent UI with existing screens
+    - Implement keyboard navigation (↑↓, Enter, Esc) matching other TUI screens
+    - Display after framework selection, before theme/engine selection
+    - Provide clear help text explaining engines vs themes
+    - Binary choice only - no multi-select needed
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>run_prompt_mode_selection</name>
+      <kind>function</kind>
+      <signature>pub fn run_prompt_mode_selection() -> Result&lt;PromptMode&gt;</signature>
+      <path>src/tui/prompt_mode_select.rs</path>
+      <notes>Main entry point for prompt mode selection TUI, returns selected PromptMode enum</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      TUI components are typically tested via integration tests that verify the flow, not unit tests of rendering. Focus on ensuring correct enum variant is returned based on user selection.
+    </standards>
+    <locations>
+      - Unit tests: src/tui/prompt_mode_select.rs #[cfg(test)] mod tests
+      - Integration: tests/create_test.rs or tests/create_workflow_test.rs
+    </locations>
+    <ideas>
+      <test ac="Return PromptMode enum">
+        <idea>Test that selecting "Standalone prompt engine" returns PromptMode::PromptEngine variant</idea>
+        <idea>Test that selecting "Framework themes" returns PromptMode::FrameworkTheme variant</idea>
+      </test>
+      <test ac="Keyboard navigation">
+        <idea>Integration test verifying Up/Down arrows change selection</idea>
+        <idea>Test Enter key confirms selection</idea>
+        <idea>Test Esc key cancels and returns error</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

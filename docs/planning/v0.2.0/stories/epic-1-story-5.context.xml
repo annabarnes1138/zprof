@@ -1,0 +1,95 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>5</storyId>
+    <title>Refactor Theme Selection for Conditional Display</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-1-story-5.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user who chose "Framework themes"</asA>
+    <iWant>to see only themes compatible with my framework</iWant>
+    <soThat>I don't pick incompatible options</soThat>
+    <tasks>
+      - Modify theme_select.rs to accept PromptMode parameter
+      - Add conditional logic to skip when mode is PromptEngine
+      - Filter themes by framework when mode is FrameworkTheme
+      - Update wizard.rs to pass PromptMode
+      - Update existing tests
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Modify `src/tui/theme_select.rs` to accept `PromptMode`
+    - [ ] If mode = `PromptEngine`: Skip theme selection entirely
+    - [ ] If mode = `FrameworkTheme`: Show framework-specific themes
+    - [ ] Filter theme registry by selected framework
+    - [ ] Update tests
+  </acceptanceCriteria>
+
+  <artifacts>
+    <code>
+      <artifact>
+        <path>src/tui/theme_select.rs</path>
+        <kind>module</kind>
+        <symbol>run_theme_selection</symbol>
+        <lines>48-50</lines>
+        <reason>Existing function signature that needs modification to accept PromptMode parameter.</reason>
+      </artifact>
+      <artifact>
+        <path>src/frameworks/mod.rs</path>
+        <kind>module</kind>
+        <symbol>Theme registry</symbol>
+        <lines>N/A</lines>
+        <reason>Source of theme data filtered by framework type.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <rust>
+        <package name="ratatui" version="0.29.0" purpose="Terminal UI"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Maintain backward compatibility if possible, or update all callers
+    - Skip theme selection entirely when PromptEngine mode (return early)
+    - Filter themes by framework when FrameworkTheme mode
+    - Update wizard.rs and any other callers to pass PromptMode
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>run_theme_selection</name>
+      <kind>function (modified)</kind>
+      <signature>pub fn run_theme_selection(framework: FrameworkType, plugins: &amp;[String], mode: PromptMode) -> Result&lt;Option&lt;String&gt;&gt;</signature>
+      <path>src/tui/theme_select.rs</path>
+      <notes>Updated signature to accept PromptMode, returns Option to handle skip case</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Update existing theme_select tests. Add tests for conditional behavior based on PromptMode.
+    </standards>
+    <locations>
+      - Unit tests: src/tui/theme_select.rs #[cfg(test)] mod tests
+      - Integration: tests/create_test.rs
+    </locations>
+    <ideas>
+      <test ac="Skip when PromptEngine">
+        <idea>Test that PromptMode::PromptEngine causes early return without showing UI</idea>
+      </test>
+      <test ac="Filter by framework">
+        <idea>Test that only framework-specific themes appear for given FrameworkType</idea>
+      </test>
+      <test ac="Updated tests">
+        <idea>Update all existing tests to pass PromptMode parameter</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

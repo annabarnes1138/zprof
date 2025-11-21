@@ -1,0 +1,128 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>6</storyId>
+    <title>Update Generator for Prompt Engines</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-1-story-6.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>the generator to handle prompt engines correctly</iWant>
+    <soThat>shell configs initialize engines instead of framework themes</soThat>
+    <tasks>
+      - Modify shell generator to handle PromptMode enum
+      - Disable framework theme when using prompt engine
+      - Add engine initialization commands
+      - Handle framework-specific syntax differences
+      - Create prompt engine installer module
+      - Add tests for all engine × framework combinations
+      - Validate generated configs with zsh -n
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Modify `src/shell/generator.rs`
+    - [ ] If `prompt_mode = PromptEngine`: Disable framework theme, add engine init
+    - [ ] If `prompt_mode = FrameworkTheme`: Use existing theme logic
+    - [ ] Add prompt engine installation to profile creation
+    - [ ] Validate generated configs with `zsh -n`
+    - [ ] Add tests for each engine × framework combination
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-1-smart-tui.md</path>
+        <title>Epic 1: Smart TUI</title>
+        <section>Generated Config Examples</section>
+        <snippet>Shows example configs: Starship with oh-my-zsh sets ZSH_THEME="" and adds eval "$(starship init zsh)". Framework theme mode uses traditional ZSH_THEME="robbyrussell".</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>src/shell/generator.rs</path>
+        <kind>module</kind>
+        <symbol>N/A</symbol>
+        <lines>N/A</lines>
+        <reason>Core shell config generator that needs to be extended with prompt engine support.</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/manifest.rs</path>
+        <kind>struct</kind>
+        <symbol>Manifest, PromptMode</symbol>
+        <lines>N/A</lines>
+        <reason>Manifest structure with PromptMode enum that generator reads to determine output.</reason>
+      </artifact>
+      <artifact>
+        <path>src/prompts/engine.rs</path>
+        <kind>module</kind>
+        <symbol>PromptEngine, EngineMetadata</symbol>
+        <lines>N/A</lines>
+        <reason>Engine registry with init_command metadata needed for generating initialization code.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <rust>
+        <package name="anyhow" version="1.0" purpose="Error handling for installation"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Generated configs must be valid zsh syntax (validate with zsh -n)
+    - For oh-my-zsh: Set ZSH_THEME="" when using prompt engine
+    - For zinit/zimfw/zap: Follow their respective syntax for disabling themes
+    - Each framework has different syntax - handle all 5 frameworks
+    - Engine init must come after framework initialization
+    - Installation should download/install engine before generating config
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>generate_shell_config</name>
+      <kind>function (modified)</kind>
+      <signature>pub fn generate_shell_config(manifest: &amp;Manifest) -> Result&lt;String&gt;</signature>
+      <path>src/shell/generator.rs</path>
+      <notes>Existing generator function that needs PromptMode branching logic</notes>
+    </interface>
+    <interface>
+      <name>install_prompt_engine</name>
+      <kind>function (new)</kind>
+      <signature>pub fn install_prompt_engine(engine: &amp;PromptEngine) -> Result&lt;()&gt;</signature>
+      <path>src/prompts/installer.rs</path>
+      <notes>New module for installing prompt engines before config generation</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Comprehensive snapshot tests for generated configs. Test matrix: 5 frameworks × 5 engines + framework themes. Validate syntax with zsh -n command.
+    </standards>
+    <locations>
+      - Unit tests: src/shell/generator.rs #[cfg(test)] mod tests
+      - Snapshot tests: Use insta crate for config output verification
+      - Integration: tests/generator_test.rs
+    </locations>
+    <ideas>
+      <test ac="Prompt engine mode">
+        <idea>Test oh-my-zsh + Starship generates ZSH_THEME="" and starship init</idea>
+        <idea>Test zinit + Powerlevel10k generates correct zinit syntax</idea>
+        <idea>Test each framework × engine combination</idea>
+        <idea>Snapshot test for each generated config</idea>
+      </test>
+      <test ac="Framework theme mode">
+        <idea>Test existing theme logic still works</idea>
+        <idea>Test oh-my-zsh + robbyrussell generates ZSH_THEME="robbyrussell"</idea>
+      </test>
+      <test ac="Validation">
+        <idea>Test all generated configs pass zsh -n syntax validation</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>
