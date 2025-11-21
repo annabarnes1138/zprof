@@ -1,0 +1,134 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>4</storyId>
+    <title>Handle Re-initialization</title>
+    <status>TODO</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-6-story-4.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user running zprof init again</asA>
+    <iWant>it to be safe and not destroy backups</iWant>
+    <soThat>I can fix broken installations without risk</soThat>
+    <tasks>
+      - Detect if already initialized (.zsh-profiles/ exists, pre-zprof backup exists)
+      - Show different message for re-init with backup date
+      - Preserve existing backup (don't overwrite)
+      - Recreate directory structure if needed
+      - Update .zshenv if missing or outdated
+      - Don't move files again (already backed up)
+      - Show summary of existing installation
+      - Add --force flag to re-backup (overwrites existing backup)
+      - Integration test for re-init
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Detect if already initialized
+    - [ ] Show different message for re-init
+    - [ ] Preserve existing backup
+    - [ ] Recreate directory structure if needed
+    - [ ] Don't move files again
+    - [ ] Show summary of existing installation
+    - [ ] Add --force flag to re-backup
+    - [ ] Integration test
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-6-init-cleanup.md</path>
+        <title>Epic 6: Init Cleanup and Enhancement</title>
+        <section>Story 6.4: Handle Re-initialization</section>
+        <snippet>Detects existing installation. Shows different message with backup date. Preserves backup, recreates structure if needed, doesn't move files again. Adds --force flag to re-backup. Shows summary of existing profiles and backup.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/cli/init.rs</path>
+        <kind>CLI command</kind>
+        <symbol>init command, InitArgs</symbol>
+        <lines>all</lines>
+        <reason>Init command will be modified to detect existing installation and handle re-init flow. Will add --force flag to InitArgs struct.</reason>
+      </artifact>
+      <artifact>
+        <path>src/backup/pre_zprof.rs</path>
+        <kind>module</kind>
+        <symbol>backup functions</symbol>
+        <lines>all</lines>
+        <reason>Backup logic needs to check if backup exists and skip or force re-backup based on flag.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="clap" version="4.5" purpose="--force flag parsing"/>
+        <package name="chrono" version="0.4" purpose="Parsing backup date from manifest"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Check if .zsh-profiles/ directory exists as first step
+    - Check if backups/pre-zprof/ exists to determine if backup was created
+    - Read backup-manifest.toml to get backup creation date
+    - Show re-init message with backup date: "Existing backup found from Jan 15, 2025"
+    - Offer options: Continue (safe re-init), View backup details, Cancel
+    - If continuing: skip backup step, recreate directory structure if needed
+    - Update .zshenv if it's missing or doesn't contain zprof integration
+    - Don't attempt to move files (they're already in backup)
+    - Show summary: profile count, active profile, backup date, history entries
+    - Add --force flag to InitArgs: #[arg(long)]
+    - If --force: warn user, confirm, then overwrite existing backup
+    - Integration test for both re-init and --force scenarios
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>is_initialized function</name>
+      <kind>helper function (to be created)</kind>
+      <signature>pub fn is_initialized() -> bool</signature>
+      <path>src/cli/init.rs or src/core/config.rs</path>
+      <notes>Checks if zprof is already initialized</notes>
+    </interface>
+    <interface>
+      <name>get_backup_info function</name>
+      <kind>helper function (to be created)</kind>
+      <signature>pub fn get_backup_info() -> Result&lt;BackupInfo&gt;</signature>
+      <path>src/backup/pre_zprof.rs</path>
+      <notes>Reads backup manifest and returns backup metadata including creation date</notes>
+    </interface>
+    <interface>
+      <name>InitArgs.force field</name>
+      <kind>CLI argument (to be added)</kind>
+      <signature>force: bool</signature>
+      <path>src/cli/init.rs</path>
+      <notes>Optional --force flag to re-create backup</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Integration tests for re-init scenarios. Test both safe re-init and forced re-backup.</standards>
+    <locations>
+      - Integration tests: tests/init_reinit_test.rs
+    </locations>
+    <ideas>
+      <test ac="Detect initialization">
+        <idea>Test is_initialized returns true when .zsh-profiles/ exists</idea>
+        <idea>Test is_initialized returns false on fresh system</idea>
+      </test>
+      <test ac="Re-init flow">
+        <idea>Test re-init preserves existing backup</idea>
+        <idea>Test re-init doesn't move files again</idea>
+        <idea>Test re-init recreates .zshenv if missing</idea>
+      </test>
+      <test ac="Force flag">
+        <idea>Test --force overwrites existing backup</idea>
+        <idea>Test --force prompts for confirmation</idea>
+        <idea>Test canceling --force leaves backup intact</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

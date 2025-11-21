@@ -1,0 +1,135 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>3</storyId>
+    <title>Move Root Configs to Backup Location</title>
+    <status>TODO</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-6-story-3.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user completing zprof init</asA>
+    <iWant>root config files moved out of HOME</iWant>
+    <soThat>only zprof integration remains</soThat>
+    <tasks>
+      - Move (not copy) config files to backup location after backup created
+      - Move framework directories to backup/frameworks/
+      - Create new .zshenv with zprof integration code
+      - Keep .zsh_history in place for shared history
+      - Handle edge cases (symlinks, read-only files)
+      - Show confirmation with moved file counts
+      - Integration test
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Move config files to backup (not copy)
+    - [ ] Move framework directories
+    - [ ] Create new .zshenv with zprof integration
+    - [ ] Keep .zsh_history in place
+    - [ ] Handle edge cases (symlinks, read-only)
+    - [ ] Show confirmation
+    - [ ] Integration test
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-6-init-cleanup.md</path>
+        <title>Epic 6: Init Cleanup and Enhancement</title>
+        <section>Story 6.3: Move Root Configs to Backup Location</section>
+        <snippet>After backup, moves config files and framework directories to backup location (not copies). Creates new .zshenv with zprof integration. Keeps .zsh_history in place. Handles symlinks and read-only files.</snippet>
+      </doc>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-6-init-cleanup.md</path>
+        <title>Epic 6: Init Cleanup and Enhancement</title>
+        <section>Directory Structure After Init</section>
+        <snippet>Shows final structure: only .zshenv (zprof integration) and .zsh_history remain in HOME root. All other configs moved to backup.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/backup/pre_zprof.rs</path>
+        <kind>module (from Story 6.2)</kind>
+        <symbol>create_pre_zprof_backup</symbol>
+        <lines>all</lines>
+        <reason>Backup logic. Move operation happens after backup is created and verified.</reason>
+      </artifact>
+      <artifact>
+        <path>src/cli/init.rs</path>
+        <kind>CLI command</kind>
+        <symbol>init command</symbol>
+        <lines>all</lines>
+        <reason>Init command orchestrates: detect → backup → move → create integration.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="std::fs" version="std" purpose="Moving files and directories"/>
+        <package name="anyhow" version="1.0" purpose="Error handling"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Move files using std::fs::rename (atomic on same filesystem)
+    - Fall back to copy+delete if rename fails (cross-filesystem)
+    - Move .zshrc, .zshenv, .zprofile, .zlogin, .zlogout to backup
+    - DO NOT move .zsh_history (keep in place for shared history)
+    - Move framework directories (.oh-my-zsh, .zimfw, etc.) to backups/pre-zprof/frameworks/
+    - Create new .zshenv with zprof integration code
+    - Integration template: export ZPROF_ROOT, load active profile from current file
+    - Handle symlinks: move symlink itself, not target
+    - Handle read-only files: attempt to move, fail gracefully with clear error
+    - Warn user to restart shells after cleanup
+    - Show confirmation: "✓ Moved 5 config files", "✓ Moved oh-my-zsh framework"
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>move_configs_to_backup function</name>
+      <kind>public function (to be created)</kind>
+      <signature>pub fn move_configs_to_backup(config_info: &ShellConfigInfo) -> Result&lt;()&gt;</signature>
+      <path>src/backup/pre_zprof.rs</path>
+      <notes>Moves config files and frameworks to backup location after backup created</notes>
+    </interface>
+    <interface>
+      <name>create_zprof_integration function</name>
+      <kind>public function (to be created)</kind>
+      <signature>pub fn create_zprof_integration() -> Result&lt;()&gt;</signature>
+      <path>src/backup/pre_zprof.rs or src/shell/generator.rs</path>
+      <notes>Creates new .zshenv with zprof integration code</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Integration tests using tempfile for isolated testing. Verify files moved (not copied), new .zshenv created, history preserved.</standards>
+    <locations>
+      - Unit tests: src/backup/pre_zprof.rs #[cfg(test)] mod tests
+      - Integration tests: tests/init_cleanup_test.rs
+    </locations>
+    <ideas>
+      <test ac="Move config files">
+        <idea>Test config files are moved (not copied) to backup</idea>
+        <idea>Test original files no longer exist in HOME</idea>
+        <idea>Test files exist in backup location</idea>
+      </test>
+      <test ac="Keep history">
+        <idea>Test .zsh_history remains in HOME (not moved)</idea>
+      </test>
+      <test ac="Move frameworks">
+        <idea>Test framework directory is moved to backup/frameworks/</idea>
+      </test>
+      <test ac="Create .zshenv">
+        <idea>Test new .zshenv is created with zprof integration</idea>
+        <idea>Test .zshenv contains ZPROF_ROOT export</idea>
+        <idea>Test .zshenv contains profile loading logic</idea>
+      </test>
+      <test ac="Handle symlinks">
+        <idea>Test symlinked config files are moved (not dereferenced)</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

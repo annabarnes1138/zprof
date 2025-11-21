@@ -1,0 +1,103 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>8</storyId>
+    <title>Update Documentation</title>
+    <status>TODO</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-2-story-8.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>clear documentation on presets</iWant>
+    <soThat>I know which to choose</soThat>
+    <tasks>
+      - Update docs/user-guide/quick-start.md with preset flow
+      - Create docs/user-guide/presets.md explaining each preset
+      - Include comparison table
+      - Add screenshots or ASCII art of TUI
+      - Document --preset flag in commands.md
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Update quick-start with preset flow
+    - [ ] Create presets.md guide
+    - [ ] Document --preset flag
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-2-presets.md</path>
+        <title>Epic 2: Quick Setup Presets</title>
+        <section>Story 2.8: Update Documentation</section>
+        <snippet>Updates quick-start.md with preset flow, creates presets.md guide with comparison table and preset details, documents --preset flag in commands.md.</snippet>
+      </doc>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-2-presets.md</path>
+        <title>Epic 2: Quick Setup Presets</title>
+        <section>Story 2.2: Define Initial Preset Catalog</section>
+        <snippet>Provides detailed specifications for all 4 presets (Minimal, Performance, Fancy, Developer) with target users, frameworks, prompts, and plugin lists.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>docs/user-guide/quick-start.md</path>
+        <kind>documentation</kind>
+        <symbol>quick start guide</symbol>
+        <lines>all</lines>
+        <reason>Needs to be updated to include preset flow as the recommended path for beginners.</reason>
+      </artifact>
+      <artifact>
+        <path>docs/user-guide/commands.md</path>
+        <kind>documentation</kind>
+        <symbol>command reference</symbol>
+        <lines>all</lines>
+        <reason>Needs to document --preset flag for zprof create command.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <none/>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Update docs/user-guide/quick-start.md to show preset flow first
+    - Create new docs/user-guide/presets.md with comprehensive preset guide
+    - Include comparison table showing: Preset, Framework, Prompt, Plugin Count, Startup Time, Best For
+    - Document each preset with: description, target user, what's included, why choose it
+    - Add ASCII art or screenshots of preset selection TUI
+    - Update docs/user-guide/commands.md with --preset flag documentation
+    - Include examples: zprof create work --preset performance
+    - Keep documentation clear, beginner-friendly, and helpful
+  </constraints>
+
+  <interfaces>
+    <none>This is a documentation-only story</none>
+  </interfaces>
+
+  <tests>
+    <standards>Manual review of documentation for clarity and completeness.</standards>
+    <locations>
+      - Manual review of all updated documentation files
+    </locations>
+    <ideas>
+      <test ac="Update quick-start">
+        <idea>Review quick-start.md shows preset flow prominently</idea>
+        <idea>Verify quick-start is beginner-friendly and clear</idea>
+      </test>
+      <test ac="Create presets.md">
+        <idea>Review presets.md explains all 4 presets clearly</idea>
+        <idea>Verify comparison table is complete and helpful</idea>
+        <idea>Verify each preset has clear "when to choose" guidance</idea>
+      </test>
+      <test ac="Document --preset flag">
+        <idea>Review commands.md documents --preset flag with examples</idea>
+        <idea>Verify examples are clear and correct</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

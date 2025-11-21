@@ -2,7 +2,7 @@
 
 **Epic:** Epic 6 - Init Cleanup and Enhancement
 **Priority:** P0
-**Status:** TODO
+**Status:** ready-for-dev
 
 ## User Story
 
@@ -26,3 +26,8 @@
 ## Dependencies
 
 Epic 3 (shares backup logic and manifest format)
+
+## Dev Agent Record
+
+### Context Reference
+- [epic-6-story-6.context.xml](epic-6-story-6.context.xml)

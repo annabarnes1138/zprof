@@ -1,0 +1,123 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>6</storyId>
+    <title>Add Init Dry-Run Mode</title>
+    <status>TODO</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-6-story-6.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user considering zprof</asA>
+    <iWant>to see what init will do without committing</iWant>
+    <soThat>I can understand changes before proceeding</soThat>
+    <tasks>
+      - Add --dry-run flag to zprof init
+      - Show what would happen without making changes
+      - List config files that would be backed up with sizes
+      - Show framework detection result
+      - Calculate and show total backup size estimate
+      - Show cleanup plan (files to move)
+      - Detect potential issues (disk space, permissions)
+      - Show final result summary
+      - Integration test
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Add --dry-run flag
+    - [ ] Show what would happen without changes
+    - [ ] Detect potential issues (disk space, permissions)
+    - [ ] Show backup size estimate
+    - [ ] Show cleanup plan
+    - [ ] Integration test
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-6-init-cleanup.md</path>
+        <title>Epic 6: Init Cleanup and Enhancement</title>
+        <section>Story 6.6: Add Init Dry-Run Mode</section>
+        <snippet>Adds --dry-run flag showing what init will do without making changes. Shows backup list with sizes, framework detection, total size estimate, cleanup plan. Detects issues like disk space and permissions.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/cli/init.rs</path>
+        <kind>CLI command</kind>
+        <symbol>init command, InitArgs</symbol>
+        <lines>all</lines>
+        <reason>Init command will add --dry-run flag and implement dry-run logic.</reason>
+      </artifact>
+      <artifact>
+        <path>src/backup/shell_config.rs</path>
+        <kind>module</kind>
+        <symbol>ShellConfigInfo</symbol>
+        <lines>all</lines>
+        <reason>Detection still runs in dry-run mode to show what would be backed up.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="clap" version="4.5" purpose="--dry-run flag parsing"/>
+        <package name="sysinfo" version="0.30" purpose="Checking available disk space"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Add --dry-run flag to InitArgs: #[arg(long)]
+    - If --dry-run, perform detection but don't create backup or move files
+    - Show header: "Dry Run - No changes will be made"
+    - Show backup section: list config files with sizes, framework, history
+    - Calculate total backup size (sum of all files + estimated framework tarball size)
+    - Show cleanup section: list files that would be moved
+    - Show result section: "Your HOME would be clean", "Could restore with zprof uninstall"
+    - Detect issues: check disk space (need 2x backup size free), check write permissions
+    - If issues found, show warnings: "⚠ Warning: Only 100MB disk space (need ~200MB)"
+    - End with: "Run 'zprof init' without --dry-run to proceed"
+    - Integration test verifies no files created/modified in dry-run mode
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>InitArgs.dry_run field</name>
+      <kind>CLI argument (to be added)</kind>
+      <signature>dry_run: bool</signature>
+      <path>src/cli/init.rs</path>
+      <notes>Optional flag for dry-run mode</notes>
+    </interface>
+    <interface>
+      <name>check_disk_space function</name>
+      <kind>helper function (to be created)</kind>
+      <signature>fn check_disk_space(required_bytes: u64) -> Result&lt;bool&gt;</signature>
+      <path>src/cli/init.rs</path>
+      <notes>Checks if enough disk space available for backup</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Integration tests to verify dry-run makes no changes to filesystem.</standards>
+    <locations>
+      - Integration tests: tests/init_dry_run_test.rs
+    </locations>
+    <ideas>
+      <test ac="No changes made">
+        <idea>Test --dry-run doesn't create .zsh-profiles/ directory</idea>
+        <idea>Test --dry-run doesn't create backup files</idea>
+        <idea>Test --dry-run doesn't move config files</idea>
+      </test>
+      <test ac="Shows plan">
+        <idea>Test dry-run output shows detected config files</idea>
+        <idea>Test dry-run output shows backup size estimate</idea>
+      </test>
+      <test ac="Detects issues">
+        <idea>Test dry-run detects insufficient disk space</idea>
+        <idea>Test dry-run detects permission issues</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

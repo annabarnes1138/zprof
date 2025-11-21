@@ -1,0 +1,168 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>1</storyId>
+    <title>Detect Existing Shell Configuration</title>
+    <status>TODO</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-6-story-1.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user running zprof init</asA>
+    <iWant>my existing config detected</iWant>
+    <soThat>zprof can properly back it up</soThat>
+    <tasks>
+      - Create src/backup/shell_config.rs
+      - Detect all shell config files (.zshrc, .zshenv, .zprofile, .zlogin, .zlogout, .zsh_history)
+      - Detect existing frameworks (oh-my-zsh, zimfw, prezto, zinit, zap directories)
+      - Parse .zshrc to identify framework in use
+      - Return ShellConfigInfo struct with config files, framework, history info, total size
+      - Handle symlinks (resolve and backup targets)
+      - Unit tests with mock filesystem
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Create src/backup/shell_config.rs
+    - [ ] Detect all shell config files (.zshrc, .zshenv, etc.)
+    - [ ] Detect existing frameworks (oh-my-zsh, zimfw, etc.)
+    - [ ] Parse .zshrc to identify framework
+    - [ ] Return ShellConfigInfo struct
+    - [ ] Handle symlinks
+    - [ ] Unit tests with mock filesystem
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-6-init-cleanup.md</path>
+        <title>Epic 6: Init Cleanup and Enhancement</title>
+        <section>Story 6.1: Detect Existing Shell Configuration</section>
+        <snippet>Detects all shell config files in HOME (.zshrc, .zshenv, etc.), existing framework installations (.oh-my-zsh, .zimfw, etc.), parses .zshrc to identify framework. Returns ShellConfigInfo struct with files, framework, history, and total size.</snippet>
+      </doc>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-6-init-cleanup.md</path>
+        <title>Epic 6: Init Cleanup and Enhancement</title>
+        <section>Technical Design - Shell Config Detection</section>
+        <snippet>Shows ShellConfigInfo, ConfigFile, and HistoryFile struct definitions with detect() method that finds all .zsh* files, history, and framework.</snippet>
+      </doc>
+      <doc>
+        <path>docs/developer/architecture.md</path>
+        <title>Architecture Overview</title>
+        <section>Frameworks - Detection</section>
+        <snippet>Framework detection strategies for each framework type. Checks for installation directories and config patterns.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/frameworks/detector.rs</path>
+        <kind>module</kind>
+        <symbol>detect_existing_framework, FrameworkInfo</symbol>
+        <lines>all</lines>
+        <reason>Existing framework detection logic. Can reuse FrameworkInfo struct and detection patterns for shell config detection.</reason>
+      </artifact>
+      <artifact>
+        <path>src/cli/init.rs</path>
+        <kind>CLI command</kind>
+        <symbol>init command</symbol>
+        <lines>all</lines>
+        <reason>Init command will integrate shell config detection. Currently basic, will be extended to call detection before initialization.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="regex" version="1.10" purpose="Parsing .zshrc to identify framework"/>
+        <package name="dirs" version="5.0" purpose="Finding home directory"/>
+        <package name="anyhow" version="1.0" purpose="Error handling"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Create new module src/backup/shell_config.rs
+    - Create src/backup/mod.rs if it doesn't exist
+    - ShellConfigInfo struct must include: config_files (Vec), history_file (Option), framework (Option), total_size (u64)
+    - ConfigFile struct needs: path, size, permissions, is_symlink, target (for symlinks)
+    - Detect all standard zsh config files: .zshrc, .zshenv, .zprofile, .zlogin, .zlogout, and .zsh_history
+    - Framework detection: look for .oh-my-zsh/, .zimfw/, .zprezto/, .zinit/, .zap/ directories
+    - Parse .zshrc for framework signatures (e.g., "source ~/.oh-my-zsh/oh-my-zsh.sh")
+    - Handle symlinks by resolving to actual files and storing both path and target
+    - Use std::fs::symlink_metadata to detect symlinks without following them
+    - Calculate total size by summing all config files
+    - Comprehensive error handling for permission denied, missing home directory
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>ShellConfigInfo struct</name>
+      <kind>Rust struct (to be created)</kind>
+      <signature>pub struct ShellConfigInfo { pub config_files: Vec&lt;ConfigFile&gt;, pub history_file: Option&lt;HistoryFile&gt;, pub framework: Option&lt;FrameworkInfo&gt;, pub total_size: u64 }</signature>
+      <path>src/backup/shell_config.rs</path>
+      <notes>Main struct containing detected shell configuration information</notes>
+    </interface>
+    <interface>
+      <name>ConfigFile struct</name>
+      <kind>Rust struct (to be created)</kind>
+      <signature>pub struct ConfigFile { pub path: PathBuf, pub size: u64, pub permissions: u32, pub is_symlink: bool, pub target: Option&lt;PathBuf&gt; }</signature>
+      <path>src/backup/shell_config.rs</path>
+      <notes>Represents a single config file with metadata</notes>
+    </interface>
+    <interface>
+      <name>HistoryFile struct</name>
+      <kind>Rust struct (to be created)</kind>
+      <signature>pub struct HistoryFile { pub path: PathBuf, pub size: u64, pub line_count: usize }</signature>
+      <path>src/backup/shell_config.rs</path>
+      <notes>Represents shell history file with line count</notes>
+    </interface>
+    <interface>
+      <name>ShellConfigInfo::detect method</name>
+      <kind>method (to be created)</kind>
+      <signature>pub fn detect() -> Result&lt;Self&gt;</signature>
+      <path>src/backup/shell_config.rs</path>
+      <notes>Main detection method that scans HOME for config files and frameworks</notes>
+    </interface>
+    <interface>
+      <name>FrameworkInfo</name>
+      <kind>existing struct</kind>
+      <signature>pub struct FrameworkInfo { framework_type: FrameworkType, ... }</signature>
+      <path>src/frameworks/detector.rs</path>
+      <notes>Reuse from existing framework detection for identifying framework in use</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Rust unit tests in #[cfg(test)] mod tests. Use mock filesystem or tempfile for testing file detection without affecting user's actual config.</standards>
+    <locations>
+      - Unit tests: src/backup/shell_config.rs #[cfg(test)] mod tests
+      - Integration tests may use tempfile to create fake HOME directory
+    </locations>
+    <ideas>
+      <test ac="Detect all shell config files">
+        <idea>Test detection finds .zshrc when it exists</idea>
+        <idea>Test detection finds .zshenv, .zprofile, .zlogin, .zlogout</idea>
+        <idea>Test detection handles missing config files gracefully</idea>
+        <idea>Test detection returns correct file sizes</idea>
+      </test>
+      <test ac="Detect frameworks">
+        <idea>Test detection finds .oh-my-zsh directory</idea>
+        <idea>Test detection finds .zimfw directory</idea>
+        <idea>Test detection handles no framework installed</idea>
+      </test>
+      <test ac="Parse .zshrc">
+        <idea>Test parsing identifies oh-my-zsh from source statement</idea>
+        <idea>Test parsing identifies zimfw from module loading</idea>
+        <idea>Test parsing handles empty .zshrc</idea>
+      </test>
+      <test ac="Handle symlinks">
+        <idea>Test detection identifies symlinked config files</idea>
+        <idea>Test resolution of symlink targets</idea>
+        <idea>Test stores both symlink path and target</idea>
+      </test>
+      <test ac="Calculate total size">
+        <idea>Test total_size sums all config file sizes correctly</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

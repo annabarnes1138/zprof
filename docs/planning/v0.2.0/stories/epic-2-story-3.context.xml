@@ -1,0 +1,177 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>3</storyId>
+    <title>Create Quick vs Custom Selection Screen</title>
+    <status>TODO</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-2-story-3.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user running `zprof create`</asA>
+    <iWant>to choose between preset and custom setup</iWant>
+    <soThat>I can pick the path that fits my expertise</soThat>
+    <tasks>
+      - Create `src/tui/setup_mode_select.rs`
+      - Display initial binary choice (Quick Setup vs Custom Setup)
+      - Return `SetupMode` enum (Quick | Custom)
+      - Default selection: Quick Setup
+      - Keyboard navigation
+      - Help text explaining each option
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Create `src/tui/setup_mode_select.rs`
+    - [ ] Display initial binary choice (Quick Setup vs Custom Setup)
+    - [ ] Return `SetupMode` enum (Quick | Custom)
+    - [ ] Default selection: Quick Setup
+    - [ ] Keyboard navigation
+    - [ ] Help text explaining each option
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-2-presets.md</path>
+        <title>Epic 2: Quick Setup Presets</title>
+        <section>Story 2.3: Create Quick vs Custom Selection Screen</section>
+        <snippet>Defines the setup mode selection screen showing binary choice between "Quick Setup (recommended presets)" and "Custom Setup (choose your own components)". Returns SetupMode enum, defaults to Quick Setup, includes keyboard navigation and help text.</snippet>
+      </doc>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-2-presets.md</path>
+        <title>Epic 2: Quick Setup Presets</title>
+        <section>Workflow Integration</section>
+        <snippet>Shows flow diagram: "zprof create myprofile" → Setup Mode Selection (Quick vs Custom) → branches to either Preset Selection or Framework Selection (existing wizard).</snippet>
+      </doc>
+      <doc>
+        <path>docs/developer/architecture.md</path>
+        <title>Architecture Overview</title>
+        <section>TUI Module</section>
+        <snippet>TUI uses Ratatui + Crossterm for full-screen interfaces. Rules: Keyboard-only navigation, returns selected values (doesn't perform operations), graceful cancellation (Esc key).</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/tui/framework_select.rs</path>
+        <kind>TUI module</kind>
+        <symbol>select_framework</symbol>
+        <lines>all</lines>
+        <reason>Existing TUI pattern for selection screens. Shows how to use Ratatui for keyboard navigation, rendering selection lists, and returning user choices. Reference for implementing setup_mode_select.</reason>
+      </artifact>
+      <artifact>
+        <path>src/tui/theme_select.rs</path>
+        <kind>TUI module</kind>
+        <symbol>select_theme</symbol>
+        <lines>all</lines>
+        <reason>Another TUI selection pattern showing keyboard handling, default selection, and help text display.</reason>
+      </artifact>
+      <artifact>
+        <path>src/tui/mod.rs</path>
+        <kind>module</kind>
+        <symbol>tui</symbol>
+        <lines>all</lines>
+        <reason>TUI module exports. New setup_mode_select function will need to be exported here.</reason>
+      </artifact>
+      <artifact>
+        <path>src/cli/create.rs</path>
+        <kind>CLI command</kind>
+        <symbol>create command</symbol>
+        <lines>all</lines>
+        <reason>The create command will need to call setup_mode_select before branching to either preset or custom flow.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="ratatui" version="0.29.0" purpose="Terminal UI framework for rendering selection screen"/>
+        <package name="crossterm" version="0.29.0" purpose="Cross-platform terminal manipulation for keyboard input"/>
+        <package name="anyhow" version="1.0" purpose="Error handling"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Create new file at src/tui/setup_mode_select.rs
+    - Follow existing TUI patterns from framework_select.rs and theme_select.rs
+    - Use Ratatui for rendering, Crossterm for input handling
+    - Keyboard-only navigation (↑↓ or j/k, Enter to select, Esc to cancel)
+    - Default selection must be "Quick Setup" (index 0)
+    - Return SetupMode enum with two variants: Quick and Custom
+    - TUI should not perform operations, only return user's choice
+    - Help text should be clear and concise explaining each option
+    - Follow architecture rule: graceful cancellation with Esc key
+    - Export new function from src/tui/mod.rs
+    - Integrate into src/cli/create.rs workflow
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>SetupMode enum</name>
+      <kind>Rust enum (to be created)</kind>
+      <signature>pub enum SetupMode { Quick, Custom }</signature>
+      <path>src/tui/setup_mode_select.rs</path>
+      <notes>Enum representing user's choice between Quick and Custom setup modes</notes>
+    </interface>
+    <interface>
+      <name>select_setup_mode function</name>
+      <kind>public function (to be created)</kind>
+      <signature>pub fn select_setup_mode() -> Result&lt;SetupMode&gt;</signature>
+      <path>src/tui/setup_mode_select.rs</path>
+      <notes>Main entry point that displays TUI and returns user selection. Returns error if user cancels (Esc).</notes>
+    </interface>
+    <interface>
+      <name>Ratatui Terminal</name>
+      <kind>external dependency</kind>
+      <signature>Terminal&lt;CrosstermBackend&lt;Stdout&gt;&gt;</signature>
+      <path>ratatui crate</path>
+      <notes>Used for rendering TUI. Pattern: setup terminal → render loop → cleanup terminal.</notes>
+    </interface>
+    <interface>
+      <name>Crossterm Events</name>
+      <kind>external dependency</kind>
+      <signature>crossterm::event::{Event, KeyCode, KeyEvent}</signature>
+      <path>crossterm crate</path>
+      <notes>Used for keyboard input handling. Listen for KeyCode::Up, Down, Enter, Esc.</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      The codebase uses Rust's built-in test framework. TUI components are challenging to unit test due to terminal interaction, so focus on testing logic separately from rendering. Integration tests can verify the function compiles and returns expected enum variants. Follow patterns from existing TUI modules.
+    </standards>
+    <locations>
+      - Unit tests: src/tui/setup_mode_select.rs #[cfg(test)] mod tests
+      - Integration tests: tests/create_test.rs (verify setup mode integration)
+      - Manual testing required for TUI interaction and rendering
+    </locations>
+    <ideas>
+      <test ac="Create src/tui/setup_mode_select.rs">
+        <idea>Test module compiles and exports SetupMode enum and select_setup_mode function</idea>
+      </test>
+      <test ac="Return SetupMode enum">
+        <idea>Test SetupMode enum has Quick and Custom variants</idea>
+        <idea>Test SetupMode can be used in match statements</idea>
+      </test>
+      <test ac="Default selection: Quick Setup">
+        <idea>Test initial selection index is 0 (Quick Setup)</idea>
+        <idea>Manual test: verify Quick Setup is highlighted by default</idea>
+      </test>
+      <test ac="Keyboard navigation">
+        <idea>Manual test: verify ↑↓ keys change selection</idea>
+        <idea>Manual test: verify j/k keys work (vim bindings)</idea>
+        <idea>Manual test: verify Enter key confirms selection</idea>
+        <idea>Manual test: verify Esc key cancels and returns error</idea>
+      </test>
+      <test ac="Help text">
+        <idea>Manual test: verify help text is displayed for both options</idea>
+        <idea>Manual test: verify help text is clear and helpful</idea>
+      </test>
+      <test ac="Display binary choice">
+        <idea>Manual test: verify both "Quick Setup" and "Custom Setup" options are shown</idea>
+        <idea>Manual test: verify layout is clear and visually appealing</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

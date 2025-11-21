@@ -1,0 +1,102 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>6</storyId>
+    <title>Add Preset Preview/Details Screen</title>
+    <status>TODO</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-2-story-6.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user browsing presets</asA>
+    <iWant>to see detailed information before committing</iWant>
+    <soThat>I understand what I'm installing</soThat>
+    <tasks>
+      - Add "Preview" action to preset selection (press 'p' key)
+      - Show detailed screen with: description, configuration, plugins list, startup time estimate
+      - Return to selection screen on Esc
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Add Preview action (press 'p' key)
+    - [ ] Show detailed screen with description, config, plugins
+    - [ ] Return to selection on Esc
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-2-presets.md</path>
+        <title>Epic 2: Quick Setup Presets</title>
+        <section>Story 2.6: Add Preset Preview/Details Screen</section>
+        <snippet>Adds Preview action (press 'p') to show detailed screen with full description, configuration details (framework/prompt/plugins with descriptions), estimated startup time. Returns to selection on Esc.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/tui/preset_select.rs</path>
+        <kind>TUI module (from Story 2.4)</kind>
+        <symbol>select_preset</symbol>
+        <lines>all</lines>
+        <reason>Will be extended to handle 'p' key press and show preview screen.</reason>
+      </artifact>
+      <artifact>
+        <path>src/presets/mod.rs</path>
+        <kind>module</kind>
+        <symbol>Preset</symbol>
+        <lines>all</lines>
+        <reason>Contains preset data to display in preview (description, config, plugins).</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="ratatui" version="0.29.0" purpose="Terminal UI framework"/>
+        <package name="crossterm" version="0.29.0" purpose="Terminal input handling"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Modify existing src/tui/preset_select.rs
+    - Handle 'p' key press to show preview for currently highlighted preset
+    - Preview screen shows: preset name, full description, framework details, prompt engine details, full plugin list with descriptions, estimated startup time
+    - Use Ratatui for rendering preview screen
+    - Esc key returns to preset selection screen
+    - Maintain current selection when returning from preview
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>show_preset_preview function</name>
+      <kind>private function (to be created)</kind>
+      <signature>fn show_preset_preview(preset: &Preset) -> Result&lt;()&gt;</signature>
+      <path>src/tui/preset_select.rs</path>
+      <notes>Internal function to display detailed preview screen for a preset</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Manual testing required for TUI interaction.</standards>
+    <locations>
+      - Manual testing for TUI interaction
+    </locations>
+    <ideas>
+      <test ac="Add Preview action">
+        <idea>Manual test: verify 'p' key shows preview screen</idea>
+        <idea>Manual test: verify preview shows for currently highlighted preset</idea>
+      </test>
+      <test ac="Show detailed screen">
+        <idea>Manual test: verify preview shows full description</idea>
+        <idea>Manual test: verify preview shows all configuration details</idea>
+        <idea>Manual test: verify preview shows complete plugin list</idea>
+      </test>
+      <test ac="Return to selection on Esc">
+        <idea>Manual test: verify Esc returns to selection screen</idea>
+        <idea>Manual test: verify selection is maintained after returning</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,215 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>1</storyId>
+    <title>Define Preset Data Model</title>
+    <status>TODO</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-2-story-1.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a data-driven preset system</iWant>
+    <soThat>adding new presets requires no code changes</soThat>
+    <tasks>
+      - Create `src/presets/mod.rs` module
+      - Define `Preset` struct with all config fields (id, name, icon, description, target_user, framework, prompt_mode, plugins, env vars, shell options)
+      - Create `PresetConfig` that can generate a `Manifest`
+      - Add `PRESET_REGISTRY` constant with 4-5 presets
+      - Implement `Manifest::from_preset()` method
+      - Add unit tests
+      - Files: `src/presets/mod.rs` (NEW), `src/core/manifest.rs`
+      - Dependencies: Epic 1 complete (requires PromptMode)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Create `src/presets/mod.rs` module
+    - [ ] Define `Preset` struct with all config fields:
+      - id, name, icon, description
+      - target_user (who it's for)
+      - framework, prompt_mode, plugins
+      - env vars, shell options
+    - [ ] Create `PresetConfig` that can generate a `Manifest`
+    - [ ] Add `PRESET_REGISTRY` constant with 4-5 presets
+    - [ ] Implement `Manifest::from_preset()` method
+    - [ ] Add unit tests
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-2-presets.md</path>
+        <title>Epic 2: Quick Setup Presets</title>
+        <section>Story 2.1: Define Preset Data Model</section>
+        <snippet>Defines the Preset struct with id, name, icon, description, target_user, and PresetConfig containing framework, prompt_mode, plugins, env_vars, and shell_options. Shows creating PRESET_REGISTRY constant with 4-5 presets and implementing Manifest::from_preset() method.</snippet>
+      </doc>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-2-presets.md</path>
+        <title>Epic 2: Quick Setup Presets</title>
+        <section>Technical Design - Preset Data Structure</section>
+        <snippet>Complete Rust code example showing Preset and PresetConfig structs with static lifetimes, using FrameworkType, PromptMode enums, and demonstrating the PRESETS constant array with the "Minimal" preset example.</snippet>
+      </doc>
+      <doc>
+        <path>docs/developer/architecture.md</path>
+        <title>Architecture Overview</title>
+        <section>Data Model - Profile Manifest</section>
+        <snippet>Describes the profile.toml manifest structure with [profile], [plugins], and [env] sections. Manifests are the single source of truth, with shell configs being generated artifacts.</snippet>
+      </doc>
+      <doc>
+        <path>docs/developer/architecture.md</path>
+        <title>Architecture Overview</title>
+        <section>Key Design Patterns - Manifest-Based Configuration</section>
+        <snippet>Single source of truth is profile.toml. Shell configs (.zshrc, .zshenv) are generated artifacts from manifest using generator.rs, validated with `zsh -n` before writing.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/core/manifest.rs</path>
+        <kind>module</kind>
+        <symbol>Manifest, ProfileSection</symbol>
+        <lines>1-613</lines>
+        <reason>Core manifest structure that will need to be extended with from_preset() method. Contains the Manifest struct and serialization/validation logic that presets will use.</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/manifest.rs</path>
+        <kind>struct</kind>
+        <symbol>Manifest</symbol>
+        <lines>19-25</lines>
+        <reason>Main manifest struct containing profile, plugins, and env sections. The from_preset() method will be added here to construct Manifest instances from Preset configs.</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/manifest.rs</path>
+        <kind>struct</kind>
+        <symbol>ProfileSection</symbol>
+        <lines>28-38</lines>
+        <reason>Profile metadata that will be populated from Preset data (name, framework, theme). Currently has simple String fields that need to work with PromptMode from Epic 1.</reason>
+      </artifact>
+      <artifact>
+        <path>src/frameworks/detector.rs</path>
+        <kind>enum</kind>
+        <symbol>FrameworkType</symbol>
+        <lines>11-17</lines>
+        <reason>Existing enum for framework types (OhMyZsh, Zimfw, Prezto, Zinit, Zap) that PresetConfig will reference in its framework field.</reason>
+      </artifact>
+      <artifact>
+        <path>src/frameworks/mod.rs</path>
+        <kind>module</kind>
+        <symbol>frameworks</symbol>
+        <lines>all</lines>
+        <reason>Framework module exports that Preset system will use to reference FrameworkType and potentially PromptMode when defining presets.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="serde" version="1.0" purpose="Serialization for Preset structs with derive macros"/>
+        <package name="toml" version="0.9" purpose="Not directly used by presets, but manifests they generate use TOML"/>
+        <package name="chrono" version="0.4" purpose="Timestamps in generated manifests"/>
+        <package name="anyhow" version="1.0" purpose="Error handling in from_preset() method"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Create new module at src/presets/mod.rs (does not exist yet)
+    - Preset structs must use static lifetimes (&'static str) since they're constants
+    - PresetConfig must be able to generate a valid Manifest struct
+    - Must work with PromptMode enum from Epic 1 (dependency requirement)
+    - Follow existing patterns: use serde derives, comprehensive validation
+    - PRESET_REGISTRY should be a const array like SUPPORTED_FRAMEWORKS in manifest.rs
+    - Plugin names in presets must match plugin registry strings
+    - Framework types in presets must use existing FrameworkType enum
+    - Unit tests should be in #[cfg(test)] mod tests within src/presets/mod.rs
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Preset struct</name>
+      <kind>Rust struct (to be created)</kind>
+      <signature>pub struct Preset { pub id: &'static str, pub name: &'static str, pub icon: &'static str, pub description: &'static str, pub target_user: &'static str, pub config: PresetConfig }</signature>
+      <path>src/presets/mod.rs (NEW)</path>
+      <notes>Main preset definition with metadata and configuration</notes>
+    </interface>
+    <interface>
+      <name>PresetConfig struct</name>
+      <kind>Rust struct (to be created)</kind>
+      <signature>pub struct PresetConfig { pub framework: FrameworkType, pub prompt_mode: PromptMode, pub plugins: Vec&lt;&'static str&gt;, pub env_vars: HashMap&lt;&'static str, &'static str&gt;, pub shell_options: Vec&lt;&'static str&gt; }</signature>
+      <path>src/presets/mod.rs (NEW)</path>
+      <notes>Configuration data that can generate a Manifest</notes>
+    </interface>
+    <interface>
+      <name>PRESET_REGISTRY</name>
+      <kind>constant array</kind>
+      <signature>pub const PRESET_REGISTRY: &[Preset] = &[...]</signature>
+      <path>src/presets/mod.rs (NEW)</path>
+      <notes>Static array holding 4-5 preset definitions (Minimal, Performance, Fancy, Developer)</notes>
+    </interface>
+    <interface>
+      <name>Manifest::from_preset</name>
+      <kind>method (to be created)</kind>
+      <signature>pub fn from_preset(name: &str, preset: &Preset) -> Self</signature>
+      <path>src/core/manifest.rs</path>
+      <notes>Constructor method to create Manifest from a Preset instance</notes>
+    </interface>
+    <interface>
+      <name>FrameworkType enum</name>
+      <kind>existing enum</kind>
+      <signature>pub enum FrameworkType { OhMyZsh, Zimfw, Prezto, Zinit, Zap }</signature>
+      <path>src/frameworks/detector.rs (lines 11-17)</path>
+      <notes>Existing enum that PresetConfig.framework will use</notes>
+    </interface>
+    <interface>
+      <name>PromptMode enum</name>
+      <kind>to be added in Epic 1</kind>
+      <signature>pub enum PromptMode { PromptEngine { engine: PromptEngine }, FrameworkTheme { theme: String } }</signature>
+      <path>src/core/manifest.rs (from Epic 1)</path>
+      <notes>Required by Epic 2.1 - dependency on Epic 1 completion</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      The codebase uses comprehensive unit testing with Rust's built-in test framework. Tests are located in #[cfg(test)] mod tests blocks within the same file. Tests verify struct creation, serialization, validation, and roundtrip conversions. Follow patterns from manifest.rs tests: test valid cases, invalid cases, edge cases, and provide descriptive assertions.
+    </standards>
+    <locations>
+      - Unit tests: src/presets/mod.rs #[cfg(test)] mod tests (to be created)
+      - Manifest tests: src/core/manifest.rs lines 239-613 (reference for patterns)
+      - Integration tests may be added later in tests/ directory
+    </locations>
+    <ideas>
+      <test ac="Create src/presets/mod.rs module">
+        <idea>Test that module compiles and exports Preset, PresetConfig, PRESET_REGISTRY</idea>
+      </test>
+      <test ac="Define Preset struct">
+        <idea>Test creating a Preset instance with all required fields</idea>
+        <idea>Test that static lifetimes work correctly for string fields</idea>
+      </test>
+      <test ac="Create PresetConfig">
+        <idea>Test PresetConfig with various FrameworkType values</idea>
+        <idea>Test PresetConfig with different PromptMode variants</idea>
+        <idea>Test PresetConfig with empty and populated plugin vectors</idea>
+        <idea>Test PresetConfig with HashMap of env vars</idea>
+      </test>
+      <test ac="Add PRESET_REGISTRY constant">
+        <idea>Test that PRESET_REGISTRY contains 4-5 presets</idea>
+        <idea>Test that each preset has unique id</idea>
+        <idea>Test that preset ids match expected values (minimal, performance, fancy, developer)</idea>
+      </test>
+      <test ac="Implement Manifest::from_preset()">
+        <idea>Test from_preset creates valid Manifest with correct profile name</idea>
+        <idea>Test from_preset sets framework from PresetConfig.framework</idea>
+        <idea>Test from_preset copies plugins from PresetConfig.plugins</idea>
+        <idea>Test from_preset sets env vars from PresetConfig.env_vars</idea>
+        <idea>Test from_preset sets prompt_mode from PresetConfig.prompt_mode</idea>
+        <idea>Test generated manifest passes validation</idea>
+        <idea>Test roundtrip: from_preset -> to_toml_string -> parse -> validate</idea>
+      </test>
+      <test ac="Add unit tests">
+        <idea>Test all acceptance criteria are covered</idea>
+        <idea>Test preset definitions are complete and well-formed</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

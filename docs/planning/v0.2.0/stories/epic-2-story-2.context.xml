@@ -1,0 +1,178 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>2</storyId>
+    <title>Define Initial Preset Catalog</title>
+    <status>TODO</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-2-story-2.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>product manager</asA>
+    <iWant>4-5 well-defined presets</iWant>
+    <soThat>users have clear, differentiated options</soThat>
+    <tasks>
+      - Define **Minimal** preset (Zap + Pure + 3 essential plugins)
+      - Define **Performance** preset (Zinit + Starship + 5 optimized plugins)
+      - Define **Fancy** preset (Oh-My-Zsh + Powerlevel10k + 12 feature-rich plugins)
+      - Define **Developer** preset (Zimfw + Starship + 8 dev-focused plugins)
+      - Document each preset with rationale
+      - Files: `src/presets/mod.rs`, `docs/planning/v0.2.0/preset-definitions.md` (NEW)
+      - Dependencies: Story 2.1 (Preset Data Model)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] **Minimal** preset defined (Zap + Pure + 3 essential plugins)
+    - [ ] **Performance** preset defined (Zinit + Starship + 5 optimized plugins)
+    - [ ] **Fancy** preset defined (Oh-My-Zsh + Powerlevel10k + 12 feature-rich plugins)
+    - [ ] **Developer** preset defined (Zimfw + Starship + 8 dev-focused plugins)
+    - [ ] Each preset documented with rationale
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-2-presets.md</path>
+        <title>Epic 2: Quick Setup Presets</title>
+        <section>Story 2.2: Define Initial Preset Catalog</section>
+        <snippet>Defines 4 presets with full specifications: Minimal (Zap/Pure/3 plugins for beginners), Performance (Zinit/Starship/5 optimized for speed), Fancy (Oh-My-Zsh/Powerlevel10k/12 plugins for aesthetics), Developer (Zimfw/Starship/8 dev tools). Each includes framework, prompt, plugin list, and target user description.</snippet>
+      </doc>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-2-presets.md</path>
+        <title>Epic 2: Quick Setup Presets</title>
+        <section>Technical Design - Preset Data Structure</section>
+        <snippet>Shows example PRESETS constant with "Minimal" preset implementation including id:"minimal", name, icon:"✨", description, target_user, and config with FrameworkType::Zap, PromptMode::PromptEngine, plugins vec, empty env_vars HashMap, and shell_options vec.</snippet>
+      </doc>
+      <doc>
+        <path>docs/developer/architecture.md</path>
+        <title>Architecture Overview</title>
+        <section>Frameworks - Framework Trait</section>
+        <snippet>All frameworks implement Framework trait with methods: name(), detect(), install(), get_plugins(), get_themes(). Each framework has its own implementation file in src/frameworks/.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/presets/mod.rs</path>
+        <kind>module (NEW in Story 2.1)</kind>
+        <symbol>PRESET_REGISTRY</symbol>
+        <lines>N/A - to be created</lines>
+        <reason>The PRESET_REGISTRY constant will be populated with 4-5 preset definitions in this story. This is where the Minimal, Performance, Fancy, and Developer presets will be defined as const array items.</reason>
+      </artifact>
+      <artifact>
+        <path>src/frameworks/detector.rs</path>
+        <kind>enum</kind>
+        <symbol>FrameworkType</symbol>
+        <lines>11-17</lines>
+        <reason>Contains the framework types that will be used in preset definitions: OhMyZsh (Fancy), Zimfw (Developer), Zinit (Performance), Zap (Minimal), and Prezto.</reason>
+      </artifact>
+      <artifact>
+        <path>src/frameworks/plugin.rs</path>
+        <kind>module</kind>
+        <symbol>plugin registry</symbol>
+        <lines>all</lines>
+        <reason>Contains plugin registry with 600+ plugins. Need to reference correct plugin names when defining preset plugin lists (e.g., "zsh-autosuggestions", "zsh-syntax-highlighting", "git", "docker", "kubectl", "fzf").</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="serde" version="1.0" purpose="Not directly needed for const definitions but part of Preset struct"/>
+        <package name="std::collections::HashMap" version="std" purpose="For env_vars in PresetConfig"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Preset definitions must use FrameworkType enum variants exactly as defined
+    - Plugin names must match the plugin registry strings exactly
+    - Each preset must have unique id (minimal, performance, fancy, developer)
+    - Target user descriptions should be clear and differentiated
+    - Prompt engines referenced must be valid (Starship, Powerlevel10k, Pure)
+    - Plugin counts should match specifications: Minimal=3, Performance=5, Fancy=12, Developer=8
+    - All presets must use &'static str for string fields (const compatibility)
+    - Documentation file preset-definitions.md should explain rationale for each choice
+    - Follow Epic 2 design showing PromptMode::PromptEngine for standalone engines
+    - Follow Epic 2 design showing PromptMode::FrameworkTheme for framework themes
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>PRESET_REGISTRY constant</name>
+      <kind>const array (to be populated)</kind>
+      <signature>pub const PRESET_REGISTRY: &[Preset] = &[MINIMAL, PERFORMANCE, FANCY, DEVELOPER]</signature>
+      <path>src/presets/mod.rs</path>
+      <notes>Array of 4 preset definitions that will be populated in this story</notes>
+    </interface>
+    <interface>
+      <name>Preset struct instances</name>
+      <kind>const structs</kind>
+      <signature>const MINIMAL: Preset = Preset { id: "minimal", ... }</signature>
+      <path>src/presets/mod.rs</path>
+      <notes>Four const instances: MINIMAL, PERFORMANCE, FANCY, DEVELOPER</notes>
+    </interface>
+    <interface>
+      <name>FrameworkType enum</name>
+      <kind>existing enum</kind>
+      <signature>pub enum FrameworkType { OhMyZsh, Zimfw, Prezto, Zinit, Zap }</signature>
+      <path>src/frameworks/detector.rs</path>
+      <notes>Used in PresetConfig.framework field</notes>
+    </interface>
+    <interface>
+      <name>PromptMode enum</name>
+      <kind>from Epic 1</kind>
+      <signature>pub enum PromptMode { PromptEngine { engine: PromptEngine }, FrameworkTheme { theme: String } }</signature>
+      <path>src/core/manifest.rs (from Epic 1)</path>
+      <notes>Minimal/Performance/Developer use PromptEngine variant, Fancy may use FrameworkTheme</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Unit tests in #[cfg(test)] mod tests within src/presets/mod.rs. Test preset definitions are complete, well-formed, and have correct field values. Verify plugin counts, unique IDs, valid framework types, and that each preset can generate a valid Manifest.
+    </standards>
+    <locations>
+      - Unit tests: src/presets/mod.rs #[cfg(test)] mod tests
+      - Documentation: docs/planning/v0.2.0/preset-definitions.md (to be created)
+    </locations>
+    <ideas>
+      <test ac="Minimal preset defined">
+        <idea>Test PRESET_REGISTRY contains preset with id="minimal"</idea>
+        <idea>Test Minimal preset has framework=FrameworkType::Zap</idea>
+        <idea>Test Minimal preset has 3 plugins exactly</idea>
+        <idea>Test Minimal preset plugins include autosuggestions, syntax-highlighting, git</idea>
+        <idea>Test Minimal preset has PromptMode::PromptEngine with Pure</idea>
+      </test>
+      <test ac="Performance preset defined">
+        <idea>Test PRESET_REGISTRY contains preset with id="performance"</idea>
+        <idea>Test Performance preset has framework=FrameworkType::Zinit</idea>
+        <idea>Test Performance preset has 5 plugins exactly</idea>
+        <idea>Test Performance preset has PromptMode::PromptEngine with Starship</idea>
+      </test>
+      <test ac="Fancy preset defined">
+        <idea>Test PRESET_REGISTRY contains preset with id="fancy"</idea>
+        <idea>Test Fancy preset has framework=FrameworkType::OhMyZsh</idea>
+        <idea>Test Fancy preset has 12 plugins exactly</idea>
+        <idea>Test Fancy preset has Powerlevel10k in prompt configuration</idea>
+      </test>
+      <test ac="Developer preset defined">
+        <idea>Test PRESET_REGISTRY contains preset with id="developer"</idea>
+        <idea>Test Developer preset has framework=FrameworkType::Zimfw</idea>
+        <idea>Test Developer preset has 8 plugins exactly</idea>
+        <idea>Test Developer preset plugins include dev tools (docker, kubectl, git, fzf)</idea>
+        <idea>Test Developer preset has PromptMode::PromptEngine with Starship</idea>
+      </test>
+      <test ac="Each preset documented">
+        <idea>Test all 4 presets have non-empty description fields</idea>
+        <idea>Test all 4 presets have target_user fields</idea>
+        <idea>Test each preset ID is unique</idea>
+        <idea>Test PRESET_REGISTRY.len() == 4</idea>
+      </test>
+      <test ac="Presets can generate Manifests">
+        <idea>Test Manifest::from_preset works with each of the 4 presets</idea>
+        <idea>Test generated manifests pass validation</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,130 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>4</storyId>
+    <title>Create Preset Selection TUI</title>
+    <status>TODO</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-2-story-4.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user who chose Quick Setup</asA>
+    <iWant>to see preset options as cards</iWant>
+    <soThat>I can quickly understand and choose</soThat>
+    <tasks>
+      - Display preset cards with full details
+      - Highlight recommended preset (Minimal for first-time users)
+      - Show "Customize (advanced)" option at bottom
+      - Return selected Preset or Custom signal
+      - Keyboard navigation (↑↓, Enter, Esc)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Display preset cards with full details
+    - [ ] Highlight recommended preset
+    - [ ] Show preview characters
+    - [ ] Allow skipping
+    - [ ] Keyboard navigation
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-2-presets.md</path>
+        <title>Epic 2: Quick Setup Presets</title>
+        <section>Story 2.4: Create Preset Selection TUI</section>
+        <snippet>Displays preset cards with icon, description, framework/prompt/plugins details, target user. Highlights Minimal as recommended. Includes "Customize (advanced)" option. Returns selected Preset or Custom signal with keyboard navigation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/developer/architecture.md</path>
+        <title>Architecture Overview</title>
+        <section>TUI Module</section>
+        <snippet>TUI uses Ratatui + Crossterm. Rules: Keyboard-only navigation, returns values (doesn't perform operations), graceful cancellation (Esc key).</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/tui/framework_select.rs</path>
+        <kind>TUI module</kind>
+        <symbol>select_framework</symbol>
+        <lines>all</lines>
+        <reason>Reference for TUI card-based selection pattern with keyboard navigation and rendering.</reason>
+      </artifact>
+      <artifact>
+        <path>src/presets/mod.rs</path>
+        <kind>module (from Story 2.1)</kind>
+        <symbol>PRESET_REGISTRY</symbol>
+        <lines>all</lines>
+        <reason>Contains the preset definitions to display in the TUI. Need to iterate over PRESET_REGISTRY to show all presets.</reason>
+      </artifact>
+      <artifact>
+        <path>src/tui/mod.rs</path>
+        <kind>module</kind>
+        <symbol>tui</symbol>
+        <lines>all</lines>
+        <reason>Module exports. New preset_select function will be exported here.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="ratatui" version="0.29.0" purpose="Terminal UI framework"/>
+        <package name="crossterm" version="0.29.0" purpose="Terminal input handling"/>
+        <package name="anyhow" version="1.0" purpose="Error handling"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Create src/tui/preset_select.rs
+    - Follow existing TUI patterns from framework_select.rs
+    - Display all presets from PRESET_REGISTRY
+    - Render cards showing: icon, name, description, framework, prompt, plugin count, target user
+    - Highlight "Minimal" preset as recommended by default
+    - Add "Customize (advanced)" option at bottom to return to custom wizard
+    - Use Ratatui for rendering, Crossterm for input
+    - Keyboard navigation: ↑↓ to select, Enter to confirm, Esc to cancel
+    - Return Result<PresetChoice> enum with variants: Preset(&Preset) and Custom
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>PresetChoice enum</name>
+      <kind>Rust enum (to be created)</kind>
+      <signature>pub enum PresetChoice { Preset(&'static Preset), Custom }</signature>
+      <path>src/tui/preset_select.rs</path>
+      <notes>Return type allowing user to select a preset or switch to custom setup</notes>
+    </interface>
+    <interface>
+      <name>select_preset function</name>
+      <kind>public function (to be created)</kind>
+      <signature>pub fn select_preset() -> Result&lt;PresetChoice&gt;</signature>
+      <path>src/tui/preset_select.rs</path>
+      <notes>Main entry point displaying preset cards and returning user selection</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Rust unit tests in #[cfg(test)] mod tests. Manual testing required for TUI rendering and interaction.</standards>
+    <locations>
+      - Unit tests: src/tui/preset_select.rs #[cfg(test)] mod tests
+      - Manual testing for TUI interaction
+    </locations>
+    <ideas>
+      <test ac="Display preset cards">
+        <idea>Manual test: verify all presets from PRESET_REGISTRY are displayed</idea>
+        <idea>Manual test: verify card format shows icon, name, description, details</idea>
+      </test>
+      <test ac="Highlight recommended">
+        <idea>Manual test: verify Minimal preset is highlighted by default</idea>
+      </test>
+      <test ac="Keyboard navigation">
+        <idea>Manual test: verify ↑↓ keys navigate between presets</idea>
+        <idea>Manual test: verify Enter selects preset</idea>
+        <idea>Manual test: verify Esc cancels</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

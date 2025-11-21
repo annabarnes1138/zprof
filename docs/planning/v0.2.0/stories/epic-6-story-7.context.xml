@@ -1,0 +1,99 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>7</storyId>
+    <title>Update Init Documentation</title>
+    <status>TODO</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-6-story-7.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>clear documentation about init behavior</iWant>
+    <soThat>I understand what happens to config</soThat>
+    <tasks>
+      - Update quick-start.md with backup and cleanup process explanation
+      - Document init flags in commands.md (--force, --dry-run, --skip-verification)
+      - Create "What Happens During Init" section in installation.md
+      - Update FAQ with init-related questions
+      - Add troubleshooting section for init issues
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Update quick-start with backup/cleanup process
+    - [ ] Document init flags (--force, --dry-run, --skip-verification)
+    - [ ] Create 'What Happens During Init' section
+    - [ ] Update FAQ
+    - [ ] Add troubleshooting section
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-6-init-cleanup.md</path>
+        <title>Epic 6: Init Cleanup and Enhancement</title>
+        <section>Story 6.7: Update Init Documentation</section>
+        <snippet>Updates documentation to explain backup and cleanup process, init flags, what happens during init, FAQ answers, and troubleshooting for init issues.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <none>This is a documentation-only story</none>
+    </code>
+    <dependencies>
+      <none/>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Update docs/user-guide/quick-start.md: add backup/cleanup explanation after installation
+    - Update docs/user-guide/commands.md: document zprof init flags with examples
+    - Create section in docs/user-guide/installation.md: "What Happens During Init"
+    - Explain three phases: Backup (all config preserved), Cleanup (files moved), Integration (new .zshenv)
+    - Emphasize reversibility: "can be restored anytime using zprof uninstall"
+    - Update docs/user-guide/faq.md with questions:
+      - "What happens to my .zshrc?"
+      - "Can I undo zprof init?"
+      - "Is it safe to run init multiple times?"
+    - Add troubleshooting section for common init issues:
+      - Permission denied errors
+      - Disk space issues
+      - Existing installation conflicts
+    - Keep documentation beginner-friendly, clear, and reassuring
+    - Include examples and command outputs
+  </constraints>
+
+  <interfaces>
+    <none>This is a documentation-only story</none>
+  </interfaces>
+
+  <tests>
+    <standards>Manual review of documentation for clarity and completeness.</standards>
+    <locations>
+      - Manual review of all updated documentation files
+    </locations>
+    <ideas>
+      <test ac="Quick-start updated">
+        <idea>Review quick-start explains backup and cleanup clearly</idea>
+        <idea>Verify quick-start reassures users about safety</idea>
+      </test>
+      <test ac="Commands documented">
+        <idea>Review commands.md documents all init flags</idea>
+        <idea>Verify examples are correct and helpful</idea>
+      </test>
+      <test ac="What Happens section">
+        <idea>Review section explains init process clearly</idea>
+        <idea>Verify beginner-friendly language</idea>
+      </test>
+      <test ac="FAQ updated">
+        <idea>Review FAQ answers common init concerns</idea>
+      </test>
+      <test ac="Troubleshooting added">
+        <idea>Review troubleshooting covers common issues</idea>
+        <idea>Verify solutions are clear and actionable</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

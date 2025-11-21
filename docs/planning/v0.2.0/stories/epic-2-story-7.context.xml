@@ -1,0 +1,125 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>7</storyId>
+    <title>Add Non-Interactive Preset Flag</title>
+    <status>TODO</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-2-story-7.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>power user</asA>
+    <iWant>to create profiles from presets via CLI</iWant>
+    <soThat>I can script profile creation</soThat>
+    <tasks>
+      - Add `--preset <name>` flag to `zprof create` command
+      - Example: `zprof create work --preset performance`
+      - Skip all TUI, use preset directly
+      - Show summary after creation
+      - Return error if preset doesn't exist
+      - Update CLI help text
+      - Add integration test
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Add --preset &lt;name&gt; flag
+    - [ ] Skip TUI, use preset directly
+    - [ ] Show summary after creation
+    - [ ] Update CLI help text
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-2-presets.md</path>
+        <title>Epic 2: Quick Setup Presets</title>
+        <section>Story 2.7: Add Non-Interactive Preset Flag</section>
+        <snippet>Adds --preset flag to zprof create command. Example: zprof create work --preset performance. Skips TUI, uses preset directly, shows summary, returns error if preset doesn't exist.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/cli/create.rs</path>
+        <kind>CLI command</kind>
+        <symbol>CreateArgs</symbol>
+        <lines>all</lines>
+        <reason>Will add --preset flag to CreateArgs struct using Clap. Main integration point for non-interactive preset creation.</reason>
+      </artifact>
+      <artifact>
+        <path>src/cli/create_from_preset.rs</path>
+        <kind>helper module (from Story 2.5)</kind>
+        <symbol>create_from_preset</symbol>
+        <lines>all</lines>
+        <reason>Function that will be called when --preset flag is provided.</reason>
+      </artifact>
+      <artifact>
+        <path>src/presets/mod.rs</path>
+        <kind>module</kind>
+        <symbol>PRESET_REGISTRY</symbol>
+        <lines>all</lines>
+        <reason>Need to look up preset by name from PRESET_REGISTRY.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="clap" version="4.5" purpose="CLI argument parsing with derive macros"/>
+        <package name="anyhow" version="1.0" purpose="Error handling"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Add preset: Option<String> field to CreateArgs struct in src/cli/create.rs
+    - Use Clap's derive macros: #[arg(long, value_name = "PRESET_NAME")]
+    - When --preset is provided, skip TUI and call create_from_preset directly
+    - Look up preset by id in PRESET_REGISTRY (case-insensitive)
+    - Return clear error if preset name doesn't match any in registry
+    - Suggest similar preset names if typo detected
+    - Show summary after creation: "Profile 'work' created using Performance preset"
+    - Update clap help text to list available presets
+    - Add integration test in tests/create_preset_test.rs
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>CreateArgs.preset field</name>
+      <kind>CLI argument (to be added)</kind>
+      <signature>preset: Option&lt;String&gt;</signature>
+      <path>src/cli/create.rs</path>
+      <notes>Optional --preset flag for non-interactive preset-based creation</notes>
+    </interface>
+    <interface>
+      <name>find_preset_by_id function</name>
+      <kind>helper function (to be created)</kind>
+      <signature>pub fn find_preset_by_id(id: &str) -> Option&lt;&Preset&gt;</signature>
+      <path>src/presets/mod.rs</path>
+      <notes>Looks up preset by id from PRESET_REGISTRY. Case-insensitive.</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Integration tests in tests/create_preset_test.rs. Test CLI argument parsing and error cases.</standards>
+    <locations>
+      - Integration tests: tests/create_preset_test.rs (NEW)
+      - Unit tests: src/presets/mod.rs for find_preset_by_id
+    </locations>
+    <ideas>
+      <test ac="Add --preset flag">
+        <idea>Test zprof create work --preset minimal creates profile with Minimal preset</idea>
+        <idea>Test zprof create work --preset performance creates profile with Performance preset</idea>
+        <idea>Test preset lookup is case-insensitive (--preset MINIMAL works)</idea>
+      </test>
+      <test ac="Error handling">
+        <idea>Test zprof create work --preset invalid returns error</idea>
+        <idea>Test error message suggests similar preset names</idea>
+        <idea>Test error message lists all available presets</idea>
+      </test>
+      <test ac="Show summary">
+        <idea>Test output shows "Profile 'work' created using <preset name> preset"</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

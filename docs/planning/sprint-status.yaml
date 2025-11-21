@@ -47,14 +47,14 @@ development_status:
   epic-1-retrospective: optional
 
   epic-2: backlog
-  epic-2-story-1: drafted
-  epic-2-story-2: drafted
-  epic-2-story-3: drafted
-  epic-2-story-4: drafted
-  epic-2-story-5: drafted
-  epic-2-story-6: drafted
-  epic-2-story-7: drafted
-  epic-2-story-8: drafted
+  epic-2-story-1: ready-for-dev
+  epic-2-story-2: ready-for-dev
+  epic-2-story-3: ready-for-dev
+  epic-2-story-4: ready-for-dev
+  epic-2-story-5: ready-for-dev
+  epic-2-story-6: ready-for-dev
+  epic-2-story-7: ready-for-dev
+  epic-2-story-8: ready-for-dev
   epic-2-retrospective: optional
 
   epic-3: backlog
@@ -92,11 +92,11 @@ development_status:
   epic-5-retrospective: optional
 
   epic-6: backlog
-  epic-6-story-1: drafted
-  epic-6-story-2: drafted
-  epic-6-story-3: drafted
-  epic-6-story-4: drafted
-  epic-6-story-5: drafted
-  epic-6-story-6: drafted
-  epic-6-story-7: drafted
+  epic-6-story-1: ready-for-dev
+  epic-6-story-2: ready-for-dev
+  epic-6-story-3: ready-for-dev
+  epic-6-story-4: ready-for-dev
+  epic-6-story-5: ready-for-dev
+  epic-6-story-6: ready-for-dev
+  epic-6-story-7: ready-for-dev
   epic-6-retrospective: optional

@@ -1,0 +1,136 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>2</storyId>
+    <title>Create Comprehensive Pre-zprof Backup</title>
+    <status>TODO</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-6-story-2.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user running zprof init</asA>
+    <iWant>all my shell config backed up automatically</iWant>
+    <soThat>I can restore it if needed</soThat>
+    <tasks>
+      - Create .zsh-profiles/backups/pre-zprof/ directory
+      - Backup all detected config files with original permissions
+      - Backup framework directories as tarball (framework-backup.tar.gz)
+      - Create backup-manifest.toml with metadata, files, framework info
+      - Skip backup if pre-zprof/ already exists (don't overwrite)
+      - Show summary with file counts, framework, history entries, total size
+      - Integration test
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Create .zsh-profiles/backups/pre-zprof/ directory
+    - [ ] Backup all config files with permissions
+    - [ ] Backup framework directories as tarball
+    - [ ] Create backup-manifest.toml
+    - [ ] Skip if already exists
+    - [ ] Show summary
+    - [ ] Integration test
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-6-init-cleanup.md</path>
+        <title>Epic 6: Init Cleanup and Enhancement</title>
+        <section>Story 6.2: Create Comprehensive Pre-zprof Backup</section>
+        <snippet>Creates .zsh-profiles/backups/pre-zprof/ directory, backs up all config files with permissions, creates framework tarball, generates backup-manifest.toml with metadata. Skips if backup exists. Shows summary.</snippet>
+      </doc>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-6-init-cleanup.md</path>
+        <title>Epic 6: Init Cleanup and Enhancement</title>
+        <section>Directory Structure After Init</section>
+        <snippet>Shows pre-zprof backup structure: backup-manifest.toml, config files (.zshrc, .zshenv, etc.), .zsh_history copy, frameworks/ directory with framework tarballs.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/backup/shell_config.rs</path>
+        <kind>module (from Story 6.1)</kind>
+        <symbol>ShellConfigInfo</symbol>
+        <lines>all</lines>
+        <reason>Provides detected config files and framework info to backup. Result of detection will be used as input for backup process.</reason>
+      </artifact>
+      <artifact>
+        <path>src/cli/init.rs</path>
+        <kind>CLI command</kind>
+        <symbol>init command</symbol>
+        <lines>all</lines>
+        <reason>Init command will call backup creation after detection step.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="toml" version="0.9" purpose="Generating backup-manifest.toml"/>
+        <package name="tar" version="0.4" purpose="Creating framework tarball"/>
+        <package name="flate2" version="1.0" purpose="Compressing tarball with gzip"/>
+        <package name="chrono" version="0.4" purpose="Timestamps in manifest"/>
+        <package name="serde" version="1.0" purpose="Serializing manifest"/>
+        <package name="anyhow" version="1.0" purpose="Error handling"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Create src/backup/pre_zprof.rs for backup logic
+    - Create src/core/backup_manifest.rs for manifest structure
+    - Backup directory: ~/.zsh-profiles/backups/pre-zprof/
+    - Copy all config files preserving permissions (use std::fs::copy with metadata)
+    - Create framework tarball: tar.gz of entire framework directory
+    - Manifest format: TOML with [metadata], [detected_framework], [[files]] sections
+    - Check if pre-zprof/ exists before backup - if exists, skip (preserve original)
+    - Show clear summary: "✓ Found 5 config files", "✓ Detected oh-my-zsh", "✓ Backed up 1,523 history entries"
+    - Calculate and show total backup size in human-readable format (MB, KB)
+    - Store checksums (SHA-256) for critical files in manifest
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>BackupManifest struct</name>
+      <kind>Rust struct (to be created)</kind>
+      <signature>pub struct BackupManifest { pub metadata: BackupMetadata, pub detected_framework: Option&lt;FrameworkBackup&gt;, pub files: Vec&lt;FileBackup&gt; }</signature>
+      <path>src/core/backup_manifest.rs</path>
+      <notes>Main manifest structure for pre-zprof backup</notes>
+    </interface>
+    <interface>
+      <name>create_pre_zprof_backup function</name>
+      <kind>public function (to be created)</kind>
+      <signature>pub fn create_pre_zprof_backup(config_info: &ShellConfigInfo) -> Result&lt;()&gt;</signature>
+      <path>src/backup/pre_zprof.rs</path>
+      <notes>Main function to create backup from detected config info</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Integration tests using tempfile for isolated filesystem testing. Verify backup files created, manifest generated, permissions preserved.</standards>
+    <locations>
+      - Unit tests: src/backup/pre_zprof.rs #[cfg(test)] mod tests
+      - Integration tests: tests/init_backup_test.rs
+    </locations>
+    <ideas>
+      <test ac="Backup all config files">
+        <idea>Test all detected config files are copied to backup directory</idea>
+        <idea>Test file permissions are preserved</idea>
+      </test>
+      <test ac="Framework tarball">
+        <idea>Test framework directory is tarballed and compressed</idea>
+        <idea>Test tarball is named framework-backup.tar.gz</idea>
+      </test>
+      <test ac="Backup manifest">
+        <idea>Test manifest.toml is created with correct structure</idea>
+        <idea>Test manifest includes all backed up files</idea>
+        <idea>Test manifest includes framework info if detected</idea>
+      </test>
+      <test ac="Skip if exists">
+        <idea>Test backup is skipped if pre-zprof/ directory already exists</idea>
+        <idea>Test no files are overwritten when skipping</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

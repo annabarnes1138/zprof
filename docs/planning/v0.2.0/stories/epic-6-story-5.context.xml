@@ -1,0 +1,134 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>5</storyId>
+    <title>Add Backup Verification</title>
+    <status>TODO</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-6-story-5.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user who backed up configs</asA>
+    <iWant>verification that backup is complete</iWant>
+    <soThat>I trust I can restore later</soThat>
+    <tasks>
+      - Verify all detected files were backed up
+      - Check file sizes match
+      - Verify checksums for critical files
+      - Check backup directory is readable
+      - Create verification function returning VerificationReport
+      - Show verification results (success or failures)
+      - If verification fails, show issues and recommendations
+      - Add --skip-verification flag for faster init
+      - Unit tests for verification logic
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Verify all files backed up
+    - [ ] Check file sizes match
+    - [ ] Verify checksums for critical files
+    - [ ] Show verification results
+    - [ ] Handle verification failures
+    - [ ] Add --skip-verification flag
+    - [ ] Unit tests
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-6-init-cleanup.md</path>
+        <title>Epic 6: Init Cleanup and Enhancement</title>
+        <section>Story 6.5: Add Backup Verification</section>
+        <snippet>After backup, verifies all files backed up, sizes match, checksums valid. Shows verification results. If fails, shows issues and recommendations. Adds --skip-verification flag.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/backup/pre_zprof.rs</path>
+        <kind>module</kind>
+        <symbol>create_pre_zprof_backup</symbol>
+        <lines>all</lines>
+        <reason>Backup creation will call verification after completing backup.</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/backup_manifest.rs</path>
+        <kind>module</kind>
+        <symbol>BackupManifest</symbol>
+        <lines>all</lines>
+        <reason>Manifest contains checksums and file info for verification.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="sha2" version="0.10" purpose="SHA-256 checksum calculation"/>
+        <package name="clap" version="4.5" purpose="--skip-verification flag"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Create src/backup/verify.rs for verification logic
+    - Verification function: verify_backup(manifest: &BackupManifest) -> Result<VerificationReport>
+    - Check each file in manifest exists in backup directory
+    - Verify file sizes match between manifest and actual files
+    - Calculate and verify SHA-256 checksums for .zshrc, .zshenv (critical files)
+    - Check backup directory has correct permissions (readable)
+    - VerificationReport struct: all_files_present, checksums_valid, issues (Vec<String>)
+    - Show success: "✓ All 5 files backed up successfully", "✓ Checksums verified"
+    - Show failures: "✗ Backup verification failed!", list issues, recommend --force
+    - Add --skip-verification flag to InitArgs
+    - If --skip-verification, skip verification step entirely
+    - Run verification after backup creation, before moving files
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>verify_backup function</name>
+      <kind>public function (to be created)</kind>
+      <signature>pub fn verify_backup(manifest: &BackupManifest) -> Result&lt;VerificationReport&gt;</signature>
+      <path>src/backup/verify.rs</path>
+      <notes>Main verification function that checks backup completeness</notes>
+    </interface>
+    <interface>
+      <name>VerificationReport struct</name>
+      <kind>Rust struct (to be created)</kind>
+      <signature>pub struct VerificationReport { pub all_files_present: bool, pub checksums_valid: bool, pub issues: Vec&lt;String&gt; }</signature>
+      <path>src/backup/verify.rs</path>
+      <notes>Report structure containing verification results</notes>
+    </interface>
+    <interface>
+      <name>InitArgs.skip_verification field</name>
+      <kind>CLI argument (to be added)</kind>
+      <signature>skip_verification: bool</signature>
+      <path>src/cli/init.rs</path>
+      <notes>Optional flag to skip verification for faster init</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Unit tests for verification logic. Integration tests for full backup+verify flow.</standards>
+    <locations>
+      - Unit tests: src/backup/verify.rs #[cfg(test)] mod tests
+      - Integration tests: tests/init_verification_test.rs
+    </locations>
+    <ideas>
+      <test ac="Verify all files">
+        <idea>Test verification passes when all files present</idea>
+        <idea>Test verification fails when file missing</idea>
+      </test>
+      <test ac="Check sizes">
+        <idea>Test verification fails when file size mismatch</idea>
+      </test>
+      <test ac="Verify checksums">
+        <idea>Test checksum verification passes for matching files</idea>
+        <idea>Test checksum verification fails for modified files</idea>
+      </test>
+      <test ac="Skip verification">
+        <idea>Test --skip-verification skips verification step</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>

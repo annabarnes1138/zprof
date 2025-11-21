@@ -1,0 +1,132 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>5</storyId>
+    <title>Create Profile from Preset</title>
+    <status>TODO</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-2-story-5.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user selecting a preset</asA>
+    <iWant>the profile created automatically</iWant>
+    <soThat>I can start using it immediately</soThat>
+    <tasks>
+      - Generate Manifest from Preset using Manifest::from_preset()
+      - Install framework (same as custom flow)
+      - Install prompt engine if needed
+      - Install all plugins from preset
+      - Generate shell configs
+      - Show confirmation screen with summary
+      - Offer to activate profile immediately
+      - Handle errors gracefully (network, permissions)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - [ ] Generate Manifest from Preset
+    - [ ] Install framework and plugins
+    - [ ] Generate shell configs
+    - [ ] Show confirmation
+    - [ ] Handle errors gracefully
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-2-presets.md</path>
+        <title>Epic 2: Quick Setup Presets</title>
+        <section>Story 2.5: Create Profile from Preset</section>
+        <snippet>Creates helper function to generate Manifest from Preset, install framework/prompt/plugins, generate shell configs, show confirmation, offer activation. Handles errors gracefully.</snippet>
+      </doc>
+      <doc>
+        <path>docs/developer/architecture.md</path>
+        <title>Architecture Overview</title>
+        <section>Profile Creation</section>
+        <snippet>Profile creation flow: CLI parses args → TUI wizard → Manifest created → Framework installed → Shell configs generated → Profile directory created.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/cli/create.rs</path>
+        <kind>CLI command</kind>
+        <symbol>create command</symbol>
+        <lines>all</lines>
+        <reason>Existing profile creation logic. Will integrate preset path here using create_from_preset helper.</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/manifest.rs</path>
+        <kind>module</kind>
+        <symbol>Manifest::from_preset</symbol>
+        <lines>from Story 2.1</lines>
+        <reason>Method to generate Manifest from Preset. Core functionality for preset-based profile creation.</reason>
+      </artifact>
+      <artifact>
+        <path>src/frameworks/installer.rs</path>
+        <kind>module</kind>
+        <symbol>framework installation</symbol>
+        <lines>all</lines>
+        <reason>Framework installation logic that preset flow will reuse.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="anyhow" version="1.0" purpose="Error handling"/>
+        <package name="indicatif" version="0.18" purpose="Progress indicators during installation"/>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Create src/cli/create_from_preset.rs helper module
+    - Use Manifest::from_preset() to generate manifest
+    - Reuse existing framework/plugin installation logic from custom flow
+    - Generate shell configs using existing generator.rs
+    - Show clear confirmation screen with: profile name, framework, prompt, plugins list
+    - Offer "Activate now?" option after creation
+    - Handle network errors during plugin installation
+    - Handle permission errors during file operations
+    - Follow CLI command structure pattern from architecture.md
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>create_from_preset function</name>
+      <kind>public function (to be created)</kind>
+      <signature>pub fn create_from_preset(profile_name: &str, preset: &Preset) -> Result&lt;()&gt;</signature>
+      <path>src/cli/create_from_preset.rs</path>
+      <notes>Helper function to create profile from preset. Called by create.rs.</notes>
+    </interface>
+    <interface>
+      <name>Manifest::from_preset</name>
+      <kind>method (from Story 2.1)</kind>
+      <signature>pub fn from_preset(name: &str, preset: &Preset) -> Self</signature>
+      <path>src/core/manifest.rs</path>
+      <notes>Generates Manifest from Preset config</notes>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Rust unit tests and integration tests. Test error handling paths.</standards>
+    <locations>
+      - Unit tests: src/cli/create_from_preset.rs #[cfg(test)] mod tests
+      - Integration tests: tests/create_preset_test.rs
+    </locations>
+    <ideas>
+      <test ac="Generate Manifest from Preset">
+        <idea>Test create_from_preset calls Manifest::from_preset with correct arguments</idea>
+        <idea>Test generated manifest has correct framework, plugins, env vars from preset</idea>
+      </test>
+      <test ac="Install framework and plugins">
+        <idea>Integration test: create profile from Minimal preset and verify files created</idea>
+        <idea>Test error handling when framework installation fails</idea>
+      </test>
+      <test ac="Handle errors gracefully">
+        <idea>Test network error during plugin installation shows helpful message</idea>
+        <idea>Test permission error shows clear guidance</idea>
+      </test>
+    </ideas>
+  </tests>
+</story-context>
