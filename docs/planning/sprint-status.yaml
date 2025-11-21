@@ -38,7 +38,7 @@ story_location: docs/planning/v0.2.0/stories
 development_status:
   epic-1: backlog
   epic-1-story-1: done
-  epic-1-story-2: ready-for-dev
+  epic-1-story-2: done
   epic-1-story-3: ready-for-dev
   epic-1-story-4: ready-for-dev
   epic-1-story-5: ready-for-dev
