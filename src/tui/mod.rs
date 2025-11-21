@@ -5,6 +5,7 @@
 
 pub mod framework_select;
 pub mod plugin_browser;
+pub mod prompt_engine_select;
 pub mod prompt_mode_select;
 pub mod theme_select;
 

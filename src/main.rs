@@ -3,6 +3,7 @@ mod cli;
 mod core;
 mod frameworks;
 mod git;
+mod prompts;
 mod shell;
 mod tui;
 
