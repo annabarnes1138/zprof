@@ -389,7 +389,9 @@ mod tests {
             profile: ProfileSection {
                 name: "test".to_string(),
                 framework: "oh-my-zsh".to_string(),
-                theme: "robbyrussell".to_string(),
+                prompt_mode: crate::core::manifest::PromptMode::FrameworkTheme {
+                    theme: "robbyrussell".to_string(),
+                },
                 created: Utc::now(),
                 modified: Utc::now(),
             },

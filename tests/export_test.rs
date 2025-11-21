@@ -20,7 +20,9 @@ fn create_test_profile(base_dir: &std::path::Path, name: &str) -> Result<PathBuf
         profile: ProfileSection {
             name: name.to_string(),
             framework: "oh-my-zsh".to_string(),
-            theme: "robbyrussell".to_string(),
+            prompt_mode: zprof::core::manifest::PromptMode::FrameworkTheme {
+                theme: "robbyrussell".to_string(),
+            },
             created: chrono::Utc::now(),
             modified: chrono::Utc::now(),
         },

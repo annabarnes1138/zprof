@@ -14,6 +14,30 @@ use crate::frameworks::FrameworkInfo;
 /// Supported zsh frameworks
 const SUPPORTED_FRAMEWORKS: &[&str] = &["oh-my-zsh", "zimfw", "prezto", "zinit", "zap"];
 
+/// Prompt mode discriminates between standalone prompt engines and framework themes
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[serde(tag = "prompt_mode", rename_all = "snake_case")]
+pub enum PromptMode {
+    /// Use a standalone prompt engine (Starship, Powerlevel10k, etc.)
+    PromptEngine {
+        #[serde(rename = "prompt_engine")]
+        engine: String,
+    },
+    /// Use framework's built-in theme system
+    FrameworkTheme {
+        #[serde(rename = "framework_theme")]
+        theme: String,
+    },
+}
+
+impl Default for PromptMode {
+    fn default() -> Self {
+        PromptMode::FrameworkTheme {
+            theme: String::new(),
+        }
+    }
+}
+
 /// Profile manifest structure following Pattern 4: TOML Manifest Schema
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Manifest {
@@ -25,16 +49,158 @@ pub struct Manifest {
 }
 
 /// Profile metadata section
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Clone, PartialEq)]
 pub struct ProfileSection {
     pub name: String,
     pub framework: String,
-    #[serde(default)]
-    pub theme: String,
+    #[serde(flatten)]
+    pub prompt_mode: PromptMode,
     #[serde(default = "default_timestamp")]
     pub created: DateTime<Utc>,
     #[serde(default = "default_timestamp")]
     pub modified: DateTime<Utc>,
+}
+
+impl ProfileSection {
+    /// Get the theme if using framework_theme mode, otherwise empty string
+    pub fn theme(&self) -> &str {
+        match &self.prompt_mode {
+            PromptMode::FrameworkTheme { theme } => theme.as_str(),
+            PromptMode::PromptEngine { .. } => "",
+        }
+    }
+}
+
+// Custom deserializer for backward compatibility with old manifests
+impl<'de> Deserialize<'de> for ProfileSection {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::{self, MapAccess, Visitor};
+        use std::fmt;
+
+        #[derive(Deserialize)]
+        #[serde(field_identifier, rename_all = "snake_case")]
+        enum Field {
+            Name,
+            Framework,
+            Theme,
+            PromptMode,
+            PromptEngine,
+            FrameworkTheme,
+            Created,
+            Modified,
+        }
+
+        struct ProfileSectionVisitor;
+
+        impl<'de> Visitor<'de> for ProfileSectionVisitor {
+            type Value = ProfileSection;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("struct ProfileSection")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<ProfileSection, V::Error>
+            where
+                V: MapAccess<'de>,
+            {
+                let mut name: Option<String> = None;
+                let mut framework: Option<String> = None;
+                let mut legacy_theme: Option<String> = None;
+                let mut prompt_mode_tag: Option<String> = None;
+                let mut prompt_engine: Option<String> = None;
+                let mut framework_theme: Option<String> = None;
+                let mut created: Option<DateTime<Utc>> = None;
+                let mut modified: Option<DateTime<Utc>> = None;
+
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::Name => {
+                            name = Some(map.next_value()?);
+                        }
+                        Field::Framework => {
+                            framework = Some(map.next_value()?);
+                        }
+                        Field::Theme => {
+                            legacy_theme = Some(map.next_value()?);
+                        }
+                        Field::PromptMode => {
+                            prompt_mode_tag = Some(map.next_value()?);
+                        }
+                        Field::PromptEngine => {
+                            prompt_engine = Some(map.next_value()?);
+                        }
+                        Field::FrameworkTheme => {
+                            framework_theme = Some(map.next_value()?);
+                        }
+                        Field::Created => {
+                            created = Some(map.next_value()?);
+                        }
+                        Field::Modified => {
+                            modified = Some(map.next_value()?);
+                        }
+                    }
+                }
+
+                let name = name.ok_or_else(|| de::Error::missing_field("name"))?;
+                let framework = framework.ok_or_else(|| de::Error::missing_field("framework"))?;
+                let created = created.unwrap_or_else(default_timestamp);
+                let modified = modified.unwrap_or_else(default_timestamp);
+
+                // Backward compatibility: if no prompt_mode is specified, use legacy theme field
+                let prompt_mode = if let Some(mode_tag) = prompt_mode_tag {
+                    match mode_tag.as_str() {
+                        "prompt_engine" => {
+                            let engine = prompt_engine
+                                .ok_or_else(|| de::Error::missing_field("prompt_engine"))?;
+                            PromptMode::PromptEngine { engine }
+                        }
+                        "framework_theme" => {
+                            let theme = framework_theme
+                                .ok_or_else(|| de::Error::missing_field("framework_theme"))?;
+                            PromptMode::FrameworkTheme { theme }
+                        }
+                        _ => {
+                            return Err(de::Error::unknown_variant(
+                                &mode_tag,
+                                &["prompt_engine", "framework_theme"],
+                            ))
+                        }
+                    }
+                } else {
+                    // Legacy manifest: use theme field, default to empty string
+                    PromptMode::FrameworkTheme {
+                        theme: legacy_theme.unwrap_or_default(),
+                    }
+                };
+
+                Ok(ProfileSection {
+                    name,
+                    framework,
+                    prompt_mode,
+                    created,
+                    modified,
+                })
+            }
+        }
+
+        deserializer.deserialize_struct(
+            "ProfileSection",
+            &[
+                "name",
+                "framework",
+                "theme",
+                "prompt_mode",
+                "prompt_engine",
+                "framework_theme",
+                "created",
+                "modified",
+            ],
+            ProfileSectionVisitor,
+        )
+    }
 }
 
 /// Plugins section
@@ -74,7 +240,10 @@ impl Manifest {
             profile: ProfileSection {
                 name: name.to_string(),
                 framework: framework_info.framework_type.name().to_string(),
-                theme: framework_info.theme.clone(),
+                // Backward compatibility: default to framework_theme mode
+                prompt_mode: PromptMode::FrameworkTheme {
+                    theme: framework_info.theme.clone(),
+                },
                 created: now,
                 modified: now,
             },
@@ -130,9 +299,21 @@ impl Manifest {
             }
         }
 
-        // Validate theme field is not whitespace-only if present
-        if !self.profile.theme.is_empty() && self.profile.theme.trim().is_empty() {
-            bail!("Validation error: profile.theme cannot be whitespace-only");
+        // Validate prompt_mode fields based on the variant
+        match &self.profile.prompt_mode {
+            PromptMode::PromptEngine { engine } => {
+                if engine.trim().is_empty() {
+                    bail!(
+                        "Validation error: prompt_engine cannot be empty when prompt_mode is 'prompt_engine'\n\nExample:\n  [profile]\n  prompt_mode = \"prompt_engine\"\n  prompt_engine = \"starship\""
+                    );
+                }
+            }
+            PromptMode::FrameworkTheme { theme } => {
+                // Theme can be empty (no theme), but cannot be whitespace-only
+                if !theme.is_empty() && theme.trim().is_empty() {
+                    bail!("Validation error: framework_theme cannot be whitespace-only");
+                }
+            }
         }
 
         // Validate environment variable keys are valid shell identifiers
@@ -258,7 +439,12 @@ mod tests {
 
         assert_eq!(manifest.profile.name, "work");
         assert_eq!(manifest.profile.framework, "oh-my-zsh");
-        assert_eq!(manifest.profile.theme, "robbyrussell");
+        assert_eq!(
+            manifest.profile.prompt_mode,
+            PromptMode::FrameworkTheme {
+                theme: "robbyrussell".to_string()
+            }
+        );
         assert_eq!(manifest.plugins.enabled.len(), 3);
         assert_eq!(manifest.plugins.enabled[0], "git");
         assert!(manifest.env.is_empty());
@@ -274,7 +460,8 @@ mod tests {
         assert!(toml_str.contains("[profile]"));
         assert!(toml_str.contains("name = \"work\""));
         assert!(toml_str.contains("framework = \"oh-my-zsh\""));
-        assert!(toml_str.contains("theme = \"robbyrussell\""));
+        assert!(toml_str.contains("prompt_mode = \"framework_theme\""));
+        assert!(toml_str.contains("framework_theme = \"robbyrussell\""));
         assert!(toml_str.contains("[plugins]"));
         assert!(toml_str.contains("git"));
         assert!(toml_str.contains("docker"));
@@ -290,7 +477,12 @@ mod tests {
 
         assert_eq!(parsed.profile.name, "test-profile");
         assert_eq!(parsed.profile.framework, "oh-my-zsh");
-        assert_eq!(parsed.profile.theme, "robbyrussell");
+        assert_eq!(
+            parsed.profile.prompt_mode,
+            PromptMode::FrameworkTheme {
+                theme: "robbyrussell".to_string()
+            }
+        );
         assert_eq!(parsed.plugins.enabled.len(), 3);
     }
 
@@ -302,7 +494,8 @@ mod tests {
 [profile]
 name = "test"
 framework = "oh-my-zsh"
-theme = "robbyrussell"
+prompt_mode = "framework_theme"
+framework_theme = "robbyrussell"
 created = "2025-10-31T14:30:00Z"
 modified = "2025-10-31T14:30:00Z"
 
@@ -331,7 +524,13 @@ framework = "zimfw"
         let manifest = parse_manifest(toml).expect("Should parse minimal TOML");
         assert_eq!(manifest.profile.name, "minimal");
         assert_eq!(manifest.profile.framework, "zimfw");
-        assert_eq!(manifest.profile.theme, ""); // defaults to empty
+        // Backward compatibility: no prompt_mode defaults to framework_theme with empty theme
+        assert_eq!(
+            manifest.profile.prompt_mode,
+            PromptMode::FrameworkTheme {
+                theme: String::new()
+            }
+        );
         assert!(manifest.plugins.enabled.is_empty()); // defaults to empty vec
         assert!(manifest.env.is_empty()); // defaults to empty map
     }
@@ -342,7 +541,9 @@ framework = "zimfw"
             profile: ProfileSection {
                 name: "test".to_string(),
                 framework: "oh-my-zsh".to_string(),
-                theme: "robbyrussell".to_string(),
+                prompt_mode: PromptMode::FrameworkTheme {
+                    theme: "robbyrussell".to_string(),
+                },
                 created: Utc::now(),
                 modified: Utc::now(),
             },
@@ -365,7 +566,9 @@ framework = "zimfw"
             profile: ProfileSection {
                 name: "".to_string(),
                 framework: "oh-my-zsh".to_string(),
-                theme: "default".to_string(),
+                prompt_mode: PromptMode::FrameworkTheme {
+                    theme: "default".to_string(),
+                },
                 created: Utc::now(),
                 modified: Utc::now(),
             },
@@ -384,7 +587,9 @@ framework = "zimfw"
             profile: ProfileSection {
                 name: "test".to_string(),
                 framework: "bash-it".to_string(),
-                theme: "default".to_string(),
+                prompt_mode: PromptMode::FrameworkTheme {
+                    theme: "default".to_string(),
+                },
                 created: Utc::now(),
                 modified: Utc::now(),
             },
@@ -406,7 +611,9 @@ framework = "zimfw"
                 profile: ProfileSection {
                     name: "test".to_string(),
                     framework: framework.to_string(),
-                    theme: "default".to_string(),
+                    prompt_mode: PromptMode::FrameworkTheme {
+                        theme: "default".to_string(),
+                    },
                     created: Utc::now(),
                     modified: Utc::now(),
                 },
@@ -426,7 +633,9 @@ framework = "zimfw"
             profile: ProfileSection {
                 name: "test".to_string(),
                 framework: "oh-my-zsh".to_string(),
-                theme: "default".to_string(),
+                prompt_mode: PromptMode::FrameworkTheme {
+                    theme: "default".to_string(),
+                },
                 created: Utc::now(),
                 modified: Utc::now(),
             },
@@ -447,7 +656,9 @@ framework = "zimfw"
             profile: ProfileSection {
                 name: "test".to_string(),
                 framework: "oh-my-zsh".to_string(),
-                theme: "default".to_string(),
+                prompt_mode: PromptMode::FrameworkTheme {
+                    theme: "default".to_string(),
+                },
                 created: Utc::now(),
                 modified: Utc::now(),
             },
@@ -516,7 +727,9 @@ name = "broken"
             profile: ProfileSection {
                 name: "test".to_string(),
                 framework: "oh-my-zsh".to_string(),
-                theme: "   ".to_string(), // whitespace-only
+                prompt_mode: PromptMode::FrameworkTheme {
+                    theme: "   ".to_string(), // whitespace-only
+                },
                 created: Utc::now(),
                 modified: Utc::now(),
             },
@@ -556,7 +769,8 @@ name = "broken"
 [profile]
 name = "test-profile"
 framework = "oh-my-zsh"
-theme = "robbyrussell"
+prompt_mode = "framework_theme"
+framework_theme = "robbyrussell"
 created = "2025-11-01T10:00:00Z"
 modified = "2025-11-01T10:00:00Z"
 
@@ -590,7 +804,12 @@ EDITOR = "vim"
         // Verify parsed values
         assert_eq!(parsed.profile.name, "test-profile");
         assert_eq!(parsed.profile.framework, "oh-my-zsh");
-        assert_eq!(parsed.profile.theme, "robbyrussell");
+        assert_eq!(
+            parsed.profile.prompt_mode,
+            PromptMode::FrameworkTheme {
+                theme: "robbyrussell".to_string()
+            }
+        );
         assert_eq!(parsed.plugins.enabled.len(), 2);
         assert_eq!(parsed.plugins.enabled[0], "git");
         assert_eq!(parsed.env.get("EDITOR"), Some(&"vim".to_string()));
@@ -607,6 +826,240 @@ name = "broken"
             err_msg.contains("parse") || err_msg.contains("TOML"),
             "Error should mention parsing: {}",
             err_msg
+        );
+    }
+
+    // Story 1.1 tests: Prompt Mode functionality
+
+    #[test]
+    fn test_parse_manifest_with_prompt_engine() {
+        let toml = r#"
+[profile]
+name = "test"
+framework = "oh-my-zsh"
+prompt_mode = "prompt_engine"
+prompt_engine = "starship"
+created = "2025-11-01T10:00:00Z"
+modified = "2025-11-01T10:00:00Z"
+        "#;
+
+        let manifest = parse_manifest(toml).expect("Should parse prompt_engine mode");
+        assert_eq!(
+            manifest.profile.prompt_mode,
+            PromptMode::PromptEngine {
+                engine: "starship".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_manifest_with_framework_theme() {
+        let toml = r#"
+[profile]
+name = "test"
+framework = "oh-my-zsh"
+prompt_mode = "framework_theme"
+framework_theme = "robbyrussell"
+created = "2025-11-01T10:00:00Z"
+modified = "2025-11-01T10:00:00Z"
+        "#;
+
+        let manifest = parse_manifest(toml).expect("Should parse framework_theme mode");
+        assert_eq!(
+            manifest.profile.prompt_mode,
+            PromptMode::FrameworkTheme {
+                theme: "robbyrussell".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_backward_compatibility_with_legacy_theme_field() {
+        let toml = r#"
+[profile]
+name = "test"
+framework = "oh-my-zsh"
+theme = "robbyrussell"
+created = "2025-11-01T10:00:00Z"
+modified = "2025-11-01T10:00:00Z"
+        "#;
+
+        let manifest = parse_manifest(toml).expect("Should parse legacy manifest");
+        assert_eq!(
+            manifest.profile.prompt_mode,
+            PromptMode::FrameworkTheme {
+                theme: "robbyrussell".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_backward_compatibility_empty_theme() {
+        let toml = r#"
+[profile]
+name = "test"
+framework = "zimfw"
+created = "2025-11-01T10:00:00Z"
+modified = "2025-11-01T10:00:00Z"
+        "#;
+
+        let manifest = parse_manifest(toml).expect("Should parse manifest without theme");
+        assert_eq!(
+            manifest.profile.prompt_mode,
+            PromptMode::FrameworkTheme {
+                theme: String::new()
+            }
+        );
+    }
+
+    #[test]
+    fn test_validate_prompt_engine_with_empty_engine() {
+        let manifest = Manifest {
+            profile: ProfileSection {
+                name: "test".to_string(),
+                framework: "oh-my-zsh".to_string(),
+                prompt_mode: PromptMode::PromptEngine {
+                    engine: "".to_string(),
+                },
+                created: Utc::now(),
+                modified: Utc::now(),
+            },
+            plugins: Default::default(),
+            env: Default::default(),
+        };
+
+        let result = manifest.validate();
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("prompt_engine cannot be empty"));
+    }
+
+    #[test]
+    fn test_validate_prompt_engine_success() {
+        let manifest = Manifest {
+            profile: ProfileSection {
+                name: "test".to_string(),
+                framework: "oh-my-zsh".to_string(),
+                prompt_mode: PromptMode::PromptEngine {
+                    engine: "starship".to_string(),
+                },
+                created: Utc::now(),
+                modified: Utc::now(),
+            },
+            plugins: Default::default(),
+            env: Default::default(),
+        };
+
+        assert!(manifest.validate().is_ok());
+    }
+
+    #[test]
+    fn test_validate_framework_theme_allows_empty_theme() {
+        let manifest = Manifest {
+            profile: ProfileSection {
+                name: "test".to_string(),
+                framework: "zimfw".to_string(),
+                prompt_mode: PromptMode::FrameworkTheme {
+                    theme: String::new(),
+                },
+                created: Utc::now(),
+                modified: Utc::now(),
+            },
+            plugins: Default::default(),
+            env: Default::default(),
+        };
+
+        assert!(manifest.validate().is_ok());
+    }
+
+    #[test]
+    fn test_roundtrip_with_prompt_engine() {
+        let manifest = Manifest {
+            profile: ProfileSection {
+                name: "test".to_string(),
+                framework: "oh-my-zsh".to_string(),
+                prompt_mode: PromptMode::PromptEngine {
+                    engine: "starship".to_string(),
+                },
+                created: Utc::now(),
+                modified: Utc::now(),
+            },
+            plugins: Default::default(),
+            env: Default::default(),
+        };
+
+        let toml_str = manifest.to_toml_string().unwrap();
+        let parsed: Manifest = toml::from_str(&toml_str).unwrap();
+
+        assert_eq!(
+            parsed.profile.prompt_mode,
+            PromptMode::PromptEngine {
+                engine: "starship".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_roundtrip_with_framework_theme() {
+        let manifest = Manifest {
+            profile: ProfileSection {
+                name: "test".to_string(),
+                framework: "zimfw".to_string(),
+                prompt_mode: PromptMode::FrameworkTheme {
+                    theme: "powerlevel10k".to_string(),
+                },
+                created: Utc::now(),
+                modified: Utc::now(),
+            },
+            plugins: Default::default(),
+            env: Default::default(),
+        };
+
+        let toml_str = manifest.to_toml_string().unwrap();
+        let parsed: Manifest = toml::from_str(&toml_str).unwrap();
+
+        assert_eq!(
+            parsed.profile.prompt_mode,
+            PromptMode::FrameworkTheme {
+                theme: "powerlevel10k".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_toml_serialization_includes_prompt_mode() {
+        let manifest = Manifest {
+            profile: ProfileSection {
+                name: "test".to_string(),
+                framework: "oh-my-zsh".to_string(),
+                prompt_mode: PromptMode::PromptEngine {
+                    engine: "starship".to_string(),
+                },
+                created: Utc::now(),
+                modified: Utc::now(),
+            },
+            plugins: Default::default(),
+            env: Default::default(),
+        };
+
+        let toml_str = manifest.to_toml_string().unwrap();
+        assert!(toml_str.contains("prompt_mode = \"prompt_engine\""));
+        assert!(toml_str.contains("prompt_engine = \"starship\""));
+        assert!(!toml_str.contains("framework_theme"));
+    }
+
+    #[test]
+    fn test_from_framework_info_defaults_to_framework_theme() {
+        let info = create_test_framework_info();
+        let manifest = Manifest::from_framework_info("test", &info);
+
+        assert_eq!(
+            manifest.profile.prompt_mode,
+            PromptMode::FrameworkTheme {
+                theme: "robbyrussell".to_string()
+            }
         );
     }
 }

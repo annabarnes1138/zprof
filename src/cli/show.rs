@@ -53,7 +53,7 @@ pub fn display_profile_details(profile_name: &str) -> Result<()> {
     println!();
     println!("Profile: {}", manifest_obj.profile.name);
     println!("Framework: {}", manifest_obj.profile.framework);
-    println!("Theme: {}", manifest_obj.profile.theme);
+    println!("Theme: {}", manifest_obj.profile.theme());
 
     // Show creation date if available
     if let Some(created) = metadata.created {

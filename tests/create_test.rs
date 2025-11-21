@@ -134,7 +134,7 @@ fn test_manifest_generation_from_framework_info() {
 
     assert_eq!(manifest.profile.name, "work");
     assert_eq!(manifest.profile.framework, "oh-my-zsh");
-    assert_eq!(manifest.profile.theme, "robbyrussell");
+    assert_eq!(manifest.profile.theme(), "robbyrussell");
     assert_eq!(manifest.plugins.enabled.len(), 2);
     assert!(manifest.plugins.enabled.contains(&"git".to_string()));
     assert!(manifest.plugins.enabled.contains(&"docker".to_string()));

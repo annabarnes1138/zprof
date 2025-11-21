@@ -235,7 +235,7 @@ pub fn generate_zshrc_from_manifest(manifest: &Manifest) -> Result<String> {
     output.push_str("export SAVEHIST=10000\n\n");
 
     // Auto-install external binary dependencies for selected theme
-    if manifest.profile.theme == "starship" {
+    if manifest.profile.theme() == "starship" {
         add_starship_installation_check(&mut output);
     }
 
@@ -261,8 +261,8 @@ fn generate_oh_my_zsh_config(output: &mut String, manifest: &Manifest) -> Result
     output.push_str("\n");
 
     // Set theme
-    if !manifest.profile.theme.is_empty() {
-        output.push_str(&format!("ZSH_THEME=\"{}\"\n", manifest.profile.theme));
+    if !manifest.profile.theme().is_empty() {
+        output.push_str(&format!("ZSH_THEME=\"{}\"\n", manifest.profile.theme()));
     } else {
         output.push_str("ZSH_THEME=\"robbyrussell\"\n");
     }
@@ -312,9 +312,9 @@ fn generate_zimrc_from_manifest(manifest: &Manifest) -> Result<String> {
     }
 
     // Add theme as zmodule
-    if !manifest.profile.theme.is_empty() {
+    if !manifest.profile.theme().is_empty() {
         output.push_str("# Theme\n");
-        output.push_str(&format!("zmodule {}\n", manifest.profile.theme));
+        output.push_str(&format!("zmodule {}\n", manifest.profile.theme()));
     }
 
     Ok(output)
@@ -381,8 +381,8 @@ fn generate_prezto_config(output: &mut String, manifest: &Manifest) -> Result<()
     }
 
     // Set theme
-    if !manifest.profile.theme.is_empty() {
-        output.push_str(&format!("zstyle ':prezto:module:prompt' theme '{}'\n", manifest.profile.theme));
+    if !manifest.profile.theme().is_empty() {
+        output.push_str(&format!("zstyle ':prezto:module:prompt' theme '{}'\n", manifest.profile.theme()));
         output.push_str("\n");
     }
 
@@ -418,8 +418,8 @@ fn generate_zinit_config(output: &mut String, manifest: &Manifest) -> Result<()>
     }
 
     // Load theme
-    if !manifest.profile.theme.is_empty() {
-        output.push_str(&format!("zinit light {}\n", manifest.profile.theme));
+    if !manifest.profile.theme().is_empty() {
+        output.push_str(&format!("zinit light {}\n", manifest.profile.theme()));
         output.push_str("\n");
     }
 
@@ -470,11 +470,11 @@ fn generate_zap_config(output: &mut String, manifest: &Manifest) -> Result<()> {
     }
 
     // Load theme
-    if !manifest.profile.theme.is_empty() {
+    if !manifest.profile.theme().is_empty() {
         // Look up theme repo URL from registry metadata
         if let Some(theme) = crate::frameworks::theme::THEME_REGISTRY
             .iter()
-            .find(|t| t.name == manifest.profile.theme.as_str())
+            .find(|t| t.name == manifest.profile.theme())
         {
             // Install theme dependencies first
             for dep in theme.compatibility.dependencies {
@@ -548,7 +548,9 @@ mod tests {
             profile: ProfileSection {
                 name: "test-profile".to_string(),
                 framework: framework.to_string(),
-                theme: "robbyrussell".to_string(),
+                prompt_mode: crate::core::manifest::PromptMode::FrameworkTheme {
+                    theme: "robbyrussell".to_string(),
+                },
                 created: Utc::now(),
                 modified: Utc::now(),
             },
@@ -719,7 +721,9 @@ mod tests {
             vec!["zsh-syntax-highlighting".to_string()],
             HashMap::new(),
         );
-        manifest.profile.theme = "zap-prompt".to_string();
+        manifest.profile.prompt_mode = crate::core::manifest::PromptMode::FrameworkTheme {
+            theme: "zap-prompt".to_string(),
+        };
 
         let content = generate_zshrc_from_manifest(&manifest)?;
 
@@ -764,7 +768,9 @@ mod tests {
     #[test]
     fn test_generate_zshrc_empty_theme() -> Result<()> {
         let mut manifest = create_test_manifest("oh-my-zsh", vec![], HashMap::new());
-        manifest.profile.theme = String::new();
+        manifest.profile.prompt_mode = crate::core::manifest::PromptMode::FrameworkTheme {
+            theme: String::new(),
+        };
         let content = generate_zshrc_from_manifest(&manifest)?;
 
         // Should default to robbyrussell when theme is empty
