@@ -1,0 +1,140 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>0</epicId>
+    <storyId>3</storyId>
+    <title>Implement IPC Command Layer</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-21</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-0-story-3.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a robust IPC layer between frontend and backend</iWant>
+    <soThat>the GUI can interact with zprof's business logic</soThat>
+    <tasks>
+- Create Tauri command module src-tauri/src/commands.rs
+- Implement core IPC commands (list_profiles, get_profile, get_active_profile, create_profile, delete_profile, activate_profile, get_frameworks, get_plugins, get_themes, get_prompt_engines)
+- Define shared types in src-tauri/src/types.rs (ProfileInfo, ProfileDetails, ProfileConfig, FrameworkInfo, PluginInfo, ThemeInfo, PromptEngineInfo)
+- Reuse existing business logic from src/ (import core::profile, manifest, config; import frameworks; convert types; handle errors)
+- Create frontend API client src-ui/src/lib/api.ts (wrapper functions, TypeScript types, error handling, loading states)
+- Add error handling (Result&lt;T, String&gt; returns, console logging, anyhow::Error conversion, error codes)
+- Create error types src-tauri/src/error.rs (IpcError enum, From&lt;anyhow::Error&gt;, JSON serialization)
+- Register commands in src-tauri/src/main.rs
+- Add integration tests (test handlers, mock filesystem, verify JSON serialization)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+- [ ] Create src-tauri/src/commands.rs with all IPC command handlers
+- [ ] Define shared types in src-tauri/src/types.rs
+- [ ] Reuse existing business logic from src/ modules
+- [ ] Create frontend API client src-ui/src/lib/api.ts
+- [ ] Add comprehensive error handling (Result&lt;T, String&gt;, logging, conversion)
+- [ ] Create src-tauri/src/error.rs with IpcError enum
+- [ ] Register all commands in src-tauri/src/main.rs
+- [ ] Add integration tests for command handlers
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-0-gui-foundation.md</path>
+        <title>Epic 0: GUI Foundation</title>
+        <section>Story 0.3: Implement IPC Command Layer</section>
+        <snippet>Establish robust IPC layer using Tauri commands. Implement core commands for profile management, framework/plugin/theme queries. Reuse 100% of existing business logic from src/ modules.</snippet>
+      </doc>
+      <doc>
+        <path>docs/developer/architecture.md</path>
+        <title>Architecture Overview</title>
+        <section>GUI/IPC Communication Pattern</section>
+        <snippet>Tauri commands with #[tauri::command] attribute expose backend functions to frontend via invoke(). Commands call existing core business logic, convert types, serialize to JSON. Frontend uses wrapper API client for type safety.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/core/profile.rs</path>
+        <kind>module</kind>
+        <symbol>list_all, create, activate, delete</symbol>
+        <lines>N/A</lines>
+        <reason>Existing business logic functions to be reused by IPC commands. Must import and wrap for GUI.</reason>
+      </artifact>
+      <artifact>
+        <path>src/core/manifest.rs</path>
+        <kind>module</kind>
+        <symbol>Manifest</symbol>
+        <lines>N/A</lines>
+        <reason>Core manifest type for profile configuration. IPC types will convert to/from this.</reason>
+      </artifact>
+      <artifact>
+        <path>src/frameworks/mod.rs</path>
+        <kind>module</kind>
+        <symbol>list_frameworks, get_plugins, get_themes</symbol>
+        <lines>N/A</lines>
+        <reason>Framework registry functions to expose via IPC for framework/plugin/theme selection in GUI.</reason>
+      </artifact>
+      <artifact>
+        <path>src/prompts/engine.rs</path>
+        <kind>module</kind>
+        <symbol>PromptEngine registry</symbol>
+        <lines>N/A</lines>
+        <reason>Prompt engine registry from Story 1.3 to expose via get_prompt_engines() IPC command.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="tauri" version="2.0" features="shell-open" note="Already added in Story 0.1, provides #[tauri::command] attribute" />
+        <package name="serde" version="1.0" features="derive" note="Already present, needed for JSON serialization of IPC types" />
+        <package name="serde_json" version="1.0" note="Already present, JSON conversion" />
+        <package name="anyhow" version="2.0" note="Already present for error handling, convert to String for IPC boundary" />
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>100% code reuse: IPC layer is thin wrapper, all business logic remains in src/ modules</constraint>
+    <constraint>Type safety: Frontend TypeScript types must match backend Rust types exactly</constraint>
+    <constraint>Error boundary: Convert anyhow::Error to String at IPC boundary, never expose internal errors to frontend</constraint>
+    <constraint>JSON serialization: All IPC types must implement Serialize/Deserialize</constraint>
+    <constraint>Stateless commands: Each command is independent, no shared state between invocations</constraint>
+    <constraint>Testing requirement: Integration tests must verify round-trip JSON serialization for all types</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Tauri Command Registration</name>
+      <kind>build-configuration</kind>
+      <signature>tauri::Builder::default().invoke_handler(tauri::generate_handler![list_profiles, get_profile, ...])</signature>
+      <path>src-tauri/src/main.rs</path>
+    </interface>
+    <interface>
+      <name>Frontend API Client</name>
+      <kind>module</kind>
+      <signature>export async function listProfiles(): Promise&lt;ProfileInfo[]&gt; { return await invoke('list_profiles'); }</signature>
+      <path>src-ui/src/lib/api.ts</path>
+    </interface>
+    <interface>
+      <name>IPC Error Format</name>
+      <kind>error-type</kind>
+      <signature>Result&lt;T, String&gt; where String contains user-friendly error message with context</signature>
+      <path>src-tauri/src/commands.rs</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Integration tests using Tauri's testing framework. Test command handlers in isolation with mocked dependencies. Verify JSON serialization/deserialization round-trips. Test error handling and conversion.</standards>
+    <locations>
+      <location>tests/gui_commands_test.rs</location>
+      <location>src-tauri/src/commands.rs (inline unit tests)</location>
+    </locations>
+    <ideas>
+      <test ac="list_profiles command">Integration: Mock profile list, call command, verify ProfileInfo[] returned with correct JSON structure</test>
+      <test ac="activate_profile command">Integration: Create test profile, call activate command, verify core::profile::activate called, success/error returned</test>
+      <test ac="create_profile command">Integration: Call with ProfileConfig, verify profile created on disk, manifest correct</test>
+      <test ac="Error handling">Unit: Pass invalid input, verify Result::Err returned with user-friendly message (not internal error)</test>
+      <test ac="Type conversion">Unit: Convert core::Profile to ProfileInfo, verify all fields mapped correctly</test>
+      <test ac="JSON serialization">Unit: Serialize ProfileInfo to JSON, deserialize, verify equality</test>
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,136 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>0</epicId>
+    <storyId>5</storyId>
+    <title>Ensure CLI Compatibility</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-21</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-0-story-5.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>all existing CLI commands to work without regression</iWant>
+    <soThat>users can choose between GUI and CLI</soThat>
+    <tasks>
+- Verify all CLI commands work (init, create, list, use, delete, show, current, all others)
+- Add CLI integration tests for comprehensive coverage
+- Ensure no dependency conflicts (binary size, startup time <100ms, optional GUI deps)
+- Add feature flags in Cargo.toml (gui feature default enabled, CLI-only build with --no-default-features)
+- Add zprof gui command (launch GUI, --help, --version)
+- Update help text (mention GUI in zprof --help, add GUI section)
+- Add E2E integration test suite (CLI create → GUI sees it, GUI create → CLI sees it, CLI activate → GUI shows active, GUI delete → CLI doesn't see it)
+- Document build process (cargo tauri build for GUI, cargo build --no-default-features for CLI-only, platform notes)
+- Update README.md with dual interface documentation (complementary CLI/GUI, how to launch, full functionality note)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+- [ ] All CLI commands verified working (init, create, list, use, delete, show, current, others)
+- [ ] CLI integration tests comprehensive
+- [ ] No dependency conflicts (binary size, startup time, optional GUI)
+- [ ] Feature flags in Cargo.toml (gui default, CLI-only build works)
+- [ ] zprof gui command implemented (launch, --help, --version)
+- [ ] Help text updated (GUI mentioned, GUI section added)
+- [ ] E2E integration tests (CLI ↔ GUI interop)
+- [ ] Build process documented (GUI and CLI-only builds, platform notes)
+- [ ] README.md updated with dual interface docs
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-0-gui-foundation.md</path>
+        <title>Epic 0: GUI Foundation</title>
+        <section>Story 0.5: Ensure CLI Compatibility</section>
+        <snippet>Verify all existing CLI commands work without regression. Add zprof gui command. Feature flags for CLI-only builds. E2E tests for CLI/GUI interoperability. Update documentation for dual interface.</snippet>
+      </doc>
+      <doc>
+        <path>docs/developer/architecture.md</path>
+        <title>Architecture Overview</title>
+        <section>Dual Interface Architecture</section>
+        <snippet>CLI and GUI share 100% of business logic. Both provide feature parity for core operations. CLI works without GUI (optional feature). GUI and CLI can interoperate seamlessly (shared data storage).</snippet>
+      </doc>
+      <doc>
+        <path>docs/developer/technical-decisions.md</path>
+        <title>Technical Decisions</title>
+        <section>AD-003: GUI Technology Selection</section>
+        <snippet>CLI preservation is critical. All CLI commands remain fully functional via feature flags. CLI can compile without GUI dependencies for minimal binary size.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/main.rs</path>
+        <kind>entry</kind>
+        <symbol>main</symbol>
+        <lines>N/A</lines>
+        <reason>CLI entry point, needs zprof gui subcommand added</reason>
+      </artifact>
+      <artifact>
+        <path>Cargo.toml</path>
+        <kind>manifest</kind>
+        <symbol>features</symbol>
+        <lines>1-31</lines>
+        <reason>Needs feature flags: gui (default), optional Tauri dependencies</reason>
+      </artifact>
+      <artifact>
+        <path>tests/</path>
+        <kind>test-suite</kind>
+        <symbol>all existing tests</symbol>
+        <lines>N/A</lines>
+        <reason>204 existing CLI tests must all pass to ensure no regression from GUI addition</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="tauri" version="2.0" category="optional" note="Make optional via feature flag, only included when gui feature enabled" />
+        <package name="all GUI deps" category="optional" note="All GUI-related dependencies should be behind feature flag" />
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Zero CLI regression: All 204 existing tests must pass</constraint>
+    <constraint>CLI startup time: Must remain under 100ms (test with time command)</constraint>
+    <constraint>Binary size: CLI-only build must not include GUI dependencies</constraint>
+    <constraint>Feature flag architecture: cargo build --no-default-features produces CLI-only binary</constraint>
+    <constraint>E2E interoperability: CLI and GUI must share same data storage (~/.zsh-profiles/), changes in one immediately visible in other</constraint>
+    <constraint>zprof gui command: Must work on all platforms (macOS, Linux), launch Tauri app</constraint>
+    <constraint>Documentation requirement: README must clearly explain both interfaces are complementary, not mutually exclusive</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>GUI Launch Command</name>
+      <kind>cli-command</kind>
+      <signature>zprof gui [--help|--version]</signature>
+      <path>src/cli/gui.rs</path>
+    </interface>
+    <interface>
+      <name>Feature Flag Configuration</name>
+      <kind>cargo-feature</kind>
+      <signature>[features]\ndefault = ["gui"]\ngui = ["tauri-build"]</signature>
+      <path>Cargo.toml</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Run full existing CLI test suite (204 tests) to ensure no regression. Add E2E tests for CLI/GUI interoperability. Test CLI-only build compiles and runs. Measure CLI startup time and binary size.</standards>
+    <locations>
+      <location>tests/ (existing CLI tests)</location>
+      <location>tests/cli_gui_interop_test.rs (NEW - E2E interop tests)</location>
+    </locations>
+    <ideas>
+      <test ac="All CLI commands work">Integration: Run all 204 existing tests, verify 100% pass</test>
+      <test ac="CLI-only build">Integration: cargo build --no-default-features, verify compiles, binary runs, no GUI deps included</test>
+      <test ac="CLI startup time">Performance: time zprof --help, verify completes in <100ms</test>
+      <test ac="Binary size">Metrics: Compare CLI-only vs full build, verify GUI deps don't bloat CLI-only</test>
+      <test ac="zprof gui command">Integration: Run zprof gui (mock launch), verify Tauri app starts</test>
+      <test ac="CLI create → GUI sees">E2E: zprof create test, call list_profiles() IPC, verify "test" in results</test>
+      <test ac="GUI create → CLI sees">E2E: Call create_profile() IPC, run zprof list, verify profile in output</test>
+      <test ac="CLI activate → GUI shows active">E2E: zprof use test, call get_active_profile() IPC, verify returns "test"</test>
+      <test ac="GUI delete → CLI doesn't see">E2E: Call delete_profile("test") IPC, run zprof list, verify "test" not in output</test>
+    </ideas>
+  </tests>
+</story-context>

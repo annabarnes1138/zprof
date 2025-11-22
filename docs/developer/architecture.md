@@ -10,7 +10,8 @@ zprof is a Rust CLI tool for managing multiple zsh configurations through isolat
 - **Non-destructive**: Never modifies original user configs
 - **Safe**: Automatic backups, validation before operations
 - **Fast**: < 500ms profile switching
-- **Modular**: Clear separation between CLI, core logic, frameworks, TUI, and shell integration
+- **Modular**: Clear separation between CLI, GUI, core logic, frameworks, and shell integration
+- **Dual Interface**: GUI for visual workflows, CLI for automation and power users
 
 ## Technology Stack
 
@@ -18,18 +19,23 @@ zprof is a Rust CLI tool for managing multiple zsh configurations through isolat
 |-----------|------------|---------|---------|
 | Language | Rust | 1.70+ | Performance, safety, single-binary distribution |
 | CLI Framework | Clap | 4.5+ | Type-safe argument parsing |
-| TUI Framework | Ratatui + Crossterm | 0.29.0 | Interactive wizards |
+| GUI Framework | Tauri | 2.0+ | Native desktop application with web UI |
+| Frontend | Svelte | 4+ | Reactive UI components |
+| Styling | Tailwind CSS + shadcn/ui | Latest | Design system and utilities |
 | Config Format | TOML | 0.9 | Profile manifests |
 | Archives | tar + flate2 | 0.4 / 1.0 | Export/import |
 | Git Operations | git2 | 0.20 | GitHub imports |
 | Error Handling | anyhow | 2.0 | Rich error context |
 | Testing | insta | latest | Snapshot testing |
+| IPC | Tauri Commands | 2.0+ | Frontend ↔ Backend communication |
+
+**Note:** TUI (Ratatui/Crossterm) was deprecated in v0.2.0 in favor of Tauri GUI (see [Technical Decision AD-003](technical-decisions.md#ad-003-gui-technology-selection-tauri))
 
 ## Project Structure
 
 ```
 zprof/
-├── src/
+├── src/                   # Rust CLI binary
 │   ├── cli/               # Command implementations
 │   │   ├── init.rs        # Initialize zprof
 │   │   ├── create.rs      # Create profiles
@@ -40,6 +46,7 @@ zprof/
 │   │   ├── edit.rs        # Edit manifests
 │   │   ├── export.rs      # Export archives
 │   │   ├── import.rs      # Import archives
+│   │   ├── gui.rs         # Launch GUI application (NEW)
 │   │   └── rollback.rs    # Restore original config
 │   │
 │   ├── core/              # Core business logic
@@ -58,10 +65,9 @@ zprof/
 │   │   ├── plugin.rs      # Plugin registry
 │   │   └── theme.rs       # Theme registry
 │   │
-│   ├── tui/               # Terminal UI
-│   │   ├── framework_select.rs  # Framework picker
-│   │   ├── plugin_browser.rs    # Plugin multi-select
-│   │   └── theme_select.rs      # Theme picker
+│   ├── prompts/           # Prompt engine support (NEW)
+│   │   ├── mod.rs         # Prompt module root
+│   │   └── engine.rs      # Prompt engine registry
 │   │
 │   ├── archive/           # Import/export
 │   │   ├── export.rs      # Create .zprof archives
@@ -72,23 +78,155 @@ zprof/
 │       ├── generator.rs   # Generate .zshrc/.zshenv
 │       └── zdotdir.rs     # ZDOTDIR management
 │
+├── src-tauri/             # Tauri Rust backend (NEW)
+│   ├── Cargo.toml
+│   ├── tauri.conf.json    # Tauri app configuration
+│   ├── build.rs
+│   ├── icons/             # App icons (macOS .icns, Linux .png)
+│   └── src/
+│       ├── main.rs        # Tauri app entry point
+│       ├── lib.rs         # Public library interface
+│       ├── commands.rs    # IPC command handlers
+│       ├── types.rs       # GUI-specific types
+│       └── error.rs       # Error handling for IPC
+│
+├── src-ui/                # Svelte frontend (NEW)
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── tsconfig.json
+│   ├── tailwind.config.js
+│   ├── public/
+│   │   └── favicon.ico
+│   └── src/
+│       ├── main.js
+│       ├── App.svelte
+│       ├── components/    # Reusable UI components
+│       │   ├── ui/        # shadcn/ui components
+│       │   │   ├── button.svelte
+│       │   │   ├── card.svelte
+│       │   │   └── ...
+│       │   ├── Sidebar.svelte
+│       │   ├── ProfileCard.svelte
+│       │   └── ThemePreviewCard.svelte
+│       ├── views/         # Main application views
+│       │   ├── ProfileList.svelte
+│       │   ├── CreateWizard.svelte
+│       │   ├── Settings.svelte
+│       │   └── About.svelte
+│       ├── lib/
+│       │   ├── api.ts     # Tauri IPC client wrapper
+│       │   ├── types.ts   # TypeScript type definitions
+│       │   ├── stores.ts  # Svelte stores (global state)
+│       │   └── utils.ts   # Utility functions
+│       └── styles/
+│           └── globals.css # Tailwind + design tokens
+│
 └── tests/                 # Integration tests
     ├── init_test.rs
     ├── create_test.rs
     ├── use_test.rs
-    └── framework_detection_test.rs
+    ├── framework_detection_test.rs
+    ├── gui_commands_test.rs (NEW)
+    └── cli_gui_interop_test.rs (NEW)
 ```
 
-## Data Flow
+## Architecture Overview
 
-### Profile Creation
+### Dual Interface Architecture
+
+zprof provides two complementary interfaces sharing the same business logic:
+
+```
+┌────────────────────────────────────────────────────────┐
+│                     User Interfaces                     │
+├──────────────────────┬─────────────────────────────────┤
+│   CLI (Terminal)     │     GUI (Tauri Desktop App)     │
+│   - Automation       │     - Visual workflows          │
+│   - Scripting        │     - Theme preview             │
+│   - Power users      │     - Profile management        │
+│   - SSH/Remote       │     - First-time users          │
+└──────────┬───────────┴───────────┬─────────────────────┘
+           │                       │
+           │    ┌──────────────────┴──────────────┐
+           │    │    Tauri IPC Layer              │
+           │    │    (commands.rs)                │
+           │    └──────────────────┬──────────────┘
+           │                       │
+           └───────────────────────┘
+                       │
+           ┌───────────▼──────────────────────────┐
+           │   Core Business Logic (Rust)         │
+           │   - Profile CRUD (core/profile.rs)   │
+           │   - Framework Support (frameworks/)  │
+           │   - Shell Generation (shell/)        │
+           │   - Manifest Parsing (core/)         │
+           └──────────────────────────────────────┘
+                       │
+           ┌───────────▼──────────────────────────┐
+           │      Filesystem & Shell              │
+           │   - ~/.zsh-profiles/                 │
+           │   - ~/.zshenv (ZDOTDIR)              │
+           └──────────────────────────────────────┘
+```
+
+**Key Principles:**
+- **Shared Logic:** CLI and GUI use identical business logic (no duplication)
+- **Feature Parity:** Both interfaces can perform all core operations
+- **Independent:** CLI works without GUI, GUI is optional feature
+- **Complementary:** GUI for discovery/visual tasks, CLI for automation
+
+### GUI/IPC Communication Pattern
+
+**Frontend (Svelte) ↔ Backend (Rust) via Tauri Commands:**
+
+```typescript
+// Frontend: src-ui/src/lib/api.ts
+import { invoke } from '@tauri-apps/api/core';
+
+export async function listProfiles(): Promise<ProfileInfo[]> {
+  return await invoke('list_profiles');
+}
+
+export async function activateProfile(name: string): Promise<void> {
+  return await invoke('activate_profile', { name });
+}
+```
+
+```rust
+// Backend: src-tauri/src/commands.rs
+#[tauri::command]
+pub fn list_profiles() -> Result<Vec<ProfileInfo>, String> {
+    let profiles = core::profile::list_all()
+        .map_err(|e| e.to_string())?;
+
+    Ok(profiles.into_iter().map(|p| ProfileInfo::from(p)).collect())
+}
+
+#[tauri::command]
+pub fn activate_profile(name: String) -> Result<(), String> {
+    core::profile::activate(&name)
+        .map_err(|e| e.to_string())
+}
+```
+
+**Data Flow:**
+1. User clicks "Activate" button in GUI
+2. Svelte component calls `api.activateProfile(name)`
+3. Tauri IPC invokes Rust `activate_profile` command
+4. Command calls existing `core::profile::activate()`
+5. Result serialized to JSON, returned to frontend
+6. Frontend updates UI based on result
+
+## Data Flow Patterns
+
+### Profile Creation (CLI)
 
 ```
 User runs: zprof create work
          ↓
 CLI (create.rs) parses args
          ↓
-TUI wizard (framework_select → plugin_browser → theme_select)
+Calls core::profile::create() (business logic)
          ↓
 Manifest created (manifest.rs)
          ↓
@@ -98,6 +236,30 @@ Shell configs generated (generator.rs)
          ↓
 Profile directory created (filesystem.rs)
 ```
+
+### Profile Creation (GUI)
+
+```
+User opens GUI → ProfileList view
+         ↓
+Clicks "Create Profile" button
+         ↓
+CreateWizard sheet opens (Svelte component)
+         ↓
+User selects framework, plugins, theme (visual UI)
+         ↓
+User clicks "Create" → invoke('create_profile', config)
+         ↓
+Tauri IPC → commands::create_profile()
+         ↓
+Calls core::profile::create() (SAME business logic as CLI)
+         ↓
+Returns success/error to GUI
+         ↓
+GUI shows success message, navigates to profile list
+```
+
+**Note:** Both CLI and GUI paths converge at `core::profile::create()` - zero duplication
 
 ### Profile Switching
 
@@ -269,16 +431,29 @@ When zsh starts, it sources `$ZDOTDIR/.zshrc` instead of `~/.zshrc`.
 - Detection is read-only (never modifies files)
 - Installation is idempotent
 
-### TUI (`src/tui/`)
+### GUI (`src-tauri/` + `src-ui/`)
 
-**Purpose**: Interactive terminal wizards
+**Purpose**: Native desktop application for visual workflows
 
-**Uses**: Ratatui + Crossterm for full-screen TUIs
+**Architecture**:
+- **Backend (`src-tauri/src/`)**: Tauri commands exposing business logic via IPC
+- **Frontend (`src-ui/src/`)**: Svelte components for UI
+
+**Modules**:
+- `commands.rs`: Tauri command handlers (list_profiles, create_profile, etc.)
+- `types.rs`: GUI-specific types for IPC serialization
+- `error.rs`: Error conversion for JSON responses
+- `api.ts` (frontend): TypeScript wrapper for Tauri invoke calls
+- `stores.ts` (frontend): Global state management (active profile, theme, etc.)
 
 **Rules**:
-- Keyboard-only navigation
-- Returns selected values (doesn't perform operations)
-- Graceful cancellation (Esc key)
+- **Backend**: Thin IPC layer, delegates to core/frameworks
+- **Frontend**: Pure UI logic, no business logic
+- **Communication**: All data via Tauri IPC (JSON serialization)
+- **Error Handling**: Convert Rust errors to user-friendly messages
+- **State Sync**: Frontend polls or subscribes to backend state changes
+
+**Deprecated: TUI (`src/tui/`)** - Removed in v0.2.0, replaced by Tauri GUI
 
 ### Shell (`src/shell/`)
 

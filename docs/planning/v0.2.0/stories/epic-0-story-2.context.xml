@@ -1,0 +1,137 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>0</epicId>
+    <storyId>2</storyId>
+    <title>Create Base Application Window and Navigation</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-21</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-0-story-2.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>a clean, intuitive application window with navigation</iWant>
+    <soThat>I can access different features of zprof</soThat>
+    <tasks>
+- Create main application layout (sidebar, main content, header bar)
+- Implement navigation structure (Profiles, Create Profile, Settings, About)
+- Add routing with svelte-spa-router (/, /create, /settings, /about)
+- Create reusable UI components (Sidebar.svelte, Header.svelte, Button.svelte, Card.svelte using shadcn/ui patterns)
+- Implement sidebar navigation with icons (Lucide Svelte), active highlighting, collapse/expand, localStorage persistence
+- Implement light/dark mode toggle (system preference, manual toggle, localStorage persistence, CSS custom properties)
+- Apply design system from UX spec (Developer Dark theme, Inter/JetBrains Mono fonts, Tailwind spacing, shadcn/ui components)
+- Add keyboard shortcuts (Cmd+,, Cmd+N, Cmd+1-4)
+- Handle window events (restore/save size and position)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+- [ ] Create main application layout with sidebar (collapsible 240px), main content area, header bar
+- [ ] Implement navigation: Profiles, Create Profile, Settings, About
+- [ ] Add routing with svelte-spa-router for all routes
+- [ ] Create shadcn/ui style components: Sidebar, Header, Button, Card, ThemeToggle
+- [ ] Sidebar navigation with Lucide icons, active highlighting (blue border + background), collapse/expand, localStorage persistence
+- [ ] Light/dark mode: system preference on launch, manual toggle, localStorage persistence, CSS custom properties for theming
+- [ ] Apply UX spec design: Developer Dark colors (#3b82f6 blue primary), Inter + JetBrains Mono fonts, Tailwind spacing
+- [ ] Add keyboard shortcuts: Cmd+,, Cmd+N, Cmd+1-4
+- [ ] Window events: restore size/position on launch, save on close
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-0-gui-foundation.md</path>
+        <title>Epic 0: GUI Foundation</title>
+        <section>Story 0.2: Create Base Application Window and Navigation</section>
+        <snippet>Create main application layout with sidebar navigation, implement routing, design system with shadcn/ui components, light/dark mode toggle, keyboard shortcuts.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Visual Foundation & Design Direction</section>
+        <snippet>Developer Dark theme with primary blue (#3b82f6), Inter font for UI, JetBrains Mono for code, Tailwind 4px base spacing unit, shadcn/ui component patterns.</snippet>
+      </doc>
+      <doc>
+        <path>docs/developer/architecture.md</path>
+        <title>Architecture Overview</title>
+        <section>GUI Structure</section>
+        <snippet>Frontend structure: src-ui/src/ contains components (ui/ for shadcn base, reusable components), views (main screens), lib (stores, router), styles (globals.css with design tokens).</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src-ui/src/App.svelte</path>
+        <kind>component</kind>
+        <symbol>App</symbol>
+        <lines>N/A</lines>
+        <reason>Root component created in Story 0.1, needs router integration and layout structure</reason>
+      </artifact>
+      <artifact>
+        <path>src-ui/package.json</path>
+        <kind>manifest</kind>
+        <symbol>dependencies</symbol>
+        <lines>N/A</lines>
+        <reason>Needs additional packages: svelte-spa-router, lucide-svelte</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package name="svelte-spa-router" version="latest" note="NEW - Client-side routing for Svelte" />
+        <package name="lucide-svelte" version="latest" note="NEW - Icon library (Lucide icons for Svelte)" />
+        <package name="svelte" version="4+" note="Already installed in Story 0.1" />
+        <package name="tailwindcss" version="latest" note="Already installed in Story 0.1" />
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Use shadcn/ui component patterns (copy/paste approach, not npm install)</constraint>
+    <constraint>Placeholder views only - ProfileList, CreateWizard, Settings show "Coming soon" messages</constraint>
+    <constraint>Respect system theme preference on first launch using prefers-color-scheme media query</constraint>
+    <constraint>Persist UI state to localStorage: sidebarCollapsed, theme preference, window size/position</constraint>
+    <constraint>Follow UX spec design tokens exactly: Developer Dark theme colors, Inter/JetBrains Mono fonts, Tailwind spacing</constraint>
+    <constraint>Sidebar dimensions: 240px expanded, 60px collapsed</constraint>
+    <constraint>Active route indicator: 4px blue left border + subtle background tint</constraint>
+    <constraint>About view must show zprof version from package.json</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Router Configuration</name>
+      <kind>module</kind>
+      <signature>export const routes = { '/': ProfileList, '/profiles': ProfileList, '/create': CreateWizard, '/settings': Settings, '/about': About }</signature>
+      <path>src-ui/src/lib/router.ts</path>
+    </interface>
+    <interface>
+      <name>Svelte Stores</name>
+      <kind>state-management</kind>
+      <signature>export const sidebarCollapsed = writable&lt;boolean&gt;; export const theme = writable&lt;'light' | 'dark'&gt;</signature>
+      <path>src-ui/src/lib/stores.ts</path>
+    </interface>
+    <interface>
+      <name>Design Tokens</name>
+      <kind>css-variables</kind>
+      <signature>:root and .dark CSS custom properties for --background, --foreground, --primary, --primary-foreground, etc.</signature>
+      <path>src-ui/src/styles/globals.css</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Manual verification and visual testing for UI components. Verify component rendering, interaction, state persistence, responsive behavior, accessibility (keyboard navigation).</standards>
+    <locations>
+      <location>Manual browser testing</location>
+      <location>Visual inspection against UX spec</location>
+    </locations>
+    <ideas>
+      <test ac="Navigation structure">Manual: Click each nav item, verify route changes, URL updates, correct view displays</test>
+      <test ac="Active route highlighting">Visual: Verify active route has blue left border (4px) + background tint</test>
+      <test ac="Sidebar collapse/expand">Manual: Click collapse button, verify width changes (240px ↔ 60px), state persists on reload</test>
+      <test ac="Dark/light mode">Manual: Toggle theme, verify colors change per design tokens, preference persists on reload, system preference respected on first launch</test>
+      <test ac="Keyboard shortcuts">Manual: Test Cmd+, (Settings), Cmd+N (Create), Cmd+1-4 (navigation)</test>
+      <test ac="Window state persistence">Manual: Resize/move window, restart app, verify size/position restored</test>
+      <test ac="Design system compliance">Visual: Verify colors match UX spec, fonts are Inter/JetBrains Mono, spacing follows Tailwind scale</test>
+      <test ac="Responsive layout">Manual: Resize window to various sizes, verify layout adapts gracefully</test>
+    </ideas>
+  </tests>
+</story-context>

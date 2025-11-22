@@ -2,131 +2,168 @@
   <metadata>
     <epicId>1</epicId>
     <storyId>7</storyId>
-    <title>Integrate Prompt Mode into Create Workflow</title>
+    <title>Integrate Prompt Mode into Create Wizard (GUI)</title>
     <status>drafted</status>
-    <generatedAt>2025-11-20</generatedAt>
+    <generatedAt>2025-11-21</generatedAt>
     <generator>BMAD Story Context Workflow</generator>
     <sourceStoryPath>docs/planning/v0.2.0/stories/epic-1-story-7.md</sourceStoryPath>
   </metadata>
 
   <story>
-    <asA>user running `zprof create`</asA>
-    <iWant>the new prompt mode flow to be seamless</iWant>
-    <soThat>profile creation is intuitive</soThat>
+    <asA>user creating a profile via GUI</asA>
+    <iWant>the prompt mode selection flow to be seamless and visual</iWant>
+    <soThat>profile creation is intuitive and I can preview my choices</soThat>
     <tasks>
-      - Update create.rs to integrate new TUI flow
-      - Add prompt mode selection step after framework
-      - Branch to engine or theme selection based on mode
-      - Update confirmation screen to show prompt info
-      - Create integration test for full workflow
-      - Update user documentation
+- Create Prompt Mode Selection view: src-ui/src/views/CreateWizard/PromptModeStep.svelte (binary choice, explanations, expandable help)
+- Create Prompt Engine Selection view: src-ui/src/views/CreateWizard/EngineSelectStep.svelte (grid of cards with logos, features, Nerd Font badges, previews, filter/search)
+- Update Theme Selection view: src-ui/src/views/CreateWizard/ThemeSelectStep.svelte (show only if Framework Theme mode)
+- Implement wizard flow logic (Framework → Prompt Mode → Conditional: Engine OR Theme → Plugins → Review → Create)
+- Add installation progress UI (modal, step indicators, progress bar, error handling with retry, success message)
+- Update configuration review screen (show prompt mode, engine/theme details, edit buttons)
+- Add IPC commands: get_prompt_engines, install_prompt_engine, check_engine_installed
+- Integration tests for full workflow (engine path, theme path, error handling, back navigation)
+- Update user-facing documentation (GUI guide with screenshots, troubleshooting)
     </tasks>
   </story>
 
   <acceptanceCriteria>
-    - [ ] Update `src/cli/create.rs` to use new TUI flow
-    - [ ] New flow order: Framework → Prompt mode → Engine/Theme → Plugins → Confirmation
-    - [ ] Update confirmation screen to show prompt info correctly
-    - [ ] Integration test for full workflow
-    - [ ] Update user-facing docs
+- [ ] Create PromptModeStep.svelte with binary choice UI
+- [ ] Create EngineSelectStep.svelte with card grid, filter, search
+- [ ] Update ThemeSelectStep.svelte for conditional display
+- [ ] Implement wizard flow with conditional branching
+- [ ] Add installation progress UI with states
+- [ ] Update configuration review screen
+- [ ] Add IPC commands for engines
+- [ ] Integration tests for both paths
+- [ ] Update user documentation
   </acceptanceCriteria>
 
   <artifacts>
     <docs>
       <doc>
         <path>docs/planning/v0.2.0/epic-1-smart-tui.md</path>
-        <title>Epic 1: Smart TUI</title>
-        <section>Story 1.7 - Workflow Integration</section>
-        <snippet>Shows new flow: Framework selection → Prompt mode selection → (IF engine: Prompt engine selection) OR (IF theme: Theme selection) → Plugin selection → Confirmation.</snippet>
+        <title>Epic 1: Smart Prompt Selection</title>
+        <section>Story 1.7: Integrate Prompt Mode into Create Workflow (GUI)</section>
+        <snippet>Add prompt mode selection to GUI wizard. Visual binary choice between engine and theme. Conditional branching in wizard flow. Engine selection with cards, filters, previews. Installation progress UI with error handling.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Create Wizard Flow</section>
+        <snippet>Multi-step wizard with navigation. Visual cards for selection. Progress indicators. Installation feedback. Error states with retry options.</snippet>
+      </doc>
+      <doc>
+        <path>docs/developer/architecture.md</path>
+        <title>Architecture Overview</title>
+        <section>GUI/IPC Communication</section>
+        <snippet>Frontend Svelte components invoke Tauri commands via IPC. Commands delegate to business logic in src/. Type-safe serialization with serde.</snippet>
       </doc>
     </docs>
-
     <code>
       <artifact>
-        <path>src/cli/create.rs</path>
-        <kind>module</kind>
-        <symbol>N/A</symbol>
+        <path>src-ui/src/views/CreateWizard.svelte</path>
+        <kind>component</kind>
+        <symbol>CreateWizard</symbol>
         <lines>N/A</lines>
-        <reason>Main create command that orchestrates the wizard flow - needs updates to integrate all new TUI screens.</reason>
+        <reason>Main wizard component from Epic 0, needs integration of new prompt mode step and conditional flow logic</reason>
       </artifact>
       <artifact>
-        <path>src/tui/prompt_mode_select.rs</path>
+        <path>src-tauri/src/commands.rs</path>
         <kind>module</kind>
-        <symbol>run_prompt_mode_selection</symbol>
+        <symbol>IPC commands</symbol>
         <lines>N/A</lines>
-        <reason>Prompt mode selection TUI from Story 1.2.</reason>
+        <reason>IPC command module from Epic 0 Story 0.3, needs new commands: get_prompt_engines, install_prompt_engine, check_engine_installed</reason>
       </artifact>
       <artifact>
-        <path>src/tui/prompt_engine_select.rs</path>
+        <path>src/prompts/installer.rs</path>
         <kind>module</kind>
-        <symbol>run_prompt_engine_selection</symbol>
+        <symbol>EngineInstaller</symbol>
         <lines>N/A</lines>
-        <reason>Engine selection TUI from Story 1.4.</reason>
+        <reason>Engine installer from Story 1.6, called by IPC install_prompt_engine command</reason>
       </artifact>
       <artifact>
-        <path>src/tui/theme_select.rs</path>
+        <path>src/prompts/engine.rs</path>
         <kind>module</kind>
-        <symbol>run_theme_selection</symbol>
+        <symbol>PromptEngine, PromptEngineInfo</symbol>
         <lines>N/A</lines>
-        <reason>Modified theme selection from Story 1.5.</reason>
+        <reason>Engine registry from Story 1.3, provides metadata for GUI display</reason>
+      </artifact>
+      <artifact>
+        <path>src-ui/src/lib/api.ts</path>
+        <kind>module</kind>
+        <symbol>Frontend API client</symbol>
+        <lines>N/A</lines>
+        <reason>API client from Epic 0, needs new wrapper functions for engine IPC commands</reason>
       </artifact>
     </code>
-
     <dependencies>
+      <node>
+        <package name="svelte" version="4+" note="Already installed" />
+        <package name="lucide-svelte" version="latest" note="Already installed, icons for UI" />
+        <package name="@tauri-apps/api" version="2.0+" note="Already installed, Tauri IPC" />
+      </node>
       <rust>
-        <package name="anyhow" version="1.0" purpose="Error handling"/>
-        <package name="dialoguer" version="0.11" purpose="CLI prompts and confirmation"/>
+        <package name="tauri" version="2.0" note="Already installed, IPC framework" />
+        <package name="serde" version="1.0" note="Already installed, JSON serialization" />
       </rust>
-      <dev-dependencies>
-        <package name="serial_test" version="3.0" purpose="Sequential integration tests"/>
-      </dev-dependencies>
     </dependencies>
   </artifacts>
 
   <constraints>
-    - Integrate all previous Epic 1 stories into cohesive flow
-    - Maintain existing wizard patterns where applicable
-    - Confirmation screen must show either engine or theme (not both)
-    - Handle user cancellation at any step (Esc key)
-    - Update manifest creation to use PromptMode enum
-    - All TUI screens must be called in correct order
+    <constraint>Wizard flow branching: IF prompt_mode = 'engine' THEN show EngineSelectStep, ELSE IF prompt_mode = 'theme' THEN show ThemeSelectStep</constraint>
+    <constraint>Installation progress must show during engine installation with states: installing, success, error</constraint>
+    <constraint>Error handling: Installation failures must show error message with Retry option, not crash wizard</constraint>
+    <constraint>Back navigation: User can go back from any step, state must be preserved</constraint>
+    <constraint>Wizard state management: Use Svelte writable store, persist selections across steps</constraint>
+    <constraint>Visual design: Follow UX spec - cards with icons, shadcn/ui component patterns, consistent spacing</constraint>
+    <constraint>Engine cards must show: name, description, features (async, cross-shell), Nerd Font badge, preview image</constraint>
+    <constraint>Filter functionality: Filter engines by Nerd Font requirement (no Nerd Font required) and cross-shell compatibility</constraint>
+    <constraint>Search functionality: Case-insensitive search by engine name</constraint>
+    <constraint>No regression: Theme mode path must work exactly as before</constraint>
   </constraints>
 
   <interfaces>
     <interface>
-      <name>execute (create command)</name>
-      <kind>function (modified)</kind>
-      <signature>pub fn execute(args: CreateArgs) -> Result&lt;()&gt;</signature>
-      <path>src/cli/create.rs</path>
-      <notes>Main create command execution - integrates full wizard flow</notes>
+      <name>Wizard State Store</name>
+      <kind>svelte-store</kind>
+      <signature>interface WizardState { step: number, framework: string | null, promptMode: 'engine' | 'theme' | null, promptEngine: string | null, frameworkTheme: string | null, plugins: string[], envVars: Record&lt;string, string&gt; }</signature>
+      <path>src-ui/src/lib/stores/wizard.ts</path>
+    </interface>
+    <interface>
+      <name>IPC: get_prompt_engines</name>
+      <kind>tauri-command</kind>
+      <signature>#[tauri::command] pub fn get_prompt_engines() -> Result&lt;Vec&lt;PromptEngineInfo&gt;, String&gt;</signature>
+      <path>src-tauri/src/commands.rs</path>
+    </interface>
+    <interface>
+      <name>IPC: install_prompt_engine</name>
+      <kind>tauri-command</kind>
+      <signature>#[tauri::command] pub async fn install_prompt_engine(engine: String) -> Result&lt;(), String&gt;</signature>
+      <path>src-tauri/src/commands.rs</path>
+    </interface>
+    <interface>
+      <name>Frontend API: getPromptEngines</name>
+      <kind>typescript-function</kind>
+      <signature>export async function getPromptEngines(): Promise&lt;PromptEngineInfo[]&gt;</signature>
+      <path>src-ui/src/lib/api.ts</path>
     </interface>
   </interfaces>
 
   <tests>
-    <standards>
-      Integration tests verify full end-to-end workflow. Test both engine and theme paths through the wizard.
-    </standards>
+    <standards>Unit tests for wizard state management (Svelte store mutations, computed steps). Integration tests for full wizard workflow (engine path, theme path). Manual E2E testing of UI interactions. Visual regression testing against UX spec.</standards>
     <locations>
-      - Integration: tests/create_workflow_test.rs (NEW)
-      - Existing: tests/create_test.rs (may need updates)
+      <location>src-ui/tests/wizard-state.test.ts</location>
+      <location>tests/gui_wizard_integration_test.rs</location>
+      <location>Manual E2E testing in browser</location>
     </locations>
     <ideas>
-      <test ac="Full workflow - engine path">
-        <idea>Integration test: Framework → Prompt mode (engine) → Engine selection → Plugins → Confirmation → Profile created</idea>
-        <idea>Verify manifest has PromptMode::PromptEngine with selected engine</idea>
-        <idea>Verify generated config has engine initialization</idea>
-      </test>
-      <test ac="Full workflow - theme path">
-        <idea>Integration test: Framework → Prompt mode (theme) → Theme selection → Plugins → Confirmation → Profile created</idea>
-        <idea>Verify manifest has PromptMode::FrameworkTheme with selected theme</idea>
-      </test>
-      <test ac="Confirmation screen">
-        <idea>Test confirmation shows engine name when PromptEngine mode</idea>
-        <idea>Test confirmation shows theme name when FrameworkTheme mode</idea>
-      </test>
-      <test ac="Cancellation">
-        <idea>Test Esc at any step properly cleans up and exits</idea>
-      </test>
+      <test ac="Wizard state branching">Unit: Set promptMode='engine', verify wizardSteps includes EngineSelectStep, excludes ThemeSelectStep</test>
+      <test ac="Full engine workflow">Integration: Select framework → Select engine mode → Select Starship → Create profile, verify profile created with PromptEngine::Starship in manifest</test>
+      <test ac="Full theme workflow">Integration: Select framework → Select theme mode → Select robbyrussell → Create profile, verify profile created with FrameworkTheme in manifest</test>
+      <test ac="Installation progress">E2E: Create profile with engine, observe installation progress modal, verify shows Downloading/Installing/Configuring steps, success message</test>
+      <test ac="Installation error">Integration: Mock installation failure, verify error modal shows, Retry button present, error logged</test>
+      <test ac="Back navigation">E2E: Navigate through wizard, click Back from review step, verify returns to previous step with state preserved</test>
+      <test ac="Engine filter">E2E: Click "No Nerd Font Required" filter, verify only engines without nerd_font requirement shown</test>
     </ideas>
   </tests>
 </story-context>

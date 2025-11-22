@@ -1,0 +1,221 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>0</epicId>
+    <storyId>1</storyId>
+    <title>Install Tauri and Initialize Project</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-21</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-0-story-1.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>Tauri installed and configured in the zprof project</iWant>
+    <soThat>we can build GUI applications with Rust backend</soThat>
+    <tasks>
+- Install Tauri CLI: `cargo install tauri-cli`
+- Initialize Tauri in project: `cargo tauri init`
+- Choose Svelte as frontend framework
+- Configure project structure (src-tauri/, src-ui/, keep existing src/)
+- Update .gitignore for Tauri artifacts (src-tauri/target/, src-ui/node_modules/, src-ui/dist/, src-tauri/Cargo.lock)
+- Configure tauri.conf.json (app name, window config, targets, identifier)
+- Add dependencies to src-tauri/Cargo.toml (tauri 2.0, serde, serde_json, tauri-build)
+- Create basic src-tauri/src/main.rs entry point
+- Set up Svelte project in src-ui/ with Vite template
+- Install and configure Tailwind CSS
+- Verify build: `cargo tauri dev` launches empty window
+- Verify production build: `cargo tauri build` succeeds
+- Add build instructions to README.md (prerequisites, dev build, production build, platform notes)
+- Update root Cargo.toml workspace configuration to include src-tauri member
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+- [ ] Install Tauri CLI: `cargo install tauri-cli`
+- [ ] Initialize Tauri in project: `cargo tauri init`
+- [ ] Choose Svelte as frontend framework
+- [ ] Configure project structure:
+  - `src-tauri/` for Tauri Rust backend
+  - `src-ui/` for Svelte frontend
+  - Keep existing `src/` for core business logic
+- [ ] Update `.gitignore` for Tauri artifacts:
+  - `src-tauri/target/`
+  - `src-ui/node_modules/`
+  - `src-ui/dist/`
+  - `src-tauri/Cargo.lock` (keep root Cargo.lock)
+- [ ] Configure `tauri.conf.json`:
+  - App name: "zprof"
+  - Window title: "zprof - Zsh Profile Manager"
+  - Window size: 1200x800 (resizable)
+  - Minimum size: 960x600
+  - macOS and Linux targets
+  - App identifier: "com.zprof.app"
+- [ ] Add dependencies to `src-tauri/Cargo.toml`:
+  ```toml
+  [dependencies]
+  tauri = { version = "2.0", features = ["shell-open"] }
+  serde = { version = "1.0", features = ["derive"] }
+  serde_json = "1.0"
+
+  [build-dependencies]
+  tauri-build = { version = "2.0" }
+  ```
+- [ ] Create basic `src-tauri/src/main.rs` entry point
+- [ ] Set up Svelte project in `src-ui/`:
+  - `npm create vite@latest src-ui -- --template svelte-ts`
+  - Install Tailwind CSS: `npm install -D tailwindcss postcss autoprefixer`
+  - Configure Tailwind in `tailwind.config.js`
+- [ ] Verify build: `cargo tauri dev` launches empty window
+- [ ] Verify production build: `cargo tauri build` succeeds
+- [ ] Add build instructions to README.md:
+  - Prerequisites (Rust, Node.js, Tauri dependencies)
+  - Development build: `cargo tauri dev`
+  - Production build: `cargo tauri build`
+  - Platform-specific notes
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-0-gui-foundation.md</path>
+        <title>Epic 0: GUI Foundation</title>
+        <section>Story 0.1: Install Tauri and Initialize Project</section>
+        <snippet>Establish the foundational Tauri-based GUI architecture for zprof, enabling a native desktop application with rich visual capabilities. Story 0.1 covers Tauri installation, project initialization with Svelte frontend, configuring project structure (src-tauri/, src-ui/, existing src/), and verifying builds work.</snippet>
+      </doc>
+      <doc>
+        <path>docs/developer/architecture.md</path>
+        <title>Architecture Overview</title>
+        <section>Technology Stack</section>
+        <snippet>GUI Framework: Tauri 2.0+ for native desktop application with web UI. Frontend: Svelte 4+ for reactive UI components. Styling: Tailwind CSS + shadcn/ui. IPC: Tauri Commands 2.0+ for Frontend ↔ Backend communication. Project structure includes src-tauri/ for Tauri Rust backend and src-ui/ for Svelte frontend.</snippet>
+      </doc>
+      <doc>
+        <path>docs/developer/architecture.md</path>
+        <title>Architecture Overview</title>
+        <section>Dual Interface Architecture</section>
+        <snippet>zprof provides CLI and GUI interfaces sharing the same business logic. GUI uses Tauri IPC Layer (commands.rs) to communicate with Core Business Logic. CLI works without GUI, GUI is optional feature. Both maintain feature parity for core operations.</snippet>
+      </doc>
+      <doc>
+        <path>docs/developer/technical-decisions.md</path>
+        <title>Technical Decisions</title>
+        <section>AD-003: GUI Technology Selection (Tauri)</section>
+        <snippet>Decision to pivot from TUI to GUI using Tauri 2.0+, Svelte 4+, Rust backend. Rationale: Visual capabilities for theme preview, native performance, seamless Rust integration, separate process architecture, multi-window support, cross-platform (macOS, Linux). Targets v0.2.0 with Epic 0 establishing GUI foundation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Overall</section>
+        <snippet>Design system using shadcn/ui components with Tailwind CSS. Modern, clean interface with dark/light mode support. Focus on visual workflows and theme previews.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>Cargo.toml</path>
+        <kind>manifest</kind>
+        <symbol>workspace</symbol>
+        <lines>1-31</lines>
+        <reason>Root Cargo.toml needs workspace configuration to include src-tauri member. Currently no workspace defined.</reason>
+      </artifact>
+      <artifact>
+        <path>.gitignore</path>
+        <kind>config</kind>
+        <symbol>N/A</symbol>
+        <lines>1-6</lines>
+        <reason>Needs updates for Tauri artifacts (src-tauri/target/, src-ui/node_modules/, src-ui/dist/, src-tauri/Cargo.lock)</reason>
+      </artifact>
+      <artifact>
+        <path>README.md</path>
+        <kind>documentation</kind>
+        <symbol>N/A</symbol>
+        <lines>1-548</lines>
+        <reason>Needs build instructions section update for GUI (Tauri prerequisites, cargo tauri dev, cargo tauri build)</reason>
+      </artifact>
+      <artifact>
+        <path>src/main.rs</path>
+        <kind>entry</kind>
+        <symbol>main</symbol>
+        <lines>N/A</lines>
+        <reason>Existing CLI entry point - must remain functional. Will add gui subcommand in future story (0.5).</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <package name="tauri" version="2.0" features="shell-open" note="NEW - Core Tauri framework" />
+        <package name="serde" version="1.0" features="derive" note="Already present, ensure derive feature enabled" />
+        <package name="serde_json" version="1.0" note="Already present for JSON serialization" />
+        <package name="tauri-build" version="2.0" category="build-dependencies" note="NEW - Tauri build-time code generation" />
+      </rust>
+      <node>
+        <package name="vite" version="latest" category="devDependencies" note="NEW - Build tool for Svelte" />
+        <package name="svelte" version="4+" note="NEW - Frontend framework" />
+        <package name="tailwindcss" version="latest" category="devDependencies" note="NEW - Utility-first CSS framework" />
+        <package name="postcss" version="latest" category="devDependencies" note="NEW - Required for Tailwind" />
+        <package name="autoprefixer" version="latest" category="devDependencies" note="NEW - CSS vendor prefixing for Tailwind" />
+      </node>
+      <system>
+        <requirement name="Rust" version="1.70+" note="Already installed" />
+        <requirement name="Node.js" version="18+" note="NEW - Required for frontend build" />
+        <requirement name="npm or pnpm" version="latest" note="NEW - Package manager for frontend" />
+        <requirement name="Tauri CLI" version="2.0" install="cargo install tauri-cli" note="NEW - Tauri development tool" />
+        <requirement name="Platform dependencies" platform="macOS" note="Xcode Command Line Tools, may already be installed" />
+        <requirement name="Platform dependencies" platform="Linux" note="webkit2gtk, libappindicator, varies by distro" />
+      </system>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Keep existing src/ directory unchanged - GUI and CLI must coexist</constraint>
+    <constraint>Non-destructive approach - all existing CLI functionality must remain fully functional</constraint>
+    <constraint>Workspace structure: Root Cargo.toml must define workspace with members = [".", "src-tauri"]</constraint>
+    <constraint>Separate processes: GUI runs as independent desktop app, doesn't block terminal</constraint>
+    <constraint>Platform targets: macOS 11+ and Linux (Ubuntu 20.04+, Fedora, Arch) only for v0.2.0</constraint>
+    <constraint>Project structure convention: src-tauri/ for backend, src-ui/ for frontend, src/ for shared business logic</constraint>
+    <constraint>Build validation: Both `cargo tauri dev` and `cargo tauri build` must succeed before story completion</constraint>
+    <constraint>Documentation requirement: README.md must clearly explain both CLI and GUI build processes</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Cargo Workspace</name>
+      <kind>build-system</kind>
+      <signature>[workspace]\nmembers = [".", "src-tauri"]</signature>
+      <path>Cargo.toml</path>
+    </interface>
+    <interface>
+      <name>Tauri Configuration</name>
+      <kind>config-file</kind>
+      <signature>tauri.conf.json with productName, identifier, version, build commands, app window config, bundle targets</signature>
+      <path>src-tauri/tauri.conf.json</path>
+    </interface>
+    <interface>
+      <name>Svelte Vite Configuration</name>
+      <kind>config-file</kind>
+      <signature>vite.config.ts with Svelte plugin, dev server config, build output</signature>
+      <path>src-ui/vite.config.ts</path>
+    </interface>
+    <interface>
+      <name>Tailwind Configuration</name>
+      <kind>config-file</kind>
+      <signature>tailwind.config.js with content paths, theme, plugins</signature>
+      <path>src-ui/tailwind.config.js</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>zprof uses comprehensive testing with insta for snapshot tests, tempfile for isolated test environments, and serial_test for tests that modify HOME. Tests are organized in tests/ directory for integration tests and #[cfg(test)] modules for unit tests. Current test suite has 204 passing tests.</standards>
+    <locations>
+      <location>tests/</location>
+      <location>src/**/mod.rs (inline #[cfg(test)] modules)</location>
+    </locations>
+    <ideas>
+      <test ac="Install Tauri CLI">Manual verification: `cargo install tauri-cli` succeeds and tauri --version shows 2.0+</test>
+      <test ac="Initialize Tauri">Manual verification: `cargo tauri init` creates src-tauri/ directory structure</test>
+      <test ac="Configure project structure">Integration test: Verify src-tauri/, src-ui/, and src/ directories exist after initialization</test>
+      <test ac="Update .gitignore">Unit test: Parse .gitignore and verify Tauri artifact patterns present</test>
+      <test ac="Configure tauri.conf.json">Integration test: Parse tauri.conf.json, verify app name="zprof", window dimensions, bundle targets</test>
+      <test ac="Add dependencies">Integration test: Parse src-tauri/Cargo.toml, verify tauri, serde, serde_json, tauri-build present with correct versions</test>
+      <test ac="Verify dev build">Manual verification: `cargo tauri dev` launches window successfully without errors</test>
+      <test ac="Verify production build">Manual verification: `cargo tauri build` produces platform bundle (.dmg on macOS, .deb/.appimage on Linux)</test>
+      <test ac="CLI still works">Regression test: Run existing CLI test suite (204 tests) to ensure no breakage from workspace changes</test>
+    </ideas>
+  </tests>
+</story-context>

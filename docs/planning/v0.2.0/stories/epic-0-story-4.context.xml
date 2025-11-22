@@ -1,0 +1,141 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>0</epicId>
+    <storyId>4</storyId>
+    <title>Create Profile List View (First Real Screen)</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-21</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/planning/v0.2.0/stories/epic-0-story-4.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>to see all my profiles in a clean list view</iWant>
+    <soThat>I can understand what profiles exist and which is active</soThat>
+    <tasks>
+- Create ProfileList.svelte view (replace placeholder from Story 0.2)
+- Display profiles as cards in responsive grid (3 cols >1200px, 2 cols 960-1200px)
+- Each card shows: name, framework with icon, prompt mode, plugin count, created date, active badge
+- Add profile actions: Activate button, ... menu (Edit/Duplicate disabled, Delete destructive)
+- Handle empty state: icon, headline, body text, Create Profile button
+- Add Create New Profile floating action button (bottom-right, blue, + icon)
+- Implement search/filter (search bar, filter by name, no results state, clear button)
+- Add sorting options (Name A-Z/Z-A, Created newest/oldest, localStorage persistence)
+- Integrate with IPC commands (listProfiles on mount, activateProfile, deleteProfile, refresh after mutations)
+- Add loading states (skeleton cards, button spinners, disable during operations)
+- Add error state (error icon, message, Retry button, console logging)
+- Implement delete confirmation dialog (modal, profile name, warning, Cancel/Delete buttons)
+- Handle delete edge cases (can't delete active profile, error/success toasts)
+- Implement toast notifications (success green 3s, error red 5s, top-right, max 3 stacked)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+- [ ] ProfileList.svelte displays profiles as cards in responsive grid
+- [ ] Cards show: name, framework icon, prompt mode, plugin count, date, active badge
+- [ ] Profile actions: Activate button, menu with Edit/Duplicate disabled, Delete
+- [ ] Empty state with icon, message, Create Profile button
+- [ ] Floating action button for creating profiles (bottom-right)
+- [ ] Search/filter functionality with no results state
+- [ ] Sorting options with localStorage persistence
+- [ ] IPC integration: listProfiles, activateProfile, deleteProfile, refresh
+- [ ] Loading states: skeleton cards, button spinners
+- [ ] Error state with retry functionality
+- [ ] Delete confirmation dialog
+- [ ] Delete edge cases handled (active profile, toasts)
+- [ ] Toast notification system (success/error)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/planning/v0.2.0/epic-0-gui-foundation.md</path>
+        <title>Epic 0: GUI Foundation</title>
+        <section>Story 0.4: Create Profile List View</section>
+        <snippet>First real functional screen. Profile cards in grid layout with search, sort, activate, delete actions. Empty state, loading skeletons, error handling, toast notifications. Integrates with IPC commands from Story 0.3.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Profile List View Design</section>
+        <snippet>Card-based layout, active profile highlighted with green badge, hover actions, responsive grid. Empty state with friendly messaging. Uses shadcn/ui Card component pattern.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src-ui/src/views/ProfileList.svelte</path>
+        <kind>component</kind>
+        <symbol>ProfileList</symbol>
+        <lines>N/A</lines>
+        <reason>Placeholder created in Story 0.2, needs full implementation with IPC integration, state management, UI logic</reason>
+      </artifact>
+      <artifact>
+        <path>src-ui/src/lib/api.ts</path>
+        <kind>module</kind>
+        <symbol>listProfiles, activateProfile, deleteProfile</symbol>
+        <lines>N/A</lines>
+        <reason>IPC client functions from Story 0.3, used to fetch and mutate profile data</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package name="date-fns" version="latest" note="NEW - For relative date formatting ('2 days ago')" />
+        <package name="lucide-svelte" version="latest" note="Already installed in Story 0.2, used for icons" />
+        <package name="svelte" version="4+" note="Already installed" />
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Responsive grid: 3 columns >1200px, 2 columns 960-1200px, 1 column mobile</constraint>
+    <constraint>Cannot delete active profile: button disabled with tooltip warning</constraint>
+    <constraint>Delete requires confirmation: modal dialog, explicit user action</constraint>
+    <constraint>Loading states required: skeleton cards on mount, button spinners during actions</constraint>
+    <constraint>Toast notifications: max 3 stacked, auto-dismiss (3s success, 5s error), top-right position</constraint>
+    <constraint>Search is client-side: filter displayed profiles, case-insensitive</constraint>
+    <constraint>Sort preference persists to localStorage with key 'profileListSort'</constraint>
+    <constraint>Empty state actionable: must provide clear path to create first profile</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>ProfileCard Component</name>
+      <kind>svelte-component</kind>
+      <signature>&lt;ProfileCard profile={ProfileInfo} onActivate={fn} onDelete={fn} /&gt;</signature>
+      <path>src-ui/src/components/ProfileCard.svelte</path>
+    </interface>
+    <interface>
+      <name>Toast Store</name>
+      <kind>svelte-store</kind>
+      <signature>toast.success(message: string), toast.error(message: string)</signature>
+      <path>src-ui/src/lib/stores.ts</path>
+    </interface>
+    <interface>
+      <name>ConfirmDialog Component</name>
+      <kind>svelte-component</kind>
+      <signature>&lt;ConfirmDialog title={string} message={string} onConfirm={fn} onCancel={fn} /&gt;</signature>
+      <path>src-ui/src/components/ConfirmDialog.svelte</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Manual verification of UI behavior, user interactions, loading states, error handling. Visual testing against UX spec. Test with 0, 1, and many profiles. Test all actions (activate, delete, search, sort).</standards>
+    <locations>
+      <location>Manual browser testing</location>
+      <location>Visual inspection with various profile counts</location>
+    </locations>
+    <ideas>
+      <test ac="Profile display">Manual: Create 3 profiles, verify all displayed as cards with correct info (name, framework, plugins, date)</test>
+      <test ac="Responsive grid">Manual: Resize window, verify grid adapts (3→2→1 columns)</test>
+      <test ac="Activate profile">Manual: Click Activate on non-active profile, verify IPC called, active badge moves, toast shown</test>
+      <test ac="Delete profile">Manual: Click Delete, verify confirmation dialog, confirm delete, verify profile removed and toast shown</test>
+      <test ac="Cannot delete active">Manual: Try to delete active profile, verify button disabled with tooltip</test>
+      <test ac="Empty state">Manual: Delete all profiles, verify empty state shows with Create Profile button</test>
+      <test ac="Search">Manual: Type in search, verify profiles filtered by name, clear search resets</test>
+      <test ac="Sort">Manual: Change sort order, verify profiles reorder, reload page, verify sort persists</test>
+      <test ac="Loading state">Manual: Observe initial load, verify skeleton cards display before data loads</test>
+      <test ac="Error handling">Manual: Simulate IPC error, verify error state with Retry button</test>
+    </ideas>
+  </tests>
+</story-context>
