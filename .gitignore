@@ -3,3 +3,12 @@
 /bmad
 /.specify
 .DS_Store
+
+# Tauri artifacts
+src-tauri/target/
+src-tauri/Cargo.lock
+
+# Node/Frontend artifacts
+src-ui/node_modules/
+src-ui/dist/
+src-ui/.vite/

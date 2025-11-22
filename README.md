@@ -495,12 +495,14 @@ Contributions are welcome! Please feel free to submit issues and pull requests.
 
 ### Development
 
+#### CLI Development
+
 ```bash
 # Clone repository
 git clone https://github.com/yourusername/zprof.git
 cd zprof
 
-# Build
+# Build CLI only
 cargo build
 
 # Run tests
@@ -509,6 +511,47 @@ cargo test
 # Run specific command
 cargo run -- list
 ```
+
+#### GUI Development
+
+The GUI application uses Tauri with a Svelte frontend.
+
+**Prerequisites:**
+
+- Rust 1.70+
+- Node.js 18+
+- Tauri prerequisites for your platform:
+  - macOS: Xcode Command Line Tools
+  - Linux: See [Tauri Prerequisites](https://tauri.app/start/prerequisites/)
+
+**Build and Run:**
+
+```bash
+# Install Tauri CLI
+cargo install tauri-cli
+
+# Install frontend dependencies
+cd src-ui
+npm install
+cd ..
+
+# Run in development mode (hot reload)
+cargo tauri dev
+
+# Build production bundle
+cargo tauri build
+```
+
+The development server will launch the GUI application with hot reload enabled. The production build creates a platform-specific bundle:
+
+- macOS: `.dmg` file in `src-tauri/target/release/bundle/dmg/`
+- Linux: `.deb` and `.AppImage` in `src-tauri/target/release/bundle/`
+
+**GUI Structure:**
+
+- `src-tauri/`: Tauri Rust backend and IPC layer
+- `src-ui/`: Svelte frontend application
+- `src/`: Shared core business logic (used by both CLI and GUI)
 
 ## Troubleshooting
 
