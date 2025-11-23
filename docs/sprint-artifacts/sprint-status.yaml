@@ -39,7 +39,7 @@ development_status:
   epic-0: backlog
   epic-0-story-1: done  # ✅ Approved - Tauri GUI foundation complete
   epic-0-story-2: done  # ✅ Approved - Base app window and navigation complete
-  epic-0-story-3: ready-for-dev
+  epic-0-story-3: done  # ✅ Complete - IPC command layer with 20/20 tests passing
   epic-0-story-4: ready-for-dev
   epic-0-story-5: ready-for-dev
   epic-0-retrospective: optional

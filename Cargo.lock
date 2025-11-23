@@ -5722,9 +5722,14 @@ dependencies = [
 name = "zprof-tauri"
 version = "0.2.0"
 dependencies = [
+ "anyhow",
+ "chrono",
+ "log",
  "serde",
  "serde_json",
  "tauri",
  "tauri-build",
  "tauri-plugin-shell",
+ "tempfile",
+ "zprof",
 ]
