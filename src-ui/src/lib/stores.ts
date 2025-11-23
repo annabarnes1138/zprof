@@ -70,5 +70,46 @@ function createSidebarStore() {
   };
 }
 
+// Toast notifications store
+export interface Toast {
+  id: string;
+  message: string;
+  type: 'success' | 'error' | 'info';
+  duration: number;
+}
+
+function createToastStore() {
+  const { subscribe, update } = writable<Toast[]>([]);
+
+  let idCounter = 0;
+
+  function addToast(toast: Omit<Toast, 'id'>) {
+    const id = `toast-${idCounter++}`;
+    const newToast: Toast = { ...toast, id };
+
+    update(toasts => [...toasts, newToast]);
+
+    // Auto-dismiss based on type
+    setTimeout(() => {
+      removeToast(id);
+    }, toast.duration);
+
+    return id;
+  }
+
+  function removeToast(id: string) {
+    update(toasts => toasts.filter(t => t.id !== id));
+  }
+
+  return {
+    subscribe,
+    success: (message: string) => addToast({ message, type: 'success', duration: 3000 }),
+    error: (message: string) => addToast({ message, type: 'error', duration: 5000 }),
+    info: (message: string) => addToast({ message, type: 'info', duration: 4000 }),
+    remove: removeToast,
+  };
+}
+
 export const theme = createThemeStore();
 export const sidebarCollapsed = createSidebarStore();
+export const toast = createToastStore();

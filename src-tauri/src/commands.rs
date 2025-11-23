@@ -30,22 +30,30 @@ pub fn list_profiles() -> Result<Vec<ProfileInfo>, String> {
             // Load full metadata to get created timestamp and plugin count
             let manifest = zprof::core::manifest::load_and_validate(&p.name);
 
-            let (created_at, plugin_count, prompt_mode) = match manifest {
+            let (created_at, plugin_count, prompt_mode, prompt_engine, framework_theme) = match manifest {
                 Ok(m) => {
-                    let prompt_mode_str = match m.profile.prompt_mode {
-                        zprof::core::manifest::PromptMode::PromptEngine { .. } => "prompt_engine",
-                        zprof::core::manifest::PromptMode::FrameworkTheme { .. } => "framework_theme",
+                    let (prompt_mode_str, engine, theme) = match &m.profile.prompt_mode {
+                        zprof::core::manifest::PromptMode::PromptEngine { engine } => {
+                            ("prompt_engine", Some(engine.clone()), None)
+                        },
+                        zprof::core::manifest::PromptMode::FrameworkTheme { theme } => {
+                            ("framework_theme", None, Some(theme.clone()))
+                        },
                     };
                     (
                         m.profile.created.to_rfc3339(),
                         m.plugins.enabled.len(),
                         prompt_mode_str.to_string(),
+                        engine,
+                        theme,
                     )
                 },
                 Err(_) => (
                     chrono::Utc::now().to_rfc3339(),
                     0,
                     "framework_theme".to_string(),
+                    None,
+                    None,
                 ),
             };
 
@@ -53,6 +61,8 @@ pub fn list_profiles() -> Result<Vec<ProfileInfo>, String> {
                 name: p.name,
                 framework: p.framework,
                 prompt_mode,
+                prompt_engine,
+                framework_theme,
                 active: p.is_active,
                 created_at,
                 plugin_count,

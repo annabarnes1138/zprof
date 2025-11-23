@@ -15,6 +15,12 @@ pub struct ProfileInfo {
     pub framework: String,
     /// Prompt mode: "prompt_engine" or "framework_theme"
     pub prompt_mode: String,
+    /// Prompt engine name (if using prompt_engine mode)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub prompt_engine: Option<String>,
+    /// Framework theme name (if using framework_theme mode)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub framework_theme: Option<String>,
     /// Whether this profile is currently active
     pub active: bool,
     /// ISO 8601 timestamp when profile was created

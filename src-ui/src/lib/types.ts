@@ -12,6 +12,10 @@ export interface ProfileInfo {
   framework: string;
   /** Prompt mode: "prompt_engine" or "framework_theme" */
   prompt_mode: string;
+  /** Prompt engine name (if using prompt_engine mode) */
+  prompt_engine?: string;
+  /** Framework theme name (if using framework_theme mode) */
+  framework_theme?: string;
   /** Whether this profile is currently active */
   active: boolean;
   /** ISO 8601 timestamp when profile was created */

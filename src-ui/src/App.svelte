@@ -6,6 +6,7 @@
   import { theme } from './lib/stores';
   import Sidebar from './components/Sidebar.svelte';
   import Header from './components/Header.svelte';
+  import ToastContainer from './components/ToastContainer.svelte';
 
   // Initialize theme on mount
   onMount(() => {
@@ -77,3 +78,6 @@
     </main>
   </div>
 </div>
+
+<!-- Toast notifications -->
+<ToastContainer />
