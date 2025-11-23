@@ -169,3 +169,34 @@ export async function getPromptEngines(): Promise<PromptEngineInfo[]> {
     throw new Error(`Failed to load prompt engines: ${error}`);
   }
 }
+
+/**
+ * Check if a prompt engine is installed
+ *
+ * @param engine - Engine name to check
+ * @returns True if the engine is installed, false otherwise
+ * @throws Error if check fails
+ */
+export async function checkEngineInstalled(engine: string): Promise<boolean> {
+  try {
+    return await invoke<boolean>("check_engine_installed", { engine });
+  } catch (error) {
+    console.error(`Failed to check if ${engine} is installed:`, error);
+    return false;
+  }
+}
+
+/**
+ * Install a prompt engine
+ *
+ * @param engine - Engine name to install
+ * @throws Error if installation fails
+ */
+export async function installPromptEngine(engine: string): Promise<void> {
+  try {
+    await invoke("install_prompt_engine", { engine });
+  } catch (error) {
+    console.error(`Failed to install ${engine}:`, error);
+    throw new Error(`Installation failed: ${error}`);
+  }
+}

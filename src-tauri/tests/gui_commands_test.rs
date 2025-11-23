@@ -141,6 +141,8 @@ mod integration {
             name: "work".to_string(),
             framework: "oh-my-zsh".to_string(),
             prompt_mode: "prompt_engine".to_string(),
+            prompt_engine: Some("Starship".to_string()),
+            framework_theme: None,
             active: true,
             created_at: "2025-11-22T10:00:00Z".to_string(),
             plugin_count: 5,

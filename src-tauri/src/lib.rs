@@ -23,6 +23,8 @@ pub fn run() {
             commands::get_plugins,
             commands::get_themes,
             commands::get_prompt_engines,
+            commands::check_engine_installed,
+            commands::install_prompt_engine,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -196,6 +196,16 @@ pub struct PromptEngineInfo {
     pub description: String,
     /// Whether this engine requires Nerd Fonts
     pub nerd_font_required: bool,
+    /// Whether this engine works across multiple shells
+    pub cross_shell: bool,
+    /// Whether this engine supports async rendering
+    pub async_rendering: bool,
+    /// Optional URL to preview image
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub preview_url: Option<String>,
+    /// Whether this engine is already installed
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub installed: Option<bool>,
 }
 
 #[cfg(test)]

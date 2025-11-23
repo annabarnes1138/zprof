@@ -400,7 +400,7 @@ pub fn get_themes(framework: String) -> Result<Vec<ThemeInfo>, String> {
 /// Get available prompt engines
 #[tauri::command]
 pub fn get_prompt_engines() -> Result<Vec<PromptEngineInfo>, String> {
-    use zprof::prompts::PromptEngine;
+    use zprof::prompts::engine::PromptEngine;
 
     let engines = vec![
         PromptEngine::Starship,
@@ -418,9 +418,118 @@ pub fn get_prompt_engines() -> Result<Vec<PromptEngineInfo>, String> {
                 name: metadata.name.to_string(),
                 description: metadata.description.to_string(),
                 nerd_font_required: metadata.requires_nerd_font,
+                cross_shell: metadata.cross_shell,
+                async_rendering: matches!(e, PromptEngine::Starship | PromptEngine::Pure),
+                preview_url: None,
+                installed: None,
             }
         })
         .collect();
 
     Ok(engine_infos)
+}
+
+/// Check if a prompt engine is installed
+#[tauri::command]
+pub fn check_engine_installed(engine: String) -> Result<bool, String> {
+    use zprof::prompts::engine::PromptEngine;
+    use zprof::prompts::installer::EngineInstaller;
+
+    let engine_enum = match engine.as_str() {
+        "Starship" => PromptEngine::Starship,
+        "Powerlevel10k" => PromptEngine::Powerlevel10k,
+        "Oh-My-Posh" => PromptEngine::OhMyPosh,
+        "Pure" => PromptEngine::Pure,
+        "Spaceship" => PromptEngine::Spaceship,
+        _ => {
+            return Err(IpcError::new(
+                ErrorCode::InvalidInput,
+                format!("Unknown engine: {}", engine)
+            )
+            .to_string_result());
+        }
+    };
+
+    let installer = EngineInstaller::new()
+        .map_err(|e| IpcError::from(e).to_string_result())?;
+
+    installer.is_installed(&engine_enum)
+        .map_err(|e| IpcError::from(e).to_string_result())
+}
+
+/// Install a prompt engine
+#[tauri::command]
+pub async fn install_prompt_engine(engine: String) -> Result<(), String> {
+    use zprof::prompts::engine::PromptEngine;
+    use zprof::prompts::installer::EngineInstaller;
+
+    let engine_enum = match engine.as_str() {
+        "Starship" => PromptEngine::Starship,
+        "Powerlevel10k" => PromptEngine::Powerlevel10k,
+        "Oh-My-Posh" => PromptEngine::OhMyPosh,
+        "Pure" => PromptEngine::Pure,
+        "Spaceship" => PromptEngine::Spaceship,
+        _ => {
+            return Err(IpcError::new(
+                ErrorCode::InvalidInput,
+                format!("Unknown engine: {}", engine)
+            )
+            .to_string_result());
+        }
+    };
+
+    let installer = EngineInstaller::new()
+        .map_err(|e| IpcError::from(e).to_string_result())?;
+
+    installer.install(&engine_enum)
+        .map_err(|e| IpcError::from(e).to_string_result())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_prompt_engines_returns_all() {
+        let engines = get_prompt_engines().expect("Should get engines");
+        assert_eq!(engines.len(), 5, "Should return 5 engines");
+
+        // Verify all engines have required fields
+        for engine in &engines {
+            assert!(!engine.name.is_empty(), "Engine name should not be empty");
+            assert!(!engine.description.is_empty(), "Engine description should not be empty");
+        }
+    }
+
+    #[test]
+    fn test_get_prompt_engines_includes_metadata() {
+        let engines = get_prompt_engines().expect("Should get engines");
+
+        // Find Starship engine
+        let starship = engines.iter().find(|e| e.name == "Starship");
+        assert!(starship.is_some(), "Should include Starship");
+
+        let starship = starship.unwrap();
+        assert!(starship.cross_shell, "Starship should be cross-shell");
+        assert!(starship.async_rendering, "Starship should support async rendering");
+        assert!(starship.nerd_font_required, "Starship should require Nerd Fonts");
+    }
+
+    #[test]
+    fn test_check_engine_installed_with_invalid_engine() {
+        let result = check_engine_installed("InvalidEngine".to_string());
+        assert!(result.is_err(), "Should fail with invalid engine name");
+    }
+
+    #[test]
+    fn test_get_frameworks_returns_all() {
+        let frameworks = get_frameworks().expect("Should get frameworks");
+        assert_eq!(frameworks.len(), 5, "Should return 5 frameworks");
+
+        // Verify all have descriptions
+        for fw in &frameworks {
+            assert!(!fw.name.is_empty());
+            assert!(!fw.description.is_empty());
+        }
+    }
 }

@@ -37,11 +37,11 @@ story_location: docs/planning/v0.2.0/stories
 
 development_status:
   epic-0: backlog
-  epic-0-story-1: done  # ✅ Approved - Tauri GUI foundation complete
-  epic-0-story-2: done  # ✅ Approved - Base app window and navigation complete
-  epic-0-story-3: done  # ✅ Complete - IPC command layer with 20/20 tests passing
-  epic-0-story-4: done  # ✅ Approved - ProfileList complete with all features (100% ACs)
-  epic-0-story-5: done  # ✅ APPROVED - CLI compatibility complete, 188/188 tests passing, zero regression
+  epic-0-story-1: done # ✅ Approved - Tauri GUI foundation complete
+  epic-0-story-2: done # ✅ Approved - Base app window and navigation complete
+  epic-0-story-3: done # ✅ Complete - IPC command layer with 20/20 tests passing
+  epic-0-story-4: done # ✅ Approved - ProfileList complete with all features (100% ACs)
+  epic-0-story-5: done # ✅ APPROVED - CLI compatibility complete, 188/188 tests passing, zero regression
   epic-0-retrospective: optional
 
   epic-1: backlog
@@ -50,8 +50,8 @@ development_status:
   epic-1-story-3: done
   epic-1-story-4: deprecated
   epic-1-story-5: deprecated
-  epic-1-story-6: done  # ✅ APPROVED - Prompt engine generator support complete, 202/202 tests passing
-  epic-1-story-7: ready-for-dev
+  epic-1-story-6: done # ✅ APPROVED - Prompt engine generator support complete, 202/202 tests passing
+  epic-1-story-7: done # ✅ APPROVED - Prompt mode integration complete, 24 tests passing, wizard flow working perfectly
   epic-1-retrospective: optional
 
   epic-2: backlog

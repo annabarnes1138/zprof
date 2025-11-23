@@ -115,4 +115,12 @@ export interface PromptEngineInfo {
   description: string;
   /** Whether this engine requires Nerd Fonts */
   nerd_font_required: boolean;
+  /** Whether this engine works across multiple shells */
+  cross_shell: boolean;
+  /** Whether this engine supports async rendering */
+  async_rendering: boolean;
+  /** Optional URL to preview image */
+  preview_url?: string;
+  /** Whether this engine is already installed */
+  installed?: boolean;
 }

@@ -110,6 +110,41 @@ function createToastStore() {
   };
 }
 
+// Wizard state store
+export interface WizardState {
+  step: number;
+  framework: string | null;
+  promptMode: 'engine' | 'theme' | null;
+  promptEngine: string | null;
+  frameworkTheme: string | null;
+  plugins: string[];
+  envVars: Record<string, string>;
+}
+
+const initialWizardState: WizardState = {
+  step: 0,
+  framework: null,
+  promptMode: null,
+  promptEngine: null,
+  frameworkTheme: null,
+  plugins: [],
+  envVars: {},
+};
+
+function createWizardStore() {
+  const { subscribe, set, update } = writable<WizardState>(initialWizardState);
+
+  return {
+    subscribe,
+    set,
+    update,
+    reset: () => set(initialWizardState),
+    nextStep: () => update(state => ({ ...state, step: state.step + 1 })),
+    prevStep: () => update(state => ({ ...state, step: Math.max(0, state.step - 1) })),
+  };
+}
+
 export const theme = createThemeStore();
 export const sidebarCollapsed = createSidebarStore();
 export const toast = createToastStore();
+export const wizardState = createWizardStore();
