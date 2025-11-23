@@ -335,6 +335,14 @@ from Preset   wizard)
 - [ ] Documentation clear and helpful
 - [ ] All tests passing
 
+## Post-Review Follow-ups
+
+### Story 2.1 Review Items (2025-11-22)
+
+- [x] [Med] Fix clippy uninlined_format_args warnings in test assertions (Story 2.1) - **COMPLETED** ✅
+- [ ] [Low] Consider adding test for PresetConfig with empty plugins array (Story 2.1) - edge case coverage (optional enhancement)
+- [ ] [Future] Add preset validation to ensure plugin names exist in plugin registry (Story 2.1) - quality improvement (future work)
+
 ## Out of Scope
 
 - Preset customization UI (v0.3.0)

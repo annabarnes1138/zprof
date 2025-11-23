@@ -1245,7 +1245,7 @@ modified = "2025-11-01T10:00:00Z"
 
         match &manifest.profile.prompt_mode {
             PromptMode::PromptEngine { engine } => {
-                assert_eq!(engine, "starship", "Minimal preset should use starship");
+                assert_eq!(engine, "pure", "Minimal preset should use pure");
             }
             _ => panic!("Minimal preset should use PromptEngine mode"),
         }

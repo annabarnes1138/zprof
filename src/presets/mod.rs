@@ -76,31 +76,37 @@ pub const PRESET_REGISTRY: &[Preset] = &[
     Preset {
         id: "minimal",
         name: "Minimal",
-        icon: "⚡",
-        description: "Lightweight setup with fast startup time",
-        target_user: "Users who prioritize speed and simplicity",
+        icon: "✨",
+        description: "Fast startup, clean prompt, essential plugins only",
+        target_user: "Beginners who want simplicity",
         config: PresetConfig {
-            framework: FrameworkType::Zimfw,
-            prompt_engine: Some("starship"),
+            framework: FrameworkType::Zap,
+            prompt_engine: Some("pure"),
             framework_theme: None,
-            plugins: &["git", "sudo"],
-            env_vars: &[("EDITOR", "vim")],
-            shell_options: &["HIST_IGNORE_DUPS", "SHARE_HISTORY"],
+            plugins: &["zsh-autosuggestions", "zsh-syntax-highlighting", "git"],
+            env_vars: &[],
+            shell_options: &["HIST_IGNORE_DUPS", "AUTO_CD"],
         },
     },
-    // Performance preset - optimized for speed
+    // Performance preset - optimized for speed with turbo mode
     Preset {
         id: "performance",
         name: "Performance",
         icon: "🚀",
-        description: "Optimized for maximum speed with minimal overhead",
-        target_user: "Power users who need blazing fast shell startup",
+        description: "Blazing fast, async prompt, optimized loading with turbo mode",
+        target_user: "Users with slow shells",
         config: PresetConfig {
             framework: FrameworkType::Zinit,
             prompt_engine: Some("starship"),
             framework_theme: None,
-            plugins: &["git", "zsh-autosuggestions"],
-            env_vars: &[("EDITOR", "nvim"), ("ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE", "20")],
+            plugins: &[
+                "git",
+                "zsh-autosuggestions",
+                "fast-syntax-highlighting",
+                "fzf",
+                "history-substring-search",
+            ],
+            env_vars: &[],
             shell_options: &["HIST_IGNORE_DUPS", "HIST_FIND_NO_DUPS"],
         },
     },
@@ -110,7 +116,7 @@ pub const PRESET_REGISTRY: &[Preset] = &[
         name: "Fancy",
         icon: "✨",
         description: "Beautiful terminal with rich features and visual enhancements",
-        target_user: "Users who want a visually appealing and feature-rich environment",
+        target_user: "Make my terminal Instagram-worthy",
         config: PresetConfig {
             framework: FrameworkType::OhMyZsh,
             prompt_engine: None,
@@ -119,11 +125,17 @@ pub const PRESET_REGISTRY: &[Preset] = &[
                 "git",
                 "docker",
                 "kubectl",
+                "node",
+                "npm",
                 "zsh-autosuggestions",
                 "zsh-syntax-highlighting",
                 "colored-man-pages",
+                "web-search",
+                "jsontools",
+                "extract",
+                "command-not-found",
             ],
-            env_vars: &[("EDITOR", "code"), ("LS_COLORS", "auto")],
+            env_vars: &[],
             shell_options: &[
                 "HIST_IGNORE_DUPS",
                 "HIST_IGNORE_SPACE",
@@ -138,50 +150,28 @@ pub const PRESET_REGISTRY: &[Preset] = &[
         name: "Developer",
         icon: "👨‍💻",
         description: "Development-focused setup with common programming tools",
-        target_user: "Software developers and engineers",
+        target_user: "Professional devs who code daily",
         config: PresetConfig {
-            framework: FrameworkType::OhMyZsh,
+            framework: FrameworkType::Zimfw,
             prompt_engine: Some("starship"),
             framework_theme: None,
             plugins: &[
                 "git",
                 "docker",
                 "kubectl",
+                "fzf",
+                "ripgrep",
                 "node",
-                "python",
-                "rust",
                 "zsh-autosuggestions",
                 "zsh-syntax-highlighting",
             ],
-            env_vars: &[("EDITOR", "nvim"), ("VISUAL", "code"), ("PAGER", "less")],
+            env_vars: &[],
             shell_options: &[
                 "HIST_IGNORE_DUPS",
                 "HIST_IGNORE_SPACE",
                 "SHARE_HISTORY",
                 "AUTO_CD",
-                "CORRECT",
             ],
-        },
-    },
-    // Beginner preset - user-friendly with helpful features
-    Preset {
-        id: "beginner",
-        name: "Beginner",
-        icon: "🌱",
-        description: "Friendly setup with helpful hints and safety features",
-        target_user: "New terminal users and beginners",
-        config: PresetConfig {
-            framework: FrameworkType::OhMyZsh,
-            prompt_engine: None,
-            framework_theme: Some("robbyrussell"),
-            plugins: &[
-                "git",
-                "colored-man-pages",
-                "command-not-found",
-                "zsh-autosuggestions",
-            ],
-            env_vars: &[("EDITOR", "nano")],
-            shell_options: &["CORRECT", "CORRECT_ALL", "SHARE_HISTORY"],
         },
     },
 ];
@@ -192,11 +182,7 @@ mod tests {
 
     #[test]
     fn test_preset_registry_count() {
-        assert_eq!(
-            PRESET_REGISTRY.len(),
-            5,
-            "Should have exactly 5 presets"
-        );
+        assert_eq!(PRESET_REGISTRY.len(), 4, "Should have exactly 4 presets");
     }
 
     #[test]
@@ -214,7 +200,7 @@ mod tests {
 
     #[test]
     fn test_preset_ids_match_expected() {
-        let expected_ids = vec!["minimal", "performance", "fancy", "developer", "beginner"];
+        let expected_ids = vec!["minimal", "performance", "fancy", "developer"];
         let actual_ids: Vec<&str> = PRESET_REGISTRY.iter().map(|p| p.id).collect();
 
         for expected in &expected_ids {
@@ -251,10 +237,13 @@ mod tests {
             .expect("Minimal preset should exist");
 
         assert_eq!(minimal.name, "Minimal");
-        assert_eq!(minimal.icon, "⚡");
-        assert_eq!(minimal.config.framework, FrameworkType::Zimfw);
-        assert_eq!(minimal.config.prompt_engine, Some("starship"));
-        assert!(!minimal.config.plugins.is_empty());
+        assert_eq!(minimal.icon, "✨");
+        assert_eq!(minimal.config.framework, FrameworkType::Zap);
+        assert_eq!(minimal.config.prompt_engine, Some("pure"));
+        assert_eq!(minimal.config.plugins.len(), 3);
+        assert!(minimal.config.plugins.contains(&"zsh-autosuggestions"));
+        assert!(minimal.config.plugins.contains(&"zsh-syntax-highlighting"));
+        assert!(minimal.config.plugins.contains(&"git"));
     }
 
     #[test]
@@ -266,10 +255,13 @@ mod tests {
 
         assert_eq!(developer.name, "Developer");
         assert_eq!(developer.icon, "👨‍💻");
-        assert_eq!(developer.config.framework, FrameworkType::OhMyZsh);
+        assert_eq!(developer.config.framework, FrameworkType::Zimfw);
+        assert_eq!(developer.config.prompt_engine, Some("starship"));
+        assert_eq!(developer.config.plugins.len(), 8);
         assert!(developer.config.plugins.contains(&"git"));
         assert!(developer.config.plugins.contains(&"docker"));
-        assert!(developer.config.env_vars.contains(&("EDITOR", "nvim")));
+        assert!(developer.config.plugins.contains(&"kubectl"));
+        assert!(developer.config.plugins.contains(&"fzf"));
     }
 
     #[test]
@@ -369,19 +361,35 @@ mod tests {
     }
 
     #[test]
-    fn test_beginner_preset_has_helpful_features() {
-        let beginner = PRESET_REGISTRY
+    fn test_performance_preset_has_five_plugins() {
+        let performance = PRESET_REGISTRY
             .iter()
-            .find(|p| p.id == "beginner")
-            .expect("Beginner preset should exist");
+            .find(|p| p.id == "performance")
+            .expect("Performance preset should exist");
 
-        // Should have beginner-friendly features
-        assert!(beginner.config.plugins.contains(&"colored-man-pages"));
-        assert!(beginner.config.shell_options.contains(&"CORRECT"));
-        assert!(
-            beginner.config.env_vars.contains(&("EDITOR", "nano")),
-            "Beginners should use nano by default"
+        assert_eq!(
+            performance.config.plugins.len(),
+            5,
+            "Performance preset should have exactly 5 plugins"
         );
+        assert_eq!(performance.config.framework, FrameworkType::Zinit);
+        assert_eq!(performance.config.prompt_engine, Some("starship"));
+    }
+
+    #[test]
+    fn test_fancy_preset_has_twelve_plugins() {
+        let fancy = PRESET_REGISTRY
+            .iter()
+            .find(|p| p.id == "fancy")
+            .expect("Fancy preset should exist");
+
+        assert_eq!(
+            fancy.config.plugins.len(),
+            12,
+            "Fancy preset should have exactly 12 plugins"
+        );
+        assert_eq!(fancy.config.framework, FrameworkType::OhMyZsh);
+        assert_eq!(fancy.config.framework_theme, Some("powerlevel10k"));
     }
 
     #[test]
@@ -394,9 +402,36 @@ mod tests {
         let prompt_mode = minimal.config.prompt_mode();
         match prompt_mode {
             PromptMode::PromptEngine { engine } => {
-                assert_eq!(engine, "starship");
+                assert_eq!(engine, "pure");
             }
             _ => panic!("Expected PromptEngine mode"),
         }
+    }
+
+    #[test]
+    fn test_all_presets_meet_plugin_count_requirements() {
+        let minimal = PRESET_REGISTRY
+            .iter()
+            .find(|p| p.id == "minimal")
+            .expect("Minimal preset should exist");
+        assert_eq!(minimal.config.plugins.len(), 3);
+
+        let performance = PRESET_REGISTRY
+            .iter()
+            .find(|p| p.id == "performance")
+            .expect("Performance preset should exist");
+        assert_eq!(performance.config.plugins.len(), 5);
+
+        let fancy = PRESET_REGISTRY
+            .iter()
+            .find(|p| p.id == "fancy")
+            .expect("Fancy preset should exist");
+        assert_eq!(fancy.config.plugins.len(), 12);
+
+        let developer = PRESET_REGISTRY
+            .iter()
+            .find(|p| p.id == "developer")
+            .expect("Developer preset should exist");
+        assert_eq!(developer.config.plugins.len(), 8);
     }
 }
