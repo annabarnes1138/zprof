@@ -122,10 +122,8 @@ pub fn execute_with_input(_args: InitArgs, input: &dyn UserInput) -> Result<()> 
             println!("  Theme: {}", framework_info.theme);
             println!("  Location: {}", base_dir.join("profiles").join(&profile_name).display());
 
-            if let Ok(zshenv_backup) = get_last_backup_path(&base_dir) {
-                if let Some(backup) = zshenv_backup {
-                    println!("  Backup: {}", backup.display());
-                }
+            if let Ok(Some(backup)) = get_last_backup_path(&base_dir) {
+                println!("  Backup: {}", backup.display());
             }
 
             println!();
@@ -211,7 +209,7 @@ fn import_framework(
         let custom_source = "\n# Source shared customizations (edit ~/.zsh-profiles/shared/custom.zsh)\n\
                              [ -f \"$HOME/.zsh-profiles/shared/custom.zsh\" ] && source \"$HOME/.zsh-profiles/shared/custom.zsh\"\n";
 
-        let modified_content = format!("{}{}{}", histfile_header, cleaned_content, custom_source);
+        let modified_content = format!("{histfile_header}{cleaned_content}{custom_source}");
 
         let zshrc_dest = profile_dir.join(".zshrc");
 
@@ -242,7 +240,7 @@ fn import_framework(
             fs::copy(&framework_info.config_path, &config_dest)
                 .with_context(|| format!("Failed to copy framework config to {}", config_dest.display()))?;
 
-            info!("Copied framework config file: {:?}", config_name);
+            info!("Copied framework config file: {config_name:?}");
         }
     }
 
@@ -331,6 +329,12 @@ pub mod test_utils {
         pub input_called: RefCell<bool>,
     }
 
+    impl Default for MockUserInput {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl MockUserInput {
         // NOTE: These methods are currently unused but kept for future test re-enablement
         // See tests/init_test.rs for disabled tests that use this mock
@@ -381,6 +385,6 @@ mod tests {
     fn test_init_args_creation() {
         let args = InitArgs {};
         // Just verify the struct can be created
-        assert!(format!("{:?}", args).contains("InitArgs"));
+        assert!(format!("{args:?}").contains("InitArgs"));
     }
 }

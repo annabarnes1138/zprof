@@ -67,8 +67,7 @@ fn detect_backup(profile_name: &Option<String>) -> Result<BackupInfo> {
         let profile_path = profiles_dir.join(name);
         if !profile_path.exists() {
             anyhow::bail!(
-                "Profile '{}' not found\n\n  Run 'zprof list' to see available profiles",
-                name
+                "Profile '{name}' not found\n\n  Run 'zprof list' to see available profiles"
             );
         }
         vec![profile_path]
@@ -429,9 +428,8 @@ alias ll='ls -la'
         let manifest = format!(
             r#"[profile]
 name = "test"
-framework = "{}"
-"#,
-            framework
+framework = "{framework}"
+"#
         );
         fs::write(profile_dir.join("profile.toml"), manifest)?;
         Ok(())

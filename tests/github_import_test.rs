@@ -149,8 +149,7 @@ fn test_clone_nonexistent_repository() {
     let error_msg = result.unwrap_err().to_string();
     assert!(
         error_msg.contains("Repository not found") || error_msg.contains("clone"),
-        "Error message should mention repository not found or clone failure: {}",
-        error_msg
+        "Error message should mention repository not found or clone failure: {error_msg}"
     );
 }
 
@@ -170,8 +169,7 @@ fn test_clone_repo_without_manifest() {
     let error_msg = result.unwrap_err().to_string();
     assert!(
         error_msg.contains("profile.toml not found"),
-        "Error message should mention profile.toml not found: {}",
-        error_msg
+        "Error message should mention profile.toml not found: {error_msg}"
     );
 }
 

@@ -44,7 +44,7 @@ impl Framework for OhMyZsh {
                 }
             }
             Err(e) => {
-                log::warn!("Could not read metadata for {:?}: {:#}", config_path, e);
+                log::warn!("Could not read metadata for {config_path:?}: {e:#}");
                 return None;
             }
         }
@@ -53,7 +53,7 @@ impl Framework for OhMyZsh {
         let content = match fs::read_to_string(&config_path) {
             Ok(c) => c,
             Err(e) => {
-                log::warn!("Could not read .zshrc at {:?}: {:#}", config_path, e);
+                log::warn!("Could not read .zshrc at {config_path:?}: {e:#}");
                 return None;
             }
         };

@@ -63,7 +63,7 @@ pub fn import_profile(options: ImportOptions) -> Result<String> {
 
     // 2. Create temp directory for extraction
     let temp_dir = create_temp_extraction_dir()?;
-    log::info!("Extracting to temp dir: {:?}", temp_dir);
+    log::info!("Extracting to temp dir: {temp_dir:?}");
 
     // 3. Extract archive
     let extract_result = extract_archive(&options.archive_path, &temp_dir);
@@ -124,7 +124,7 @@ pub fn import_profile(options: ImportOptions) -> Result<String> {
         // Clean up temp dir on profile creation failure
         let _ = fs::remove_dir_all(&temp_dir);
         return Err(e).with_context(|| {
-            format!("Failed to create profile directory: {:?}", profile_dir)
+            format!("Failed to create profile directory: {profile_dir:?}")
         });
     }
 
@@ -157,7 +157,7 @@ pub fn import_profile(options: ImportOptions) -> Result<String> {
     // 12. Clean up temp directory
     fs::remove_dir_all(&temp_dir).context("Failed to clean up temp directory")?;
 
-    log::info!("Import completed successfully: {}", profile_name);
+    log::info!("Import completed successfully: {profile_name}");
     Ok(profile_name)
 }
 
@@ -189,9 +189,7 @@ fn extract_archive(archive_path: &Path, dest_dir: &Path) -> Result<()> {
     let mut archive = Archive::new(decoder);
 
     archive.unpack(dest_dir).with_context(|| {
-        format!(
-            "✗ Failed to unpack archive. Archive may be corrupted.\n  → Try re-downloading or re-creating the archive"
-        )
+        "✗ Failed to unpack archive. Archive may be corrupted.\n  → Try re-downloading or re-creating the archive".to_string()
     })?;
 
     Ok(())
@@ -237,17 +235,14 @@ fn validate_archive_contents(temp_dir: &Path) -> Result<ArchiveMetadata> {
 pub fn load_manifest_from_path(manifest_path: &Path) -> Result<Manifest> {
     ensure!(
         manifest_path.exists(),
-        "Manifest not found at: {:?}",
-        manifest_path
+        "Manifest not found at: {manifest_path:?}"
     );
 
     let toml_content = fs::read_to_string(manifest_path)
-        .with_context(|| format!("Failed to read manifest: {:?}", manifest_path))?;
+        .with_context(|| format!("Failed to read manifest: {manifest_path:?}"))?;
 
     let manifest: Manifest = toml::from_str(&toml_content).with_context(|| {
-        format!(
-            "✗ Failed to parse manifest TOML\n  → The profile.toml in the archive is invalid"
-        )
+        "✗ Failed to parse manifest TOML\n  → The profile.toml in the archive is invalid".to_string()
     })?;
 
     // Validate framework is supported
@@ -279,14 +274,14 @@ pub fn handle_name_conflict(profile_name: &str, force: bool) -> Result<String> {
 
     if force {
         // Force overwrite - delete existing
-        println!("⚠ Overwriting existing profile: {}", profile_name);
+        println!("⚠ Overwriting existing profile: {profile_name}");
         fs::remove_dir_all(&profile_dir)
-            .with_context(|| format!("Failed to remove existing profile: {}", profile_name))?;
+            .with_context(|| format!("Failed to remove existing profile: {profile_name}"))?;
         return Ok(profile_name.to_string());
     }
 
     // Prompt user
-    println!("⚠ Profile '{}' already exists", profile_name);
+    println!("⚠ Profile '{profile_name}' already exists");
     println!();
     let action = prompt_conflict_resolution()?;
 
@@ -299,7 +294,7 @@ pub fn handle_name_conflict(profile_name: &str, force: bool) -> Result<String> {
         "o" | "overwrite" => {
             println!("→ Overwriting existing profile...");
             fs::remove_dir_all(&profile_dir)
-                .with_context(|| format!("Failed to remove existing profile: {}", profile_name))?;
+                .with_context(|| format!("Failed to remove existing profile: {profile_name}"))?;
             Ok(profile_name.to_string())
         }
         "c" | "cancel" => {
@@ -389,8 +384,8 @@ fn copy_profile_files(temp_dir: &Path, profile_dir: &Path) -> Result<()> {
         // Copy custom file
         let dst_path = profile_dir.join(filename);
         fs::copy(&path, &dst_path)
-            .with_context(|| format!("Failed to copy {}", filename))?;
-        log::info!("Copied custom file: {}", filename);
+            .with_context(|| format!("Failed to copy {filename}"))?;
+        log::info!("Copied custom file: {filename}");
     }
 
     Ok(())
@@ -410,8 +405,7 @@ pub fn install_framework(_profile_dir: &Path, manifest: &Manifest) -> Result<()>
     // Placeholder for MVP
     println!("  ℹ Framework installation not yet implemented");
     println!(
-        "  → You'll need to manually install {} in this profile",
-        framework
+        "  → You'll need to manually install {framework} in this profile"
     );
 
     Ok(())

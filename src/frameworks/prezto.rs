@@ -45,7 +45,7 @@ impl Framework for Prezto {
                 }
             }
             Err(e) => {
-                log::warn!("Could not read metadata for {:?}: {:#}", config_path, e);
+                log::warn!("Could not read metadata for {config_path:?}: {e:#}");
                 return None;
             }
         }
@@ -54,7 +54,7 @@ impl Framework for Prezto {
         let content = match fs::read_to_string(&config_path) {
             Ok(c) => c,
             Err(e) => {
-                log::warn!("Could not read .zpreztorc at {:?}: {:#}", config_path, e);
+                log::warn!("Could not read .zpreztorc at {config_path:?}: {e:#}");
                 return None;
             }
         };
@@ -108,11 +108,11 @@ fn extract_modules(content: &str) -> Vec<String> {
         // Extract quoted module names
         if in_pmodule_section || (trimmed.contains("':prezto:load'") && trimmed.contains("pmodule")) {
             // Simple quote extraction without regex
-            let mut chars = trimmed.chars().peekable();
+            let chars = trimmed.chars().peekable();
             let mut in_quote = false;
             let mut current_module = String::new();
 
-            while let Some(ch) = chars.next() {
+            for ch in chars {
                 if ch == '\'' {
                     if in_quote {
                         // End of quoted string

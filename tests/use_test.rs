@@ -10,20 +10,19 @@ fn create_test_profile(profiles_dir: &std::path::Path, name: &str, framework: &s
     // Create profile.toml
     let manifest = format!(
         r#"[profile]
-name = "{}"
-framework = "{}"
+name = "{name}"
+framework = "{framework}"
 theme = "robbyrussell"
 created = "2025-10-31T14:30:00Z"
 modified = "2025-10-31T14:30:00Z"
-"#,
-        name, framework
+"#
     );
     fs::write(profile_dir.join("profile.toml"), manifest)?;
 
     // Create .zshrc
     fs::write(
         profile_dir.join(".zshrc"),
-        format!("# {} profile .zshrc\n", name),
+        format!("# {name} profile .zshrc\n"),
     )?;
 
     // Create .zshenv
@@ -62,8 +61,10 @@ fn test_profile_switching_updates_config() -> Result<()> {
     let config_path = temp_dir.path().join("config.toml");
 
     // Create initial config
-    let mut config = Config::default();
-    config.active_profile = Some("profile1".to_string());
+    let config = Config {
+        active_profile: Some("profile1".to_string()),
+        ..Default::default()
+    };
     config.write_to_file(config_path.clone())?;
 
     // Temporarily override where config is loaded from for testing
@@ -107,9 +108,10 @@ fn test_config_serialization() -> Result<()> {
     let config_path = temp_dir.path().join("config.toml");
 
     // Create config with values
-    let mut config = Config::default();
-    config.active_profile = Some("my-profile".to_string());
-    config.default_framework = Some("oh-my-zsh".to_string());
+    let config = Config {
+        active_profile: Some("my-profile".to_string()),
+        default_framework: Some("oh-my-zsh".to_string()),
+    };
 
     // Write to file
     config.write_to_file(config_path.clone())?;

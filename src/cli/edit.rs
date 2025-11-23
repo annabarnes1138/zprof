@@ -36,11 +36,11 @@ pub fn execute(args: EditArgs) -> Result<()> {
 
     // 2. Detect editor
     let editor = detect_editor()?;
-    log::info!("Using editor: {}", editor);
+    log::info!("Using editor: {editor}");
 
     // 3. Create backup before editing (NFR002)
     let backup_path = create_backup(&manifest_path)?;
-    log::info!("Created backup: {:?}", backup_path);
+    log::info!("Created backup: {backup_path:?}");
 
     // 4. Open editor
     println!("→ Opening {} in {}...", manifest_path.display(), editor);
@@ -48,7 +48,7 @@ pub fn execute(args: EditArgs) -> Result<()> {
 
     // Handle editor failure
     if let Err(e) = edit_result {
-        eprintln!("✗ Editor failed to launch: {}", e);
+        eprintln!("✗ Editor failed to launch: {e}");
         println!("  → Restoring backup...");
         restore_backup(&backup_path, &manifest_path)?;
         bail!("Edit cancelled due to editor failure");
@@ -87,7 +87,7 @@ pub fn execute(args: EditArgs) -> Result<()> {
                 // Validation failed
                 println!();
                 println!("✗ TOML validation failed:");
-                println!("{:#}", e);
+                println!("{e:#}");
                 println!();
 
                 // Prompt for action
@@ -160,10 +160,10 @@ fn open_editor(editor: &str, file_path: &Path) -> Result<()> {
     let status = Command::new(editor)
         .arg(file_path)
         .status()
-        .context(format!("Failed to launch editor: {}", editor))?;
+        .context(format!("Failed to launch editor: {editor}"))?;
 
     if !status.success() {
-        bail!("Editor exited with non-zero status: {}", status);
+        bail!("Editor exited with non-zero status: {status}");
     }
 
     Ok(())
@@ -185,12 +185,12 @@ fn create_backup(file_path: &Path) -> Result<PathBuf> {
         .to_str()
         .context("Invalid filename")?;
 
-    let backup_filename = format!("{}.backup.{}", filename, timestamp);
+    let backup_filename = format!("{filename}.backup.{timestamp}");
     let backup_path = backups_dir.join(backup_filename);
 
     // Copy file to backup
     fs::copy(file_path, &backup_path)
-        .with_context(|| format!("Failed to create backup at {:?}", backup_path))?;
+        .with_context(|| format!("Failed to create backup at {backup_path:?}"))?;
 
     Ok(backup_path)
 }
@@ -279,7 +279,7 @@ mod tests {
         fs::create_dir_all(&backup_dir)?;
 
         let timestamp = Utc::now().format("%Y%m%d-%H%M%S");
-        let backup_path = backup_dir.join(format!("test.toml.backup.{}", timestamp));
+        let backup_path = backup_dir.join(format!("test.toml.backup.{timestamp}"));
 
         fs::copy(&test_file, &backup_path)?;
 

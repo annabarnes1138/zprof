@@ -62,7 +62,7 @@ fn test_export_creates_archive() -> Result<()> {
     let output_dir = temp_dir.path().join("output");
     fs::create_dir(&output_dir)?;
 
-    let output_path = output_dir.join(format!("{}.zprof", profile_name));
+    let output_path = output_dir.join(format!("{profile_name}.zprof"));
 
     // Export profile
     let archive_path = export::export_profile(profile_name, Some(output_path.clone()))?;
@@ -98,7 +98,7 @@ fn test_archive_contains_required_files() -> Result<()> {
 
     let output_dir = temp_dir.path().join("output");
     fs::create_dir(&output_dir)?;
-    let output_path = output_dir.join(format!("{}.zprof", profile_name));
+    let output_path = output_dir.join(format!("{profile_name}.zprof"));
 
     // Export profile
     let archive_path = export::export_profile(profile_name, Some(output_path))?;
@@ -146,7 +146,7 @@ fn test_metadata_json_valid() -> Result<()> {
 
     let output_dir = temp_dir.path().join("output");
     fs::create_dir(&output_dir)?;
-    let output_path = output_dir.join(format!("{}.zprof", profile_name));
+    let output_path = output_dir.join(format!("{profile_name}.zprof"));
 
     // Export profile
     let archive_path = export::export_profile(profile_name, Some(output_path))?;
@@ -215,7 +215,7 @@ fn test_archive_excludes_framework_dirs() -> Result<()> {
 
     let output_dir = temp_dir.path().join("output");
     fs::create_dir(&output_dir)?;
-    let output_path = output_dir.join(format!("{}.zprof", profile_name));
+    let output_path = output_dir.join(format!("{profile_name}.zprof"));
 
     // Export profile
     let archive_path = export::export_profile(profile_name, Some(output_path))?;
@@ -268,7 +268,7 @@ fn test_count_archive_files() -> Result<()> {
 
     let output_dir = temp_dir.path().join("output");
     fs::create_dir(&output_dir)?;
-    let output_path = output_dir.join(format!("{}.zprof", profile_name));
+    let output_path = output_dir.join(format!("{profile_name}.zprof"));
 
     // Export profile
     let archive_path = export::export_profile(profile_name, Some(output_path))?;
@@ -323,7 +323,7 @@ fn test_export_existing_file_fails() -> Result<()> {
 
     let output_dir = temp_dir.path().join("output");
     fs::create_dir(&output_dir)?;
-    let output_path = output_dir.join(format!("{}.zprof", profile_name));
+    let output_path = output_dir.join(format!("{profile_name}.zprof"));
 
     // Create existing file
     fs::write(&output_path, "existing content")?;

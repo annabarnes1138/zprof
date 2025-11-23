@@ -1,7 +1,7 @@
 use anyhow::Result;
 use serial_test::serial;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::TempDir;
 
@@ -15,19 +15,18 @@ fn setup_test_env() -> Result<(TempDir, PathBuf)> {
 }
 
 /// Helper to create a test profile
-fn create_test_profile(home_dir: &PathBuf, name: &str, framework: &str, created: &str) -> Result<()> {
+fn create_test_profile(home_dir: &Path, name: &str, framework: &str, created: &str) -> Result<()> {
     let profile_dir = home_dir.join(".zsh-profiles").join("profiles").join(name);
     fs::create_dir_all(&profile_dir)?;
 
     let manifest = format!(
         r#"[profile]
-name = "{}"
-framework = "{}"
+name = "{name}"
+framework = "{framework}"
 theme = "robbyrussell"
-created = "{}"
-modified = "{}"
-"#,
-        name, framework, created, created
+created = "{created}"
+modified = "{created}"
+"#
     );
 
     fs::write(profile_dir.join("profile.toml"), manifest)?;
@@ -35,11 +34,11 @@ modified = "{}"
 }
 
 /// Helper to create config file
-fn create_config(home_dir: &PathBuf, active_profile: Option<&str>) -> Result<()> {
+fn create_config(home_dir: &Path, active_profile: Option<&str>) -> Result<()> {
     let config_path = home_dir.join(".zsh-profiles").join("config.toml");
 
     let content = if let Some(profile) = active_profile {
-        format!(r#"active_profile = "{}""#, profile)
+        format!(r#"active_profile = "{profile}""#)
     } else {
         String::new()
     };

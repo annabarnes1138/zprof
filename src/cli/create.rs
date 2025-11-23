@@ -8,7 +8,7 @@ use clap::Args;
 use dialoguer::Confirm;
 use regex::Regex;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::core::config::Config;
 use crate::core::filesystem::{self, copy_dir_recursive, create_shared_history, get_zprof_dir};
@@ -261,16 +261,14 @@ fn validate_profile_name(name: &str) -> Result<()> {
     let valid_pattern = Regex::new(r"^[a-zA-Z0-9\-]+$").unwrap();
     if !valid_pattern.is_match(name) {
         bail!(
-            "✗ Error: Invalid profile name '{}'\n  → Use alphanumeric characters and hyphens only",
-            name
+            "✗ Error: Invalid profile name '{name}'\n  → Use alphanumeric characters and hyphens only"
         );
     }
 
     // Check for path traversal attempts
     if name.contains("..") || name.contains('/') || name.contains('\\') {
         bail!(
-            "✗ Error: Invalid profile name '{}'\n  → Profile names cannot contain path separators",
-            name
+            "✗ Error: Invalid profile name '{name}'\n  → Profile names cannot contain path separators"
         );
     }
 
@@ -290,7 +288,7 @@ fn get_profile_dir(name: &str) -> Result<PathBuf> {
 /// - Preserves original dotfiles
 fn copy_framework_files(
     framework_info: &crate::frameworks::FrameworkInfo,
-    profile_dir: &PathBuf,
+    profile_dir: &Path,
 ) -> Result<()> {
     let home_dir = dirs::home_dir().context("Failed to get home directory")?;
 
@@ -331,7 +329,7 @@ fn copy_framework_files(
         let custom_source = "\n# Source shared customizations (edit ~/.zsh-profiles/shared/custom.zsh)\n\
                              [ -f \"$HOME/.zsh-profiles/shared/custom.zsh\" ] && source \"$HOME/.zsh-profiles/shared/custom.zsh\"\n";
 
-        let modified_content = format!("{}{}{}", histfile_header, cleaned_content, custom_source);
+        let modified_content = format!("{histfile_header}{cleaned_content}{custom_source}");
 
         let zshrc_dest = profile_dir.join(".zshrc");
         fs::write(&zshrc_dest, modified_content)
@@ -403,9 +401,9 @@ fn update_global_config(profile_name: &str) -> Result<()> {
 fn display_success(
     name: &str,
     _framework_info: &crate::frameworks::FrameworkInfo,
-    profile_dir: &PathBuf,
+    profile_dir: &Path,
 ) -> Result<()> {
-    println!("\n✓ Profile '{}' created successfully", name);
+    println!("\n✓ Profile '{name}' created successfully");
     println!("  Location: {}", profile_dir.display());
 
     // Display profile details using shared function
@@ -413,7 +411,7 @@ fn display_success(
 
     // Ask if user wants to switch to the new profile
     let should_switch = Confirm::new()
-        .with_prompt(format!("Switch to '{}' now?", name))
+        .with_prompt(format!("Switch to '{name}' now?"))
         .default(true)
         .interact()
         .context("Failed to read user input for profile switch confirmation")?;
@@ -424,7 +422,7 @@ fn display_success(
             profile_name: name.to_string(),
         })?;
     } else {
-        println!("  → Use 'zprof use {}' to switch to this profile later", name);
+        println!("  → Use 'zprof use {name}' to switch to this profile later");
     }
 
     Ok(())

@@ -354,8 +354,7 @@ fn test_performance_under_2_seconds() {
         // Should complete in under 2 seconds (AC #4)
         assert!(
             duration.as_secs() < 2,
-            "Detection took {:?}, expected < 2s",
-            duration
+            "Detection took {duration:?}, expected < 2s"
         );
     });
 }

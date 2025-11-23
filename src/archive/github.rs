@@ -67,18 +67,18 @@ pub fn import_from_github(options: GitHubImportOptions) -> Result<String> {
         "https://github.com/{}/{}",
         options.username, options.repo_name
     );
-    println!("→ Cloning repository: {}", repo_url);
+    println!("→ Cloning repository: {repo_url}");
 
     // 2. Create temp directory for clone
     let temp_dir = create_temp_clone_dir()?;
-    log::info!("Cloning to temp dir: {:?}", temp_dir);
+    log::info!("Cloning to temp dir: {temp_dir:?}");
 
     // 3. Clone repository
     let clone_result = clone_repository(&repo_url, &temp_dir);
     if let Err(e) = clone_result {
         // Clean up temp dir on clone failure
         let _ = fs::remove_dir_all(&temp_dir);
-        return Err(e).context(format!("Failed to clone repository: {}", repo_url));
+        return Err(e).context(format!("Failed to clone repository: {repo_url}"));
     }
 
     // 4. Search for profile.toml
@@ -131,7 +131,7 @@ pub fn import_from_github(options: GitHubImportOptions) -> Result<String> {
         // Clean up temp dir on profile creation failure
         let _ = fs::remove_dir_all(&temp_dir);
         return Err(e).with_context(|| {
-            format!("Failed to create profile directory: {:?}", profile_dir)
+            format!("Failed to create profile directory: {profile_dir:?}")
         });
     }
 
@@ -172,7 +172,7 @@ pub fn import_from_github(options: GitHubImportOptions) -> Result<String> {
     // 13. Clean up temp directory
     fs::remove_dir_all(&temp_dir).context("Failed to clean up temp directory")?;
 
-    log::info!("GitHub import completed: {}", profile_name);
+    log::info!("GitHub import completed: {profile_name}");
     Ok(profile_name)
 }
 
@@ -208,8 +208,7 @@ pub fn parse_github_url(input: &str) -> Result<(String, String)> {
     let parts: Vec<&str> = path.split('/').collect();
     ensure!(
         parts.len() == 2,
-        "Invalid GitHub format. Expected: github:user/repo\n  → Got: {}\n  → Make sure to use the format: github:username/repository",
-        input
+        "Invalid GitHub format. Expected: github:user/repo\n  → Got: {input}\n  → Make sure to use the format: github:username/repository"
     );
 
     let username = parts[0].trim().to_string();
@@ -268,7 +267,7 @@ fn clone_repository(url: &str, dest: &Path) -> Result<()> {
         let received = progress.received_objects();
         let total = progress.total_objects();
         if total > 0 {
-            print!("\r  Receiving objects: {}/{}", received, total);
+            print!("\r  Receiving objects: {received}/{total}");
             std::io::stdout().flush().ok();
         }
         true
@@ -292,13 +291,10 @@ fn clone_repository(url: &str, dest: &Path) -> Result<()> {
             // Provide helpful error messages based on error type
             let error_msg = if e.code() == git2::ErrorCode::NotFound {
                 format!(
-                    "✗ Repository not found: {}\n  → Check that the repository exists and is spelled correctly\n  → For private repos, ensure you have access and git credentials are configured",
-                    url
+                    "✗ Repository not found: {url}\n  → Check that the repository exists and is spelled correctly\n  → For private repos, ensure you have access and git credentials are configured"
                 )
             } else if e.message().contains("authentication") || e.message().contains("credentials") {
-                format!(
-                    "✗ Authentication failed\n  → This may be a private repository requiring authentication\n  → Configure git credentials: git config --global credential.helper\n  → For GitHub, you may need a Personal Access Token"
-                )
+                "✗ Authentication failed\n  → This may be a private repository requiring authentication\n  → Configure git credentials: git config --global credential.helper\n  → For GitHub, you may need a Personal Access Token".to_string()
             } else {
                 format!(
                     "✗ Git clone failed\n  → Error: {}\n  → Check repository URL and network connection",
@@ -339,7 +335,7 @@ fn find_manifest_in_repo(repo_dir: &Path) -> Result<PathBuf> {
 
     for path in &search_paths {
         if path.exists() {
-            log::info!("Found manifest at: {:?}", path);
+            log::info!("Found manifest at: {path:?}");
             return Ok(path.clone());
         }
     }
@@ -407,14 +403,14 @@ fn copy_repo_files(repo_dir: &Path, profile_dir: &Path) -> Result<()> {
             || filename.eq_ignore_ascii_case("changelog")
             || filename.eq_ignore_ascii_case("changelog.md")
         {
-            log::debug!("Skipping file: {}", filename);
+            log::debug!("Skipping file: {filename}");
             continue;
         }
 
         // Copy custom config file
         let dst_path = profile_dir.join(filename);
-        fs::copy(&path, &dst_path).with_context(|| format!("Failed to copy {}", filename))?;
-        log::info!("Copied custom file: {}", filename);
+        fs::copy(&path, &dst_path).with_context(|| format!("Failed to copy {filename}"))?;
+        log::info!("Copied custom file: {filename}");
     }
 
     Ok(())
@@ -469,7 +465,7 @@ fn store_github_metadata(profile_dir: &Path, repo_url: &str, repo_dir: &Path) ->
     let metadata_path = profile_dir.join(".zprof-source");
     fs::write(&metadata_path, metadata).context("Failed to write source metadata")?;
 
-    log::info!("Stored GitHub metadata: {}", commit_hash);
+    log::info!("Stored GitHub metadata: {commit_hash}");
     Ok(())
 }
 

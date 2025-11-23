@@ -14,4 +14,5 @@ pub mod tui;
 
 // Re-export commonly used items
 pub use frameworks::{detect_existing_framework, FrameworkInfo, FrameworkType};
-pub use prompts::{EngineMetadata, InstallMethod, PromptEngine};
+pub use prompts::engine::{EngineMetadata, InstallMethod, PromptEngine};
+pub use prompts::installer::EngineInstaller;

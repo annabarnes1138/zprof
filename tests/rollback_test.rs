@@ -32,28 +32,26 @@ impl TestEnv {
         // Create profile manifest
         let manifest = format!(
             r#"[profile]
-name = "{}"
-framework = "{}"
+name = "{name}"
+framework = "{framework}"
 theme = "robbyrussell"
 created = "2025-11-01T10:00:00Z"
 modified = "2025-11-01T10:00:00Z"
-"#,
-            name, framework
+"#
         );
         fs::write(profile_dir.join("profile.toml"), manifest)?;
 
         // Create backup .zshrc file
         let backup_content = format!(
             "# Original .zshrc backed up during zprof init\n\
-             # Profile: {}\n\
-             # Framework: {}\n\
+             # Profile: {name}\n\
+             # Framework: {framework}\n\
              \n\
              export PATH=$HOME/bin:$PATH\n\
              export EDITOR=vim\n\
              \n\
              alias ll='ls -la'\n\
-             alias gs='git status'\n",
-            name, framework
+             alias gs='git status'\n"
         );
         fs::write(profile_dir.join(".zshrc.pre-zprof"), backup_content)?;
 
@@ -170,18 +168,17 @@ fn test_framework_detection() -> Result<()> {
     ];
 
     for (framework_name, framework_dir) in frameworks {
-        let profile_dir = env.create_profile_with_backup(&format!("test-{}", framework_name), framework_name)?;
+        let profile_dir = env.create_profile_with_backup(&format!("test-{framework_name}"), framework_name)?;
 
         // Verify manifest exists
         let manifest_path = profile_dir.join("profile.toml");
-        assert!(manifest_path.exists(), "Manifest should exist for {}", framework_name);
+        assert!(manifest_path.exists(), "Manifest should exist for {framework_name}");
 
         // Verify framework directory exists
         let fw_dir = profile_dir.join(framework_dir);
         assert!(
             fw_dir.exists(),
-            "Framework directory should exist for {}",
-            framework_name
+            "Framework directory should exist for {framework_name}"
         );
     }
 

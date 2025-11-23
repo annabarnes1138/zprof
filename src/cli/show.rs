@@ -58,8 +58,8 @@ pub fn display_profile_details(profile_name: &str) -> Result<()> {
     // Show creation date if available
     if let Some(created) = metadata.created {
         match format_date(&created) {
-            Ok(formatted_date) => println!("Created: {}", formatted_date),
-            Err(_) => println!("Created: {}", created),
+            Ok(formatted_date) => println!("Created: {formatted_date}"),
+            Err(_) => println!("Created: {created}"),
         }
     }
 
@@ -71,7 +71,7 @@ pub fn display_profile_details(profile_name: &str) -> Result<()> {
     } else {
         println!("Plugins ({}):", manifest_obj.plugins.enabled.len());
         for plugin in &manifest_obj.plugins.enabled {
-            println!("  - {}", plugin);
+            println!("  - {plugin}");
         }
     }
     println!();
@@ -80,7 +80,7 @@ pub fn display_profile_details(profile_name: &str) -> Result<()> {
     if !manifest_obj.env.is_empty() {
         println!("Environment Variables ({}):", manifest_obj.env.len());
         for (key, value) in &manifest_obj.env {
-            println!("  {}={}", key, value);
+            println!("  {key}={value}");
         }
         println!();
     }

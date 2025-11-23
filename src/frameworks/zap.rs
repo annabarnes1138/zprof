@@ -45,7 +45,7 @@ impl Framework for Zap {
                 }
             }
             Err(e) => {
-                log::warn!("Could not read metadata for {:?}: {:#}", config_path, e);
+                log::warn!("Could not read metadata for {config_path:?}: {e:#}");
                 return None;
             }
         }
@@ -54,7 +54,7 @@ impl Framework for Zap {
         let content = match fs::read_to_string(&config_path) {
             Ok(c) => c,
             Err(e) => {
-                log::warn!("Could not read .zshrc at {:?}: {:#}", config_path, e);
+                log::warn!("Could not read .zshrc at {config_path:?}: {e:#}");
                 return None;
             }
         };
@@ -95,6 +95,7 @@ impl Framework for Zap {
 /// Looks for patterns like:
 /// - plug "zsh-users/zsh-autosuggestions"
 /// - plug "zsh-users/zsh-syntax-highlighting"
+///
 /// Processes line-by-line to prevent ReDoS attacks
 fn extract_zap_plugins(content: &str) -> (Vec<String>, String) {
     const MAX_LINES: usize = 10000; // Limit lines processed
@@ -125,12 +126,12 @@ fn extract_zap_plugins(content: &str) -> (Vec<String>, String) {
                         {
                             theme = plugin_str
                                 .split('/')
-                                .last()
+                                .next_back()
                                 .unwrap_or("default")
                                 .to_string();
                         } else {
                             // Extract plugin name from path
-                            let plugin_name = plugin_str.split('/').last().unwrap_or(plugin_str);
+                            let plugin_name = plugin_str.split('/').next_back().unwrap_or(plugin_str);
                             plugins.push(plugin_name.to_string());
                         }
                         break;

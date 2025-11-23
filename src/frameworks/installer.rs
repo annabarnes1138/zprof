@@ -47,9 +47,9 @@ pub fn install_profile(wizard_state: &WizardState, profile_path: &Path) -> Resul
 
     // Step 2: Install plugins
     for plugin in &wizard_state.plugins {
-        pb.set_message(format!("Installing plugin: {}...", plugin));
+        pb.set_message(format!("Installing plugin: {plugin}..."));
         install_plugin(&wizard_state.framework, plugin, profile_path)
-            .context(format!("Failed to install plugin: {}", plugin))?;
+            .context(format!("Failed to install plugin: {plugin}"))?;
         pb.inc(1);
     }
 
@@ -148,7 +148,7 @@ fn install_prezto_placeholder(profile_path: &Path) -> Result<()> {
     // Initialize submodules for Prezto
     use std::process::Command;
     let status = Command::new("git")
-        .args(&["submodule", "update", "--init", "--recursive"])
+        .args(["submodule", "update", "--init", "--recursive"])
         .current_dir(&framework_dir)
         .status()
         .context("Failed to execute git submodule command")?;
@@ -206,7 +206,7 @@ fn install_plugin(
     // Zap handles plugin installation automatically on first shell load
     // Don't create empty directories as they prevent zap from cloning the repos
     if matches!(framework, FrameworkType::Zap) {
-        log::info!("Skipping plugin directory creation for Zap (handles automatically): {}", plugin_name);
+        log::info!("Skipping plugin directory creation for Zap (handles automatically): {plugin_name}");
         return Ok(());
     }
 
@@ -233,9 +233,7 @@ fn install_plugin(
     }
 
     log::info!(
-        "Created plugin directory for {} in {:?}",
-        plugin_name,
-        framework
+        "Created plugin directory for {plugin_name} in {framework:?}"
     );
     Ok(())
 }
@@ -265,9 +263,7 @@ mod tests {
             install_framework(&framework, &framework_profile).unwrap();
             assert!(
                 framework_profile.join(expected_dir).exists(),
-                "Framework directory {} should exist for {:?}",
-                expected_dir,
-                framework
+                "Framework directory {expected_dir} should exist for {framework:?}"
             );
         }
     }

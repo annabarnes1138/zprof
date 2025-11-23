@@ -1,7 +1,6 @@
 use anyhow::Result;
 use flate2::write::GzEncoder;
 use flate2::Compression;
-use serde_json;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
@@ -29,7 +28,7 @@ mod test_helpers {
         // Create valid profile.toml
         let profile_toml = format!(
             r#"[profile]
-name = "{}"
+name = "{profile_name}"
 framework = "oh-my-zsh"
 theme = "robbyrussell"
 created = "2025-10-31T10:00:00Z"
@@ -39,8 +38,7 @@ modified = "2025-10-31T10:00:00Z"
 enabled = ["git", "docker"]
 
 [env]
-"#,
-            profile_name
+"#
         );
 
         // Create tar.gz archive
@@ -238,8 +236,7 @@ fn test_import_corrupted_archive() -> Result<()> {
     let err_msg = result.unwrap_err().to_string();
     assert!(
         err_msg.contains("Failed to extract") || err_msg.contains("corrupted"),
-        "Expected extraction error, got: {}",
-        err_msg
+        "Expected extraction error, got: {err_msg}"
     );
 
     Ok(())

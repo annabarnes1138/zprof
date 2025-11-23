@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::TempDir;
 
@@ -170,8 +170,8 @@ fn test_all_subdirectories_created() {
 
     for dir in expected_dirs {
         let dir_path = zprof_dir.join(dir);
-        assert!(dir_path.exists(), "{} should exist", dir);
-        assert!(dir_path.is_dir(), "{} should be a directory", dir);
+        assert!(dir_path.exists(), "{dir} should exist");
+        assert!(dir_path.is_dir(), "{dir} should be a directory");
     }
 }
 
@@ -180,7 +180,7 @@ fn test_all_subdirectories_created() {
 // ============================================================================
 
 /// Helper to create a mock oh-my-zsh installation for testing
-fn create_mock_oh_my_zsh(home: &PathBuf) {
+fn create_mock_oh_my_zsh(home: &Path) {
     use std::fs;
 
     let omz_dir = home.join(".oh-my-zsh");
@@ -286,7 +286,7 @@ fn test_backup_filename_pattern() {
     use chrono::Local;
 
     let timestamp = Local::now().format("%Y%m%d-%H%M%S");
-    let backup_filename = format!(".zshenv.backup.{}", timestamp);
+    let backup_filename = format!(".zshenv.backup.{timestamp}");
 
     // Verify pattern
     assert!(backup_filename.starts_with(".zshenv.backup."));

@@ -49,7 +49,7 @@ pub fn clone_repository(
        .arg(url)
        .arg(destination);
 
-    log::debug!("Executing: {:?}", cmd);
+    log::debug!("Executing: {cmd:?}");
     
     let output = cmd.output()
         .with_context(|| "Failed to execute git clone command")?;
@@ -57,7 +57,7 @@ pub fn clone_repository(
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         let stdout = String::from_utf8_lossy(&output.stdout);
-        anyhow::bail!("Git clone failed:\nStderr: {}\nStdout: {}", stderr, stdout);
+        anyhow::bail!("Git clone failed:\nStderr: {stderr}\nStdout: {stdout}");
     }
 
     if let Some(pb) = progress_bar {

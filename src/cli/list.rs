@@ -79,13 +79,12 @@ mod tests {
 
         let manifest = format!(
             r#"[profile]
-name = "{}"
-framework = "{}"
+name = "{name}"
+framework = "{framework}"
 theme = "robbyrussell"
 created = "2025-10-31T14:30:00Z"
 modified = "2025-10-31T14:30:00Z"
-"#,
-            name, framework
+"#
         );
 
         fs::write(profile_dir.join("profile.toml"), manifest)?;

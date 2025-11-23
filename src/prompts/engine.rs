@@ -26,8 +26,6 @@ pub enum PromptEngine {
 }
 
 /// Installation method for a prompt engine
-/// Note: Currently unused, planned for future prompt engine integration
-#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InstallMethod {
     /// Install as a binary (via package manager or direct download)
@@ -39,8 +37,6 @@ pub enum InstallMethod {
 }
 
 /// Metadata describing a prompt engine's characteristics and installation
-/// Note: Currently unused, planned for future prompt engine integration
-#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct EngineMetadata {
     /// Human-readable name
@@ -50,8 +46,10 @@ pub struct EngineMetadata {
     /// Whether this engine requires Nerd Fonts to display properly
     pub requires_nerd_font: bool,
     /// How to install this engine
+    #[allow(dead_code)] // Used in installer module, will be integrated in future stories
     pub installation: InstallMethod,
     /// Shell initialization command (e.g., `eval "$(starship init zsh)"`)
+    #[allow(dead_code)] // Used in installer module, will be integrated in future stories
     pub init_command: &'static str,
     /// Whether this engine works across multiple shells (bash, zsh, fish)
     pub cross_shell: bool,
@@ -59,8 +57,6 @@ pub struct EngineMetadata {
 
 impl PromptEngine {
     /// Get metadata for this prompt engine
-    /// Note: Currently unused, planned for future prompt engine integration
-    #[allow(dead_code)]
     pub fn metadata(&self) -> EngineMetadata {
         match self {
             PromptEngine::Starship => EngineMetadata {
@@ -110,29 +106,25 @@ impl PromptEngine {
                 installation: InstallMethod::GitClone {
                     repo: "https://github.com/spaceship-prompt/spaceship-prompt.git",
                 },
-                init_command: "source $HOME/.config/zsh/spaceship-prompt/spaceship.zsh",
+                init_command: "source $HOME/.zprof/engines/spaceship-prompt/spaceship.zsh",
                 cross_shell: false,
             },
         }
     }
 
     /// Returns the human-readable name of the engine
-    /// Note: Currently unused, planned for future prompt engine integration
-    #[allow(dead_code)]
+    #[allow(dead_code)] // Will be used when installer is integrated in future stories
     pub fn name(&self) -> &str {
         self.metadata().name
     }
 
     /// Check if this engine requires Nerd Fonts
-    /// Note: Currently unused, planned for future prompt engine integration
-    #[allow(dead_code)]
     pub fn requires_nerd_font(&self) -> bool {
         self.metadata().requires_nerd_font
     }
 
     /// Check if this engine works across multiple shells
-    /// Note: Currently unused, planned for future prompt engine integration
-    #[allow(dead_code)]
+    #[allow(dead_code)] // Will be used when installer is integrated in future stories
     pub fn is_cross_shell(&self) -> bool {
         self.metadata().cross_shell
     }

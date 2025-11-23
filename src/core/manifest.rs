@@ -293,8 +293,7 @@ impl Manifest {
         for (idx, plugin) in self.plugins.enabled.iter().enumerate() {
             if plugin.trim().is_empty() {
                 bail!(
-                    "Validation error: plugins.enabled[{}] cannot be empty string\n\nExample:\n  [plugins]\n  enabled = [\"git\", \"docker\"]",
-                    idx
+                    "Validation error: plugins.enabled[{idx}] cannot be empty string\n\nExample:\n  [plugins]\n  enabled = [\"git\", \"docker\"]"
                 );
             }
         }
@@ -323,12 +322,11 @@ impl Manifest {
             }
             if !key.chars().all(|c| c.is_alphanumeric() || c == '_') {
                 bail!(
-                    "Validation error: env variable key '{}' contains invalid characters\n  → Keys must be alphanumeric with underscores only\n\nExample:\n  [env]\n  EDITOR = \"vim\"\n  MY_VAR = \"value\"",
-                    key
+                    "Validation error: env variable key '{key}' contains invalid characters\n  → Keys must be alphanumeric with underscores only\n\nExample:\n  [env]\n  EDITOR = \"vim\"\n  MY_VAR = \"value\""
                 );
             }
             if value.trim().is_empty() {
-                log::warn!("env variable '{}' has empty value", key);
+                log::warn!("env variable '{key}' has empty value");
             }
         }
 
@@ -343,11 +341,10 @@ pub fn parse_manifest(toml_content: &str) -> Result<Manifest> {
         let error_msg = e.to_string();
         if error_msg.contains("line") || error_msg.contains("column") {
             anyhow::anyhow!(
-                "TOML parse error: {}\n\n  → Check TOML syntax at the indicated location",
-                error_msg
+                "TOML parse error: {error_msg}\n\n  → Check TOML syntax at the indicated location"
             )
         } else {
-            anyhow::anyhow!("Failed to parse profile.toml - check TOML syntax\n  {}", error_msg)
+            anyhow::anyhow!("Failed to parse profile.toml - check TOML syntax\n  {error_msg}")
         }
     })
 }
@@ -371,25 +368,23 @@ pub fn load_and_validate(profile_name: &str) -> Result<Manifest> {
 
     if !manifest_path.exists() {
         bail!(
-            "✗ Error: Profile manifest not found\n  Path: {:?}\n  → Run 'zprof create {}' to create this profile",
-            manifest_path,
-            profile_name
+            "✗ Error: Profile manifest not found\n  Path: {manifest_path:?}\n  → Run 'zprof create {profile_name}' to create this profile"
         );
     }
 
-    log::debug!("Loading manifest from {:?}", manifest_path);
+    log::debug!("Loading manifest from {manifest_path:?}");
 
     let toml_content = std::fs::read_to_string(&manifest_path)
-        .with_context(|| format!("Failed to read profile.toml at {:?}", manifest_path))?;
+        .with_context(|| format!("Failed to read profile.toml at {manifest_path:?}"))?;
 
     let manifest = parse_manifest(&toml_content)
-        .with_context(|| format!("Invalid TOML in {:?}", manifest_path))?;
+        .with_context(|| format!("Invalid TOML in {manifest_path:?}"))?;
 
     manifest
         .validate()
         .context("Manifest validation failed")?;
 
-    log::info!("✓ Manifest validated successfully: {}", profile_name);
+    log::info!("✓ Manifest validated successfully: {profile_name}");
     Ok(manifest)
 }
 
@@ -623,7 +618,7 @@ framework = "zimfw"
 
             manifest
                 .validate()
-                .unwrap_or_else(|_| panic!("Framework '{}' should validate successfully", framework));
+                .unwrap_or_else(|_| panic!("Framework '{framework}' should validate successfully"));
         }
     }
 
@@ -689,8 +684,7 @@ name = "broken"
         // Verify line number extraction works
         assert!(
             err_msg.contains("line") || err_msg.contains("column"),
-            "Error should include line/column information: {}",
-            err_msg
+            "Error should include line/column information: {err_msg}"
         );
     }
 
@@ -824,8 +818,7 @@ name = "broken"
         let err_msg = result.unwrap_err().to_string();
         assert!(
             err_msg.contains("parse") || err_msg.contains("TOML"),
-            "Error should mention parsing: {}",
-            err_msg
+            "Error should mention parsing: {err_msg}"
         );
     }
 

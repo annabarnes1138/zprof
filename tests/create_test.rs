@@ -2,7 +2,7 @@ use anyhow::Result;
 use serial_test::serial;
 use std::env;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 
 // Helper to set up a test environment with HOME pointing to a temp directory
@@ -17,7 +17,7 @@ fn setup_test_env() -> (TempDir, PathBuf) {
 }
 
 // Helper to create a mock oh-my-zsh installation for testing
-fn create_mock_omz(home: &PathBuf) -> Result<()> {
+fn create_mock_omz(home: &Path) -> Result<()> {
     let omz_dir = home.join(".oh-my-zsh");
     fs::create_dir_all(&omz_dir)?;
     fs::create_dir_all(omz_dir.join("custom/plugins"))?;
@@ -57,7 +57,7 @@ fn test_create_profile_name_validation() {
             name: name.to_string(),
         };
         let result = execute(args);
-        assert!(result.is_err(), "Name '{}' should be invalid", name);
+        assert!(result.is_err(), "Name '{name}' should be invalid");
     }
 }
 
@@ -84,8 +84,7 @@ fn test_create_profile_no_framework_detected() {
     let err_msg = result.unwrap_err().to_string();
     assert!(
         err_msg.contains("terminal") || err_msg.contains("TUI") || err_msg.contains("cancelled"),
-        "Error should be related to terminal/TUI: {}",
-        err_msg
+        "Error should be related to terminal/TUI: {err_msg}"
     );
 }
 

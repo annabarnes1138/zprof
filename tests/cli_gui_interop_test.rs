@@ -8,7 +8,6 @@
 ///
 /// Note: These tests use the Tauri IPC commands directly (bypassing the GUI frontend)
 /// to verify the shared data layer works correctly.
-
 use anyhow::Result;
 use serial_test::serial;
 use std::process::Command;
@@ -24,7 +23,7 @@ fn setup_test_env() -> Result<TempDir> {
 // Helper to run zprof CLI command
 fn run_zprof(args: &[&str]) -> Result<std::process::Output> {
     let output = Command::new("cargo")
-        .args(&["run", "--quiet", "--"])
+        .args(["run", "--quiet", "--"])
         .args(args)
         .output()?;
     Ok(output)
@@ -245,7 +244,7 @@ fn test_cli_startup_performance() -> Result<()> {
     // use: `time ./target/release/zprof --version`
     // Target: <100ms for release build
 
-    println!("CLI startup time: {:?}", duration);
+    println!("CLI startup time: {duration:?}");
 
     // We can't assert <100ms here due to cargo run overhead,
     // but this test serves as a reminder to check performance manually

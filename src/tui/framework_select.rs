@@ -165,7 +165,7 @@ fn render_ui(
         .split(f.area());
 
     // Title
-    let title = Paragraph::new(format!("Select Framework for Profile '{}'", profile_name))
+    let title = Paragraph::new(format!("Select Framework for Profile '{profile_name}'"))
         .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
         .alignment(Alignment::Center)
         .block(Block::default().borders(Borders::ALL));

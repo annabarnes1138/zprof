@@ -49,10 +49,10 @@ fn confirm_deletion(profile_name: &str, profile_path: &Path) -> Result<bool> {
     println!();
     println!("⚠️  WARNING: This action is irreversible!");
     println!();
-    println!("  Profile to delete: '{}'", profile_name);
-    println!("  Path: {:?}", profile_path);
+    println!("  Profile to delete: '{profile_name}'");
+    println!("  Path: {profile_path:?}");
     println!();
-    print!("Delete profile '{}'? (y/n): ", profile_name);
+    print!("Delete profile '{profile_name}'? (y/n): ");
     io::stdout().flush()?;
 
     let mut input = String::new();
@@ -75,11 +75,10 @@ mod tests {
         // Create profile.toml
         let manifest = format!(
             r#"[profile]
-name = "{}"
+name = "{name}"
 framework = "oh-my-zsh"
 theme = "robbyrussell"
-"#,
-            name
+"#
         );
         fs::write(profile_dir.join("profile.toml"), manifest)?;
 

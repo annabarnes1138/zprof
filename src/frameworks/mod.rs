@@ -123,7 +123,7 @@ impl PluginCompatibility {
         self.supported_managers
             .iter()
             .find(|m| &m.framework == framework)
-            .and_then(|m| m.repo_url.as_deref())
+            .and_then(|m| m.repo_url)
     }
 
     /// Check if this plugin is recommended for the given framework
@@ -149,7 +149,7 @@ impl ThemeCompatibility {
         self.supported_managers
             .iter()
             .find(|m| &m.framework == framework)
-            .and_then(|m| m.repo_url.as_deref())
+            .and_then(|m| m.repo_url)
     }
 
     /// Check if this theme is recommended for the given framework

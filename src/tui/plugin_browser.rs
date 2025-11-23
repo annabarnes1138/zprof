@@ -75,7 +75,7 @@ pub fn run_plugin_selection(framework: FrameworkType) -> Result<Vec<String>> {
     // If no plugins available, show warning and return empty vec (AC: #6)
     if plugins.is_empty() {
         restore_terminal()?;
-        log::warn!("No plugins defined for framework: {:?}", framework);
+        log::warn!("No plugins defined for framework: {framework:?}");
         return Ok(vec![]);
     }
 
@@ -180,7 +180,7 @@ fn run_plugin_loop(
 }
 
 /// Toggle selection for current item
-fn toggle_selection(selected: &mut Vec<bool>, state: &ListState) {
+fn toggle_selection(selected: &mut [bool], state: &ListState) {
     if let Some(idx) = state.selected() {
         selected[idx] = !selected[idx];
     }
@@ -251,18 +251,15 @@ fn render_plugin_browser(
 
     let header_text = if search_mode {
         format!(
-            "Select Plugins for '{}' - Selected: {} - Search: {}",
-            framework_name, selected_count, search_query
+            "Select Plugins for '{framework_name}' - Selected: {selected_count} - Search: {search_query}"
         )
     } else if !search_query.is_empty() {
         format!(
-            "Select Plugins for '{}' - Selected: {} - Filter: '{}'",
-            framework_name, selected_count, search_query
+            "Select Plugins for '{framework_name}' - Selected: {selected_count} - Filter: '{search_query}'"
         )
     } else {
         format!(
-            "Select Plugins for '{}' - Selected: {}",
-            framework_name, selected_count
+            "Select Plugins for '{framework_name}' - Selected: {selected_count}"
         )
     };
 

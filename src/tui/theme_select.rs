@@ -189,7 +189,7 @@ fn render_ui(
                     ),
                 ]),
                 Line::from(vec![Span::styled(
-                    format!("    {}", description),
+                    format!("    {description}"),
                     Style::default().fg(Color::Gray),
                 )]),
                 Line::from(vec![Span::styled(

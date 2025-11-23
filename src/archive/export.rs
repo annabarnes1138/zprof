@@ -52,14 +52,13 @@ pub struct ArchiveMetadata {
 /// - Insufficient disk space
 /// - Permission denied
 pub fn export_profile(profile_name: &str, output_path: Option<PathBuf>) -> Result<PathBuf> {
-    log::info!("Exporting profile: {}", profile_name);
+    log::info!("Exporting profile: {profile_name}");
 
     // 1. Get profile directory
     let profile_dir = get_profile_dir(profile_name)?;
     if !profile_dir.exists() {
         bail!(
-            "✗ Profile '{}' not found\n  → Run 'zprof list' to see available profiles",
-            profile_name
+            "✗ Profile '{profile_name}' not found\n  → Run 'zprof list' to see available profiles"
         );
     }
 
@@ -81,7 +80,7 @@ pub fn export_profile(profile_name: &str, output_path: Option<PathBuf>) -> Resul
     // 5. Determine output path
     let archive_path = output_path.unwrap_or_else(|| {
         let cwd = std::env::current_dir().unwrap_or_default();
-        cwd.join(format!("{}.zprof", profile_name))
+        cwd.join(format!("{profile_name}.zprof"))
     });
 
     // 6. Check if output file exists
@@ -99,7 +98,7 @@ pub fn export_profile(profile_name: &str, output_path: Option<PathBuf>) -> Resul
     // 8. Validate archive
     validate_archive(&archive_path).context("Archive validation failed")?;
 
-    log::info!("Export completed: {:?}", archive_path);
+    log::info!("Export completed: {archive_path:?}");
     Ok(archive_path)
 }
 
@@ -153,7 +152,7 @@ fn collect_files(profile_dir: &Path) -> Result<Vec<PathBuf>> {
 
         // Skip directories (framework installations)
         if path.is_dir() {
-            log::debug!("Excluding directory: {:?}", path);
+            log::debug!("Excluding directory: {path:?}");
             continue;
         }
 
@@ -164,12 +163,12 @@ fn collect_files(profile_dir: &Path) -> Result<Vec<PathBuf>> {
 
         // Skip excluded patterns
         if should_exclude(&path) {
-            log::debug!("Excluding file: {:?}", path);
+            log::debug!("Excluding file: {path:?}");
             continue;
         }
 
         // Include custom file
-        log::debug!("Including custom file: {:?}", path);
+        log::debug!("Including custom file: {path:?}");
         files.push(path);
     }
 
@@ -256,15 +255,15 @@ fn create_archive(
         // Get relative path within profile directory
         let relative_path = file_path
             .strip_prefix(profile_dir)
-            .with_context(|| format!("File not in profile directory: {:?}", file_path))?;
+            .with_context(|| format!("File not in profile directory: {file_path:?}"))?;
 
         let mut file = File::open(file_path)
-            .with_context(|| format!("Failed to open file: {:?}", file_path))?;
+            .with_context(|| format!("Failed to open file: {file_path:?}"))?;
 
         tar.append_file(relative_path, &mut file)
-            .with_context(|| format!("Failed to add file to archive: {:?}", file_path))?;
+            .with_context(|| format!("Failed to add file to archive: {file_path:?}"))?;
 
-        log::debug!("Added to archive: {:?}", relative_path);
+        log::debug!("Added to archive: {relative_path:?}");
     }
 
     // Finalize archive
@@ -287,10 +286,10 @@ fn validate_archive(archive_path: &Path) -> Result<()> {
 
     if size > 10 * 1024 * 1024 {
         // 10 MB
-        log::warn!("Archive is larger than expected: {} bytes", size);
+        log::warn!("Archive is larger than expected: {size} bytes");
     }
 
-    log::info!("Archive size: {} bytes", size);
+    log::info!("Archive size: {size} bytes");
     Ok(())
 }
 
@@ -304,7 +303,7 @@ pub fn format_file_size(bytes: u64) -> String {
     } else if bytes >= KB {
         format!("{:.2} KB", bytes as f64 / KB as f64)
     } else {
-        format!("{} bytes", bytes)
+        format!("{bytes} bytes")
     }
 }
 

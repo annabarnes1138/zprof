@@ -48,11 +48,11 @@ fn execute_github_import(args: ImportArgs) -> Result<()> {
     println!();
     println!("✓ Profile imported from GitHub");
     println!();
-    println!("  Profile: {}", profile_name);
+    println!("  Profile: {profile_name}");
     println!("  Source: {}", args.source);
-    println!("  Location: ~/.zsh-profiles/profiles/{}", profile_name);
+    println!("  Location: ~/.zsh-profiles/profiles/{profile_name}");
     println!();
-    println!("  → Run 'zprof use {}' to activate this profile", profile_name);
+    println!("  → Run 'zprof use {profile_name}' to activate this profile");
 
     Ok(())
 }
@@ -74,10 +74,10 @@ fn execute_local_import(args: ImportArgs) -> Result<()> {
     println!();
     println!("✓ Profile imported successfully");
     println!();
-    println!("  Profile: {}", profile_name);
-    println!("  Location: ~/.zsh-profiles/profiles/{}", profile_name);
+    println!("  Profile: {profile_name}");
+    println!("  Location: ~/.zsh-profiles/profiles/{profile_name}");
     println!();
-    println!("  → Run 'zprof use {}' to activate this profile", profile_name);
+    println!("  → Run 'zprof use {profile_name}' to activate this profile");
 
     Ok(())
 }

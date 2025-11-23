@@ -15,7 +15,7 @@ use ratatui::{
 };
 use std::io;
 
-use crate::prompts::PromptEngine;
+use crate::prompts::engine::PromptEngine;
 use crate::tui::{restore_terminal, setup_terminal};
 
 /// Run interactive prompt engine selection TUI
@@ -174,7 +174,7 @@ fn render_ui(
                     ),
                 ]),
                 Line::from(vec![Span::styled(
-                    format!("    {}", description),
+                    format!("    {description}"),
                     Style::default().fg(Color::Gray),
                 )]),
                 Line::from(""), // Blank line for spacing

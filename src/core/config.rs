@@ -71,7 +71,7 @@ pub fn save_config(config: &Config) -> Result<()> {
         .context("Failed to serialize config")?;
 
     std::fs::write(&config_path, toml_string)
-        .with_context(|| format!("Failed to write config to {:?}", config_path))?;
+        .with_context(|| format!("Failed to write config to {config_path:?}"))?;
 
     log::debug!("Updated config.toml: active_profile = {:?}", config.active_profile);
     Ok(())

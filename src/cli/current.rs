@@ -56,8 +56,8 @@ pub fn execute(_args: CurrentArgs) -> Result<()> {
     // Format and display creation date if available
     if let Some(created) = metadata.created {
         match format_date(&created) {
-            Ok(formatted_date) => println!("Created: {}", formatted_date),
-            Err(_) => println!("Created: {}", created), // Fallback to raw timestamp if parsing fails
+            Ok(formatted_date) => println!("Created: {formatted_date}"),
+            Err(_) => println!("Created: {created}"), // Fallback to raw timestamp if parsing fails
         }
     }
 

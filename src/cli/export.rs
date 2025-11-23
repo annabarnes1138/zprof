@@ -52,8 +52,8 @@ pub fn execute(args: ExportArgs) -> Result<()> {
     println!();
     println!("  Profile: {}", args.profile_name);
     println!("  Archive: {}", archive_path.display());
-    println!("  Size: {}", size);
-    println!("  Files: {}", file_count);
+    println!("  Size: {size}");
+    println!("  Files: {file_count}");
     println!();
     println!("  → Share this archive with teammates or import on another machine:");
     println!("    zprof import {}", archive_path.display());

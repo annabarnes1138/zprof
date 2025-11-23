@@ -48,7 +48,7 @@ fn list_frameworks() -> Result<()> {
     ];
 
     for (name, description) in frameworks {
-        println!("  {} - {}", name, description);
+        println!("  {name} - {description}");
     }
     println!();
 
@@ -57,7 +57,7 @@ fn list_frameworks() -> Result<()> {
 
 fn list_plugins(framework_filter: Option<String>) -> Result<()> {
     if let Some(fw) = &framework_filter {
-        println!("\nAvailable Plugins for {}:\n", fw);
+        println!("\nAvailable Plugins for {fw}:\n");
         let framework_type = parse_framework(fw)?;
         let plugins = plugin::get_plugins_for_framework(&framework_type);
 
@@ -100,7 +100,7 @@ fn list_plugins(framework_filter: Option<String>) -> Result<()> {
 
         for plugin in plugin::PLUGIN_REGISTRY.iter() {
             let category = format!("{:?}", plugin.category);
-            by_category.entry(category).or_insert_with(Vec::new).push(plugin);
+            by_category.entry(category).or_default().push(plugin);
         }
 
         // Sort categories
@@ -108,7 +108,7 @@ fn list_plugins(framework_filter: Option<String>) -> Result<()> {
         categories.sort();
 
         for category in categories {
-            println!("{}:", category);
+            println!("{category}:");
             let mut plugins = by_category[category].clone();
             plugins.sort_by_key(|p| p.name);
 
@@ -137,7 +137,7 @@ fn list_plugins(framework_filter: Option<String>) -> Result<()> {
 
 fn list_themes(framework_filter: Option<String>) -> Result<()> {
     if let Some(fw) = &framework_filter {
-        println!("\nAvailable Themes for {}:\n", fw);
+        println!("\nAvailable Themes for {fw}:\n");
         let framework_type = parse_framework(fw)?;
         let themes = theme::get_themes_for_framework(&framework_type);
 
@@ -203,6 +203,6 @@ fn parse_framework(name: &str) -> Result<FrameworkType> {
         "prezto" => Ok(FrameworkType::Prezto),
         "zinit" => Ok(FrameworkType::Zinit),
         "zap" => Ok(FrameworkType::Zap),
-        _ => anyhow::bail!("Unknown framework: {}. Supported: oh-my-zsh, zimfw, prezto, zinit, zap", name),
+        _ => anyhow::bail!("Unknown framework: {name}. Supported: oh-my-zsh, zimfw, prezto, zinit, zap"),
     }
 }

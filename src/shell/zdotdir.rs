@@ -97,11 +97,9 @@ pub fn set_active_profile(profile_path: &Path) -> Result<()> {
     } else {
         format!(
             "# ========== Managed by zprof - DO NOT EDIT THIS SECTION ==========\n\
-             {}\n\
-             {}\n\
-             # ===================================================================\n",
-            zdotdir_line,
-            histfile_lines
+             {zdotdir_line}\n\
+             {histfile_lines}\n\
+             # ===================================================================\n"
         )
     };
 
@@ -109,7 +107,7 @@ pub fn set_active_profile(profile_path: &Path) -> Result<()> {
     let content = if user_content.trim().is_empty() {
         zprof_section
     } else {
-        format!("{}\n{}", zprof_section, user_content)
+        format!("{zprof_section}\n{user_content}")
     };
 
     fs::write(&zshenv_path, content)
@@ -151,7 +149,7 @@ fn backup_zshenv(zshenv_path: &Path) -> Result<PathBuf> {
 
     // Generate timestamp for backup filename
     let timestamp = Local::now().format("%Y%m%d-%H%M%S");
-    let backup_filename = format!(".zshenv.backup.{}", timestamp);
+    let backup_filename = format!(".zshenv.backup.{timestamp}");
     let backup_path = backup_dir.join(backup_filename);
 
     // Copy file to backup (NOT move - preserve original)
@@ -243,7 +241,7 @@ mod tests {
         // Note: Can't easily test backup_zshenv without mocking get_zprof_dir
         // This test verifies timestamp format would be correct
         let timestamp = Local::now().format("%Y%m%d-%H%M%S");
-        let expected_pattern = format!(".zshenv.backup.{}", timestamp);
+        let expected_pattern = format!(".zshenv.backup.{timestamp}");
         assert!(expected_pattern.starts_with(".zshenv.backup."));
         assert!(expected_pattern.len() > 20); // Basic sanity check
     }

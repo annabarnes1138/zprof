@@ -36,7 +36,7 @@ pub fn create_zprof_structure() -> Result<PathBuf> {
     for subdir in &subdirs {
         let dir_path = base_dir.join(subdir);
         create_directory(&dir_path)
-            .with_context(|| format!("Failed to create {} subdirectory", subdir))?;
+            .with_context(|| format!("Failed to create {subdir} subdirectory"))?;
     }
 
     // Create cache subdirectories
@@ -519,8 +519,8 @@ fn create_backup_directory() -> Result<PathBuf> {
 /// ```
 pub fn safe_delete_directory(dir_path: &Path, reason: &str) -> Result<()> {
     // Check: Verify directory exists and is valid
-    ensure!(dir_path.exists(), "Directory does not exist: {:?}", dir_path);
-    ensure!(dir_path.is_dir(), "Path is not a directory: {:?}", dir_path);
+    ensure!(dir_path.exists(), "Directory does not exist: {dir_path:?}");
+    ensure!(dir_path.is_dir(), "Path is not a directory: {dir_path:?}");
 
     // Backup: Create timestamped backup before deletion
     let backup_dir = create_backup_directory()?;
@@ -530,25 +530,25 @@ pub fn safe_delete_directory(dir_path: &Path, reason: &str) -> Result<()> {
     let backup_path = backup_dir.join(format!("{}-{}",
         dir_name.to_string_lossy(), timestamp));
 
-    log::debug!("Creating backup at {:?}", backup_path);
+    log::debug!("Creating backup at {backup_path:?}");
     copy_dir_recursive(dir_path, &backup_path)
         .context("Failed to create backup before deletion")?;
 
     // Operate: Delete original directory
     match fs::remove_dir_all(dir_path) {
         Ok(_) => {
-            log::info!("Deleted directory: {:?} (reason: {})", dir_path, reason);
+            log::info!("Deleted directory: {dir_path:?} (reason: {reason})");
             // Verify: Confirm deletion succeeded
             if dir_path.exists() {
-                anyhow::bail!("Directory still exists after deletion attempt: {:?}", dir_path);
+                anyhow::bail!("Directory still exists after deletion attempt: {dir_path:?}");
             }
             // Cleanup: Keep backup for safety (as per NFR002)
-            log::debug!("Backup retained at {:?}", backup_path);
+            log::debug!("Backup retained at {backup_path:?}");
             Ok(())
         }
         Err(e) => {
-            log::error!("Failed to delete directory, backup preserved at {:?}", backup_path);
-            Err(e).context(format!("Failed to delete directory {:?}", dir_path))
+            log::error!("Failed to delete directory, backup preserved at {backup_path:?}");
+            Err(e).context(format!("Failed to delete directory {dir_path:?}"))
         }
     }
 }

@@ -71,7 +71,7 @@ pub fn scan_profiles(profiles_dir: &Path, active_profile: Option<&str>) -> Resul
         let manifest_path = path.join("profile.toml");
 
         if !manifest_path.exists() {
-            eprintln!("⚠ Warning: Profile '{}' is missing profile.toml, skipping", profile_name);
+            eprintln!("⚠ Warning: Profile '{profile_name}' is missing profile.toml, skipping");
             continue;
         }
 
@@ -86,7 +86,7 @@ pub fn scan_profiles(profiles_dir: &Path, active_profile: Option<&str>) -> Resul
                 });
             }
             Err(e) => {
-                eprintln!("⚠ Warning: Failed to read profile.toml for '{}': {}", profile_name, e);
+                eprintln!("⚠ Warning: Failed to read profile.toml for '{profile_name}': {e}");
                 continue;
             }
         }
@@ -131,9 +131,8 @@ pub fn load_profile_metadata(profile_name: &str) -> Result<ProfileMetadataFull> 
 
     if !manifest_path.exists() {
         anyhow::bail!(
-            "Active profile '{}' not found (may have been deleted)\n\n\
-             Suggestion: Run 'zprof list' to see available profiles, then 'zprof use <name>' to activate one",
-            profile_name
+            "Active profile '{profile_name}' not found (may have been deleted)\n\n\
+             Suggestion: Run 'zprof list' to see available profiles, then 'zprof use <name>' to activate one"
         );
     }
 
@@ -180,8 +179,7 @@ pub fn validate_profile(profile_path: &Path) -> Result<()> {
 
     if !manifest.exists() {
         anyhow::bail!(
-            "✗ Error: Profile is incomplete - missing profile.toml\n  Path: {:?}",
-            profile_path
+            "✗ Error: Profile is incomplete - missing profile.toml\n  Path: {profile_path:?}"
         );
     }
 
@@ -207,16 +205,14 @@ pub fn validate_not_active(profile_name: &str) -> Result<()> {
                 format!(
                     "  → Switch to another profile first:\n{}",
                     other_profiles.iter()
-                        .map(|p| format!("      zprof use {}", p))
+                        .map(|p| format!("      zprof use {p}"))
                         .collect::<Vec<_>>()
                         .join("\n")
                 )
             };
 
             anyhow::bail!(
-                "✗ Error: Cannot delete active profile '{}'\n\n{}",
-                profile_name,
-                suggestion
+                "✗ Error: Cannot delete active profile '{profile_name}'\n\n{suggestion}"
             );
         }
     }
@@ -258,7 +254,7 @@ pub fn list_available_profiles() -> Result<Vec<String>> {
 /// Format a list of profile names for display
 fn format_profile_list(profiles: &[String]) -> String {
     profiles.iter()
-        .map(|p| format!("    - {}", p))
+        .map(|p| format!("    - {p}"))
         .collect::<Vec<_>>()
         .join("\n")
 }
@@ -275,13 +271,12 @@ mod tests {
 
         let manifest = format!(
             r#"[profile]
-name = "{}"
-framework = "{}"
+name = "{name}"
+framework = "{framework}"
 theme = "robbyrussell"
 created = "2025-10-31T14:30:00Z"
 modified = "2025-10-31T14:30:00Z"
-"#,
-            name, framework
+"#
         );
 
         fs::write(profile_dir.join("profile.toml"), manifest)?;

@@ -49,7 +49,7 @@ impl Framework for Zimfw {
                 }
             }
             Err(e) => {
-                log::warn!("Could not read metadata for {:?}: {:#}", config_path, e);
+                log::warn!("Could not read metadata for {config_path:?}: {e:#}");
                 return None;
             }
         }
@@ -58,7 +58,7 @@ impl Framework for Zimfw {
         let content = match fs::read_to_string(&config_path) {
             Ok(c) => c,
             Err(e) => {
-                log::warn!("Could not read .zimrc at {:?}: {:#}", config_path, e);
+                log::warn!("Could not read .zimrc at {config_path:?}: {e:#}");
                 return None;
             }
         };
@@ -94,6 +94,7 @@ impl Framework for Zimfw {
 /// Looks for patterns like:
 /// - zmodule ohmyzsh/ohmyzsh --root plugins/git
 /// - zmodule romkatv/powerlevel10k
+///
 /// Processes line-by-line to prevent ReDoS attacks
 fn extract_modules(content: &str) -> (Vec<String>, String) {
     const MAX_LINES: usize = 10000; // Limit lines processed
@@ -123,7 +124,7 @@ fn extract_modules(content: &str) -> (Vec<String>, String) {
                 {
                     theme = module_str
                         .split('/')
-                        .last()
+                        .next_back()
                         .unwrap_or("default")
                         .to_string();
                 } else {
@@ -136,7 +137,7 @@ fn extract_modules(content: &str) -> (Vec<String>, String) {
                             .unwrap_or(module_str)
                     } else {
                         // Use last component of module path
-                        module_str.split('/').last().unwrap_or(module_str)
+                        module_str.split('/').next_back().unwrap_or(module_str)
                     };
                     plugins.push(plugin_name.to_string());
                 }

@@ -75,8 +75,7 @@ fn test_all_plugins_have_descriptions() {
         for plugin in plugins {
             assert!(
                 !plugin.name.is_empty(),
-                "{}: Plugin has empty name",
-                framework_name
+                "{framework_name}: Plugin has empty name"
             );
             assert!(
                 !plugin.description.is_empty(),

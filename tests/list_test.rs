@@ -23,13 +23,12 @@ fn create_test_profile(base_dir: &std::path::Path, name: &str, framework: &str) 
 
     let manifest = format!(
         r#"[profile]
-name = "{}"
-framework = "{}"
+name = "{name}"
+framework = "{framework}"
 theme = "robbyrussell"
 created = "2025-10-31T14:30:00Z"
 modified = "2025-10-31T14:30:00Z"
-"#,
-        name, framework
+"#
     );
 
     fs::write(profile_dir.join("profile.toml"), manifest)?;
@@ -41,7 +40,7 @@ fn create_config(base_dir: &std::path::Path, active_profile: Option<&str>) -> Re
     let config_path = base_dir.join(".zsh-profiles").join("config.toml");
 
     let content = if let Some(active) = active_profile {
-        format!(r#"active_profile = "{}""#, active)
+        format!(r#"active_profile = "{active}""#)
     } else {
         String::new()
     };
