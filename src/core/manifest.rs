@@ -10,6 +10,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use crate::frameworks::FrameworkInfo;
+use crate::presets;
 
 /// Supported zsh frameworks
 const SUPPORTED_FRAMEWORKS: &[&str] = &["oh-my-zsh", "zimfw", "prezto", "zinit", "zap"];
@@ -251,6 +252,50 @@ impl Manifest {
                 enabled: framework_info.plugins.clone(),
             },
             env: HashMap::new(),
+        }
+    }
+
+    /// Create a new manifest from a preset configuration
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The profile name
+    /// * `preset` - The preset configuration to use
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use zprof::core::manifest::Manifest;
+    /// use zprof::presets::PRESET_REGISTRY;
+    ///
+    /// let minimal = &PRESET_REGISTRY[0];
+    /// let manifest = Manifest::from_preset("my-profile", minimal);
+    /// ```
+    pub fn from_preset(name: &str, preset: &presets::Preset) -> Self {
+        let now = Utc::now();
+
+        Manifest {
+            profile: ProfileSection {
+                name: name.to_string(),
+                framework: preset.config.framework.name().to_string(),
+                prompt_mode: preset.config.prompt_mode(),
+                created: now,
+                modified: now,
+            },
+            plugins: PluginsSection {
+                enabled: preset
+                    .config
+                    .plugins
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect(),
+            },
+            env: preset
+                .config
+                .env_vars
+                .iter()
+                .map(|(k, v)| (k.to_string(), v.to_string()))
+                .collect(),
         }
     }
 
@@ -1054,5 +1099,207 @@ modified = "2025-11-01T10:00:00Z"
                 theme: "robbyrussell".to_string()
             }
         );
+    }
+
+    // Story 2.1 tests: Manifest::from_preset() functionality
+
+    #[test]
+    fn test_from_preset_creates_valid_manifest() {
+        use crate::presets::PRESET_REGISTRY;
+
+        let minimal = &PRESET_REGISTRY[0]; // minimal preset
+        let manifest = Manifest::from_preset("test-profile", minimal);
+
+        assert_eq!(manifest.profile.name, "test-profile");
+        assert!(!manifest.profile.framework.is_empty());
+        assert!(!manifest.plugins.enabled.is_empty());
+    }
+
+    #[test]
+    fn test_from_preset_sets_framework_correctly() {
+        use crate::presets::PRESET_REGISTRY;
+
+        for preset in PRESET_REGISTRY {
+            let manifest = Manifest::from_preset("test", preset);
+            assert_eq!(
+                manifest.profile.framework,
+                preset.config.framework.name(),
+                "Framework should match for preset {}",
+                preset.id
+            );
+        }
+    }
+
+    #[test]
+    fn test_from_preset_copies_plugins() {
+        use crate::presets::PRESET_REGISTRY;
+
+        let developer = PRESET_REGISTRY
+            .iter()
+            .find(|p| p.id == "developer")
+            .expect("Developer preset should exist");
+
+        let manifest = Manifest::from_preset("dev-profile", developer);
+
+        assert_eq!(
+            manifest.plugins.enabled.len(),
+            developer.config.plugins.len(),
+            "Should copy all plugins"
+        );
+
+        for plugin in developer.config.plugins {
+            assert!(
+                manifest.plugins.enabled.contains(&plugin.to_string()),
+                "Plugin {plugin} should be in manifest"
+            );
+        }
+    }
+
+    #[test]
+    fn test_from_preset_sets_env_vars() {
+        use crate::presets::PRESET_REGISTRY;
+
+        let developer = PRESET_REGISTRY
+            .iter()
+            .find(|p| p.id == "developer")
+            .expect("Developer preset should exist");
+
+        let manifest = Manifest::from_preset("dev-profile", developer);
+
+        assert_eq!(
+            manifest.env.len(),
+            developer.config.env_vars.len(),
+            "Should copy all env vars"
+        );
+
+        for (key, value) in developer.config.env_vars {
+            assert_eq!(
+                manifest.env.get(*key),
+                Some(&value.to_string()),
+                "Env var {key} should be set to {value}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_from_preset_sets_prompt_mode() {
+        use crate::presets::PRESET_REGISTRY;
+
+        for preset in PRESET_REGISTRY {
+            let manifest = Manifest::from_preset("test", preset);
+            assert_eq!(
+                manifest.profile.prompt_mode,
+                preset.config.prompt_mode(),
+                "Prompt mode should match for preset {}",
+                preset.id
+            );
+        }
+    }
+
+    #[test]
+    fn test_from_preset_manifest_validates() {
+        use crate::presets::PRESET_REGISTRY;
+
+        for preset in PRESET_REGISTRY {
+            let manifest = Manifest::from_preset("test-profile", preset);
+            manifest
+                .validate()
+                .unwrap_or_else(|e| panic!("Manifest from preset {} should validate: {}", preset.id, e));
+        }
+    }
+
+    #[test]
+    fn test_from_preset_roundtrip_serialization() {
+        use crate::presets::PRESET_REGISTRY;
+
+        let minimal = &PRESET_REGISTRY[0];
+        let manifest = Manifest::from_preset("test", minimal);
+
+        // Serialize to TOML
+        let toml_str = manifest.to_toml_string().expect("Should serialize to TOML");
+
+        // Parse back
+        let parsed: Manifest = toml::from_str(&toml_str).expect("Should parse back from TOML");
+
+        // Validate
+        parsed.validate().expect("Parsed manifest should validate");
+
+        // Check key fields match
+        assert_eq!(parsed.profile.name, manifest.profile.name);
+        assert_eq!(parsed.profile.framework, manifest.profile.framework);
+        assert_eq!(parsed.profile.prompt_mode, manifest.profile.prompt_mode);
+        assert_eq!(parsed.plugins.enabled, manifest.plugins.enabled);
+        assert_eq!(parsed.env, manifest.env);
+    }
+
+    #[test]
+    fn test_from_preset_with_prompt_engine() {
+        use crate::presets::PRESET_REGISTRY;
+
+        let minimal = PRESET_REGISTRY
+            .iter()
+            .find(|p| p.id == "minimal")
+            .expect("Minimal preset should exist");
+
+        let manifest = Manifest::from_preset("test", minimal);
+
+        match &manifest.profile.prompt_mode {
+            PromptMode::PromptEngine { engine } => {
+                assert_eq!(engine, "starship", "Minimal preset should use starship");
+            }
+            _ => panic!("Minimal preset should use PromptEngine mode"),
+        }
+    }
+
+    #[test]
+    fn test_from_preset_with_framework_theme() {
+        use crate::presets::PRESET_REGISTRY;
+
+        let fancy = PRESET_REGISTRY
+            .iter()
+            .find(|p| p.id == "fancy")
+            .expect("Fancy preset should exist");
+
+        let manifest = Manifest::from_preset("test", fancy);
+
+        match &manifest.profile.prompt_mode {
+            PromptMode::FrameworkTheme { theme } => {
+                assert_eq!(
+                    theme, "powerlevel10k",
+                    "Fancy preset should use powerlevel10k theme"
+                );
+            }
+            _ => panic!("Fancy preset should use FrameworkTheme mode"),
+        }
+    }
+
+    #[test]
+    fn test_from_preset_all_presets_different_configs() {
+        use crate::presets::PRESET_REGISTRY;
+
+        let mut manifests = Vec::new();
+        for preset in PRESET_REGISTRY {
+            let manifest = Manifest::from_preset("test", preset);
+            manifests.push(manifest);
+        }
+
+        // Verify each preset creates a unique configuration
+        for (i, manifest1) in manifests.iter().enumerate() {
+            for (j, manifest2) in manifests.iter().enumerate() {
+                if i != j {
+                    // At least one of framework, plugins, or env should differ
+                    let same_framework = manifest1.profile.framework == manifest2.profile.framework;
+                    let same_plugins = manifest1.plugins.enabled == manifest2.plugins.enabled;
+                    let same_env = manifest1.env == manifest2.env;
+
+                    assert!(
+                        !(same_framework && same_plugins && same_env),
+                        "Presets {} and {} should have different configurations",
+                        PRESET_REGISTRY[i].id,
+                        PRESET_REGISTRY[j].id
+                    );
+                }
+            }
+        }
     }
 }

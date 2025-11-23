@@ -8,6 +8,7 @@ pub mod cli;
 pub mod core;
 pub mod frameworks;
 pub mod git;
+pub mod presets;
 pub mod prompts;
 pub mod shell;
 pub mod tui;
