@@ -58,7 +58,7 @@ development_status:
   epic-2-story-1: done # ✅ APPROVED - Preset data model complete, 25/25 tests passing, clippy clean
   epic-2-story-2: done # ✅ APPROVED - Preset catalog defined, 27/27 tests passing, comprehensive docs, zero issues
   epic-2-story-3: done # ✅ APPROVED - Setup mode selection complete, 9/9 tests passing, zero issues, perfect pattern consistency
-  epic-2-story-4: ready-for-dev
+  epic-2-story-4: done # ✅ APPROVED - Preset selection TUI complete, integrated, 246/246 tests passing, clippy clean
   epic-2-story-5: ready-for-dev
   epic-2-story-6: ready-for-dev
   epic-2-story-7: ready-for-dev

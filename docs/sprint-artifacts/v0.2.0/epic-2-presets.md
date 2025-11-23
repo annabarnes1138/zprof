@@ -343,6 +343,11 @@ from Preset   wizard)
 - [ ] [Low] Consider adding test for PresetConfig with empty plugins array (Story 2.1) - edge case coverage (optional enhancement)
 - [ ] [Future] Add preset validation to ensure plugin names exist in plugin registry (Story 2.1) - quality improvement (future work)
 
+### Story 2.4 Review Items (2025-11-23)
+
+- [ ] [Med] Clarify AC #3 "Show preview characters" interpretation (Story 2.4) - Current implementation shows emoji icons (✨, ⚙️, 👨‍💻, 🚀). If requirement means actual rendered prompt examples/screenshots, additional work needed. **Awaiting product owner clarification.**
+- [ ] [Low] Add integration test for preset selection reachability (Story 2.4) - Test full quick setup flow: `create → quick mode → preset selection → profile creation` (can be done in Story 2.5 or later)
+
 ## Out of Scope
 
 - Preset customization UI (v0.3.0)
