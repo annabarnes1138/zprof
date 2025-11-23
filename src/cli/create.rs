@@ -15,7 +15,7 @@ use crate::core::filesystem::{self, copy_dir_recursive, create_shared_history, g
 use crate::core::manifest::{Manifest, PromptMode};
 use crate::frameworks::detect_existing_framework;
 use crate::frameworks::installer::{self, WizardState};
-use crate::tui::{framework_select, plugin_browser, prompt_mode_select, theme_select};
+use crate::tui::{framework_select, plugin_browser, prompt_mode_select, setup_mode_select, theme_select};
 use crate::shell::generator;
 
 /// Arguments for the create command
@@ -72,6 +72,24 @@ pub fn execute(args: CreateArgs) -> Result<()> {
         } else {
             // User declined import - launch TUI wizard
             println!("Import skipped. Launching TUI wizard...\n");
+
+            // Step 1: Setup mode selection (Quick vs Custom)
+            let setup_mode = setup_mode_select::select_setup_mode()
+                .context("Setup mode selection cancelled. Profile creation aborted.")?;
+
+            // Branch based on setup mode
+            match setup_mode {
+                setup_mode_select::SetupMode::Quick => {
+                    // TODO: Quick setup flow will be implemented in subsequent stories
+                    // For now, fall back to custom setup
+                    println!("Quick setup selected. (Note: Quick setup with presets will be implemented in upcoming stories)");
+                    println!("Falling back to custom setup for now...\n");
+                }
+                setup_mode_select::SetupMode::Custom => {
+                    println!("Custom setup selected.\n");
+                }
+            }
+
             let selected = framework_select::run_framework_selection(&args.name)
                 .context("Framework selection cancelled. Profile creation aborted.")?;
 
@@ -126,6 +144,24 @@ pub fn execute(args: CreateArgs) -> Result<()> {
         // No framework detected - launch TUI wizard
         println!("No existing zsh framework detected.");
         println!("Launching TUI wizard to create profile from scratch...\n");
+
+        // Step 1: Setup mode selection (Quick vs Custom)
+        let setup_mode = setup_mode_select::select_setup_mode()
+            .context("Setup mode selection cancelled. Profile creation aborted.")?;
+
+        // Branch based on setup mode
+        match setup_mode {
+            setup_mode_select::SetupMode::Quick => {
+                // TODO: Quick setup flow will be implemented in subsequent stories
+                // For now, fall back to custom setup
+                println!("Quick setup selected. (Note: Quick setup with presets will be implemented in upcoming stories)");
+                println!("Falling back to custom setup for now...\n");
+            }
+            setup_mode_select::SetupMode::Custom => {
+                println!("Custom setup selected.\n");
+            }
+        }
+
         let selected = framework_select::run_framework_selection(&args.name)
             .context("Framework selection cancelled. Profile creation aborted.")?;
 
