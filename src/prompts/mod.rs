@@ -6,4 +6,6 @@
 
 mod engine;
 
+// Note: These types are currently unused but part of planned prompt engine feature
+#[allow(unused_imports)]
 pub use engine::{EngineMetadata, InstallMethod, PromptEngine};

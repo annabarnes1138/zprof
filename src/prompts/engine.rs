@@ -26,6 +26,8 @@ pub enum PromptEngine {
 }
 
 /// Installation method for a prompt engine
+/// Note: Currently unused, planned for future prompt engine integration
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InstallMethod {
     /// Install as a binary (via package manager or direct download)
@@ -37,6 +39,8 @@ pub enum InstallMethod {
 }
 
 /// Metadata describing a prompt engine's characteristics and installation
+/// Note: Currently unused, planned for future prompt engine integration
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct EngineMetadata {
     /// Human-readable name
@@ -55,6 +59,8 @@ pub struct EngineMetadata {
 
 impl PromptEngine {
     /// Get metadata for this prompt engine
+    /// Note: Currently unused, planned for future prompt engine integration
+    #[allow(dead_code)]
     pub fn metadata(&self) -> EngineMetadata {
         match self {
             PromptEngine::Starship => EngineMetadata {
@@ -111,16 +117,22 @@ impl PromptEngine {
     }
 
     /// Returns the human-readable name of the engine
+    /// Note: Currently unused, planned for future prompt engine integration
+    #[allow(dead_code)]
     pub fn name(&self) -> &str {
         self.metadata().name
     }
 
     /// Check if this engine requires Nerd Fonts
+    /// Note: Currently unused, planned for future prompt engine integration
+    #[allow(dead_code)]
     pub fn requires_nerd_font(&self) -> bool {
         self.metadata().requires_nerd_font
     }
 
     /// Check if this engine works across multiple shells
+    /// Note: Currently unused, planned for future prompt engine integration
+    #[allow(dead_code)]
     pub fn is_cross_shell(&self) -> bool {
         self.metadata().cross_shell
     }

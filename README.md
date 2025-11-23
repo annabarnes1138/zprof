@@ -1,10 +1,17 @@
 # zprof
 
-Manage multiple zsh profiles with ease.
+Manage multiple zsh profiles with ease - via CLI or GUI.
 
 ## Overview
 
-`zprof` is a command-line tool that helps you manage multiple zsh shell configurations (profiles) with different frameworks, themes, and plugins. Switch between profiles instantly based on your workflow needs.
+`zprof` is a tool that helps you manage multiple zsh shell configurations (profiles) with different frameworks, themes, and plugins. Switch between profiles instantly based on your workflow needs.
+
+**Choose your interface:**
+
+- 💻 **CLI** (Command-Line Interface) - Fast, scriptable, perfect for power users and automation
+- 🖥️ **GUI** (Graphical Interface) - Visual, intuitive, with theme previews and guided workflows
+
+Both interfaces are complementary and share the same business logic - use whichever fits your workflow!
 
 ## Features
 
@@ -19,6 +26,10 @@ Manage multiple zsh profiles with ease.
 
 ## Installation
 
+### CLI Installation
+
+Install the command-line interface:
+
 ```bash
 cargo install zprof
 ```
@@ -30,6 +41,27 @@ git clone https://github.com/yourusername/zprof.git
 cd zprof
 cargo build --release
 ```
+
+For a CLI-only build without GUI dependencies:
+
+```bash
+cargo build --release --no-default-features
+```
+
+### GUI Installation
+
+The GUI is included by default. To launch it:
+
+```bash
+# From CLI (informational - full GUI integration coming soon)
+zprof gui
+
+# Or build and run the GUI directly
+cargo tauri dev       # Development mode
+cargo tauri build     # Production build
+```
+
+See the [GUI Development](#gui-development) section for more details.
 
 ## Quick Start
 
@@ -332,6 +364,7 @@ Edit with `zprof edit <name>` for automatic validation and regeneration.
 | `zprof import github:<user>/<repo>` | Import profile from GitHub repository |
 | `zprof regenerate <name>` | Regenerate shell configs from TOML manifest |
 | `zprof rollback` | Restore pre-zprof configuration |
+| `zprof gui` | Launch the graphical user interface |
 
 ## Safety and Backups
 

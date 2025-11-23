@@ -38,6 +38,9 @@ use crate::tui::{restore_terminal, setup_terminal};
 /// - Terminal too small (minimum 80x24)
 /// - User cancels with Esc key
 /// - Terminal initialization fails
+///
+/// Note: Currently unused, part of planned TUI refactoring for GUI transition
+#[allow(dead_code)]
 pub fn run_prompt_engine_selection() -> Result<PromptEngine> {
     // Initialize terminal
     let mut terminal = setup_terminal().context("Failed to initialize terminal for TUI")?;
@@ -63,6 +66,7 @@ pub fn run_prompt_engine_selection() -> Result<PromptEngine> {
 }
 
 /// Main event loop for prompt engine selection
+#[allow(dead_code)]
 fn run_selection_loop(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
 ) -> Result<PromptEngine> {
@@ -96,6 +100,7 @@ fn run_selection_loop(
 }
 
 /// Render the TUI interface
+#[allow(dead_code)]
 fn render_ui(
     f: &mut Frame,
     engines: &[PromptEngine],
@@ -226,6 +231,7 @@ fn render_ui(
 }
 
 /// Move selection to previous item (with wrapping)
+#[allow(dead_code)]
 fn select_previous(state: &mut ListState, list_len: usize) {
     if list_len == 0 {
         return;
@@ -244,6 +250,7 @@ fn select_previous(state: &mut ListState, list_len: usize) {
 }
 
 /// Move selection to next item (with wrapping)
+#[allow(dead_code)]
 fn select_next(state: &mut ListState, list_len: usize) {
     if list_len == 0 {
         return;
@@ -262,6 +269,7 @@ fn select_next(state: &mut ListState, list_len: usize) {
 }
 
 /// Get all available prompt engines in display order
+#[allow(dead_code)]
 fn get_all_engines() -> Vec<PromptEngine> {
     vec![
         PromptEngine::Starship,

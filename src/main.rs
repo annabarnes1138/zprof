@@ -11,9 +11,15 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 /// zprof - Manage multiple zsh profiles with ease
+///
+/// Available via CLI (this tool) or GUI (run 'zprof gui' to launch graphical interface)
 #[derive(Debug, Parser)]
 #[command(name = "zprof")]
-#[command(about = "Manage multiple zsh profiles with ease", long_about = None)]
+#[command(version)]
+#[command(about = "Manage multiple zsh profiles with ease")]
+#[command(long_about = "zprof allows you to manage multiple isolated zsh profiles.\n\
+Switch between configurations instantly, experiment safely, and share profiles.\n\n\
+Available via CLI (this tool) or GUI (run 'zprof gui' to launch graphical interface).")]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -33,6 +39,9 @@ enum Commands {
     Edit(cli::edit::EditArgs),
     /// Export a profile to a .zprof archive
     Export(cli::export::ExportArgs),
+    /// Launch the graphical user interface
+    #[cfg(feature = "gui")]
+    Gui(cli::gui::GuiArgs),
     /// Import a profile from a .zprof archive
     Import(cli::import::ImportArgs),
     /// Initialize zprof directory structure
@@ -64,6 +73,8 @@ fn main() -> Result<()> {
         Commands::Delete(args) => cli::delete::execute(args),
         Commands::Edit(args) => cli::edit::execute(args),
         Commands::Export(args) => cli::export::execute(args),
+        #[cfg(feature = "gui")]
+        Commands::Gui(args) => cli::gui::execute(args),
         Commands::Import(args) => cli::import::execute(args),
         Commands::Init(args) => cli::init::execute(args),
         Commands::List(args) => cli::list::execute(args),

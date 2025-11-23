@@ -41,7 +41,7 @@ development_status:
   epic-0-story-2: done  # ✅ Approved - Base app window and navigation complete
   epic-0-story-3: done  # ✅ Complete - IPC command layer with 20/20 tests passing
   epic-0-story-4: done  # ✅ Approved - ProfileList complete with all features (100% ACs)
-  epic-0-story-5: ready-for-dev
+  epic-0-story-5: done  # ✅ APPROVED - CLI compatibility complete, 188/188 tests passing, zero regression
   epic-0-retrospective: optional
 
   epic-1: backlog
