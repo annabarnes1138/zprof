@@ -12,9 +12,9 @@ use log::info;
 use std::path::Path;
 
 use crate::backup::{pre_zprof, snapshot, SafetySummary};
-use crate::cleanup::{self, CleanupConfig};
+use crate::cleanup::{self, CleanupConfig, CleanupSummary};
 use crate::core::{config, profile};
-use crate::tui::uninstall_select;
+use crate::tui::{uninstall_confirm, uninstall_select};
 
 /// Uninstall zprof and optionally restore shell configuration
 #[derive(Debug, Args)]
@@ -106,22 +106,37 @@ pub fn execute(args: UninstallArgs) -> Result<()> {
         uninstall_select::select_restoration_option(backup_available, !profiles.is_empty())?
     };
 
-    // Step 4: Show confirmation (unless --yes)
-    if !args.yes
-        && !confirm_uninstall(&restore_option, &profiles_dir)? {
-            println!("\nUninstall cancelled. No changes were made.");
-            return Ok(());
-        }
-
-    // Step 4.5: Create safety backup (unless --no-backup)
+    // Step 4: Create safety backup (unless --no-backup)
     let safety_backup_summary = if !args.no_backup {
         create_safety_backup(&home_dir)?
     } else {
         println!("\n⚠️  Skipping safety backup (--no-backup flag set)");
-        None
+        // For non-backup mode, create a dummy summary for display purposes
+        Some(SafetySummary {
+            backup_path: home_dir.join(".zsh-profiles/backups/skipped.tar.gz"),
+            backup_size: 0,
+        })
     };
 
-    // Step 5: Execute restoration
+    // Unwrap is safe here because we always create Some variant above
+    let safety_summary = safety_backup_summary.as_ref().unwrap();
+
+    // Step 5: Build uninstall summary and show confirmation (unless --yes)
+    if !args.yes {
+        let uninstall_summary = build_uninstall_summary(
+            &restore_option,
+            &profiles_dir,
+            &backup_dir,
+            safety_summary,
+        )?;
+
+        if !uninstall_confirm::show_confirmation(&uninstall_summary)? {
+            println!("\nUninstall cancelled. No changes were made.");
+            return Ok(());
+        }
+    }
+
+    // Step 6: Execute restoration
     info!("Executing restoration: {:?}", restore_option);
     match restore_option {
         RestoreOption::Original => {
@@ -136,7 +151,7 @@ pub fn execute(args: UninstallArgs) -> Result<()> {
         }
     }
 
-    // Step 6: Execute cleanup
+    // Step 7: Execute cleanup
     let cleanup_config = CleanupConfig {
         profiles_dir: profiles_dir.clone(),
         home_dir: home_dir.clone(),
@@ -151,7 +166,7 @@ pub fn execute(args: UninstallArgs) -> Result<()> {
         eprintln!("\n⚠ Some files could not be removed. You may need to remove them manually.");
     }
 
-    // Step 7: Display success message
+    // Step 8: Display success message
     display_success_message(&restore_option, safety_backup_summary.as_ref())?;
 
     Ok(())
@@ -340,67 +355,141 @@ fn display_success_message(restore_option: &RestoreOption, safety_backup: Option
     Ok(())
 }
 
-/// Confirm uninstall operation
-fn confirm_uninstall(restore_option: &RestoreOption, profiles_dir: &Path) -> Result<bool> {
-    println!();
-    println!("╭─────────────────────────────────────────────────────────────╮");
-    println!("│                    Uninstall Summary                        │");
-    println!("╰─────────────────────────────────────────────────────────────╯");
-    println!();
-
-    // Show restoration details
-    match restore_option {
+/// Build comprehensive uninstall summary for confirmation
+fn build_uninstall_summary(
+    restore_option: &RestoreOption,
+    profiles_dir: &Path,
+    backup_dir: &Path,
+    safety_summary: &SafetySummary,
+) -> Result<uninstall_confirm::UninstallSummary> {
+    // Build restoration summary
+    let restoration = match restore_option {
         RestoreOption::Original => {
-            println!("  Restoration:");
-            println!("    • Restore pre-zprof backup to HOME");
-            println!("    • Shell config will be returned to original state");
-        }
-        RestoreOption::Promote(profile_name) => {
-            println!("  Restoration:");
-            println!("    • Promote profile '{}' to HOME", profile_name);
-            println!("    • Profile configs will become your root shell config");
-        }
-        RestoreOption::Clean => {
-            println!("  Restoration:");
-            println!("    • No restoration (clean removal)");
-            println!("    • HOME directory will be left without shell configs");
-        }
-    }
+            // Load backup manifest to get details
+            let manifest = pre_zprof::validate_backup(backup_dir)?;
+            let file_count = manifest.files.len();
+            let source_date = Some(manifest.metadata.created_at);
 
-    println!();
+            // Count history entries if history file exists
+            let history_entries = manifest.files.iter()
+                .find(|f| f.path.to_str() == Some(".zsh_history"))
+                .and_then(|_| {
+                    let history_path = backup_dir.join(".zsh_history");
+                    count_history_lines(&history_path).ok()
+                });
 
-    // Show cleanup details
-    println!("  Cleanup:");
-
-    // Count profiles
-    if profiles_dir.exists() {
-        if let Ok(entries) = std::fs::read_dir(profiles_dir) {
-            let profile_count = entries.filter(|e| {
-                e.as_ref().map(|e| e.path().is_dir()).unwrap_or(false)
-            }).count();
-            if profile_count > 0 {
-                println!("    • Remove {} profile(s)", profile_count);
+            uninstall_confirm::RestorationSummary {
+                option: uninstall_confirm::RestoreOption::PreZprof,
+                file_count,
+                history_entries,
+                source_date,
             }
         }
+        RestoreOption::Promote(profile_name) => {
+            // Count config files in the profile
+            let profile_dir = profiles_dir.join(profile_name);
+            let config_files = [".zshrc", ".zshenv", ".zprofile", ".zlogin", ".zlogout"];
+            let file_count = config_files.iter()
+                .filter(|f| profile_dir.join(f).exists())
+                .count();
+
+            // Count history entries if profile has history
+            let history_path = profile_dir.join(".zsh_history");
+            let history_entries = count_history_lines(&history_path).ok();
+
+            uninstall_confirm::RestorationSummary {
+                option: uninstall_confirm::RestoreOption::PromoteProfile(profile_name.clone()),
+                file_count,
+                history_entries,
+                source_date: None,
+            }
+        }
+        RestoreOption::Clean => {
+            uninstall_confirm::RestorationSummary {
+                option: uninstall_confirm::RestoreOption::NoRestore,
+                file_count: 0,
+                history_entries: None,
+                source_date: None,
+            }
+        }
+    };
+
+    // Build cleanup summary
+    let cleanup = build_cleanup_summary(profiles_dir)?;
+
+    // Create complete summary
+    Ok(uninstall_confirm::UninstallSummary {
+        restoration,
+        cleanup,
+        safety: SafetySummary {
+            backup_path: safety_summary.backup_path.clone(),
+            backup_size: safety_summary.backup_size,
+        },
+    })
+}
+
+/// Build cleanup summary by scanning profiles directory
+fn build_cleanup_summary(profiles_dir: &Path) -> Result<CleanupSummary> {
+    let mut profile_count = 0;
+    let mut total_size = 0u64;
+    let mut directories = Vec::new();
+
+    if profiles_dir.exists() {
+        // Calculate total size recursively
+        total_size = calculate_dir_size(profiles_dir)?;
+
+        // Count profiles
+        let profiles_subdir = profiles_dir.join("profiles");
+        if profiles_subdir.exists() {
+            if let Ok(entries) = std::fs::read_dir(&profiles_subdir) {
+                profile_count = entries
+                    .filter_map(|e| e.ok())
+                    .filter(|e| e.path().is_dir())
+                    .count();
+            }
+        }
+
+        // Track main directory
+        directories.push(profiles_dir.to_path_buf());
     }
 
-    println!("    • Remove ~/.zsh-profiles/ directory");
-    println!("    • Remove zprof shell integration");
+    Ok(CleanupSummary {
+        profile_count,
+        total_size,
+        directories,
+    })
+}
 
-    println!();
-    println!("╭─────────────────────────────────────────────────────────────╮");
-    println!("│  ⚠️  This action cannot be undone!                          │");
-    println!("╰─────────────────────────────────────────────────────────────╯");
-    println!();
+/// Calculate total size of a directory recursively
+fn calculate_dir_size(dir: &Path) -> Result<u64> {
+    let mut total = 0u64;
 
-    print!("Continue with uninstall? [y/N]: ");
-    std::io::Write::flush(&mut std::io::stdout())?;
+    if dir.is_file() {
+        return Ok(std::fs::metadata(dir)?.len());
+    }
 
-    let mut input = String::new();
-    std::io::stdin().read_line(&mut input)?;
+    for entry in std::fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
 
-    let response = input.trim().to_lowercase();
-    Ok(response == "y" || response == "yes")
+        if path.is_dir() {
+            total += calculate_dir_size(&path)?;
+        } else {
+            total += std::fs::metadata(&path)?.len();
+        }
+    }
+
+    Ok(total)
+}
+
+/// Count number of lines in history file
+fn count_history_lines(path: &Path) -> Result<usize> {
+    if !path.exists() {
+        return Ok(0);
+    }
+
+    let content = std::fs::read_to_string(path)?;
+    Ok(content.lines().count())
 }
 
 #[cfg(test)]
