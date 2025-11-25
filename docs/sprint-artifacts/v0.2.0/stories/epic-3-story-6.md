@@ -2,7 +2,7 @@
 
 **Epic:** Epic 3 - Complete Uninstall System
 **Priority:** P0
-**Status:** review
+**Status:** done
 
 ## User Story
 
