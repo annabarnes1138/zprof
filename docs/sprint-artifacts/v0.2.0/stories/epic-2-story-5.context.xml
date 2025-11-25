@@ -22,6 +22,10 @@
       - Show confirmation screen with summary
       - Offer to activate profile immediately
       - Handle errors gracefully (network, permissions)
+
+    ### Review Follow-ups (AI)
+    - [ ] [AI-Review][High] Implement prompt engine installation logic in `installer.rs` or `create_from_preset.rs` (AC #2)
+    - [ ] [AI-Review][Med] Add integration tests for `create_from_preset` flow (using a mockable filesystem or isolated test env)
     </tasks>
   </story>
 

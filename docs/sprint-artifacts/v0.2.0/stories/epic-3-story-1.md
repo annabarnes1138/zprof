@@ -2,7 +2,12 @@
 
 **Epic:** Epic 3 - Complete Uninstall System
 **Priority:** P0
-**Status:** TODO
+**Status:** ready-for-dev
+
+## Dev Agent Record
+
+### Context Reference
+- docs/sprint-artifacts/v0.2.0/stories/epic-3-story-1.context.xml
 
 ## User Story
 

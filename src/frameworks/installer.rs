@@ -18,19 +18,25 @@ pub struct WizardState {
     pub framework: FrameworkType,
     pub plugins: Vec<String>,
     pub theme: String,
+    pub prompt_engine: Option<String>,
 }
 
 /// Install framework and plugins to the given profile directory
 ///
 /// This function orchestrates the complete installation process:
 /// 1. Install framework to profile directory
-/// 2. Install selected plugins
-/// 3. Show progress indicators throughout (AC #7)
+/// 2. Install prompt engine (if selected)
+/// 3. Install selected plugins
+/// 4. Show progress indicators throughout (AC #7)
 ///
 /// Currently implements a simplified installation that creates framework directories.
 /// Future enhancement: Full framework installation with git clone and setup scripts.
 pub fn install_profile(wizard_state: &WizardState, profile_path: &Path) -> Result<()> {
-    let total_steps = 2 + wizard_state.plugins.len();
+    let mut total_steps = 2 + wizard_state.plugins.len();
+    if wizard_state.prompt_engine.is_some() {
+        total_steps += 1;
+    }
+
     let pb = ProgressBar::new(total_steps as u64);
     pb.set_style(
         ProgressStyle::default_bar()
@@ -45,7 +51,15 @@ pub fn install_profile(wizard_state: &WizardState, profile_path: &Path) -> Resul
         .context("Failed to install framework")?;
     pb.inc(1);
 
-    // Step 2: Install plugins
+    // Step 2: Install prompt engine (if any)
+    if let Some(engine) = &wizard_state.prompt_engine {
+        pb.set_message(format!("Installing prompt engine: {engine}..."));
+        install_prompt_engine(engine, profile_path)
+            .context(format!("Failed to install prompt engine: {engine}"))?;
+        pb.inc(1);
+    }
+
+    // Step 3: Install plugins
     for plugin in &wizard_state.plugins {
         pb.set_message(format!("Installing plugin: {plugin}..."));
         install_plugin(&wizard_state.framework, plugin, profile_path)
@@ -53,7 +67,7 @@ pub fn install_profile(wizard_state: &WizardState, profile_path: &Path) -> Resul
         pb.inc(1);
     }
 
-    // Step 3: Finalize
+    // Step 4: Finalize
     pb.set_message("Finalizing installation...");
     pb.inc(1);
 
@@ -236,6 +250,39 @@ fn install_plugin(
         "Created plugin directory for {plugin_name} in {framework:?}"
     );
     Ok(())
+}
+
+/// Install a prompt engine to the profile directory
+///
+/// Currently supports Starship and Pure.
+/// For Starship, it assumes the binary is available or installs it (placeholder).
+/// For Pure, it clones the repository.
+fn install_prompt_engine(engine: &str, profile_path: &Path) -> Result<()> {
+    match engine.to_lowercase().as_str() {
+        "starship" => {
+            // Starship is usually a binary. For a profile-isolated setup,
+            // we might just ensure the config exists, or download the binary.
+            // For now, we'll create a placeholder config directory.
+            let config_dir = profile_path.join(".config");
+            fs::create_dir_all(&config_dir)?;
+            log::info!("Prepared Starship configuration directory at {}", config_dir.display());
+            Ok(())
+        }
+        "pure" => {
+            // Pure is a zsh theme/prompt, usually installed via git
+            let prompt_dir = profile_path.join(".pure");
+            let repo_url = "https://github.com/sindresorhus/pure.git";
+            
+            log::info!("Installing Pure prompt to {}", prompt_dir.display());
+            clone_repository(repo_url, &prompt_dir, None)
+                .context("Failed to clone Pure repository")?;
+            Ok(())
+        }
+        _ => {
+            log::warn!("Unknown prompt engine: {engine}. Skipping installation.");
+            Ok(())
+        }
+    }
 }
 
 #[cfg(test)]

@@ -15,6 +15,7 @@ use ratatui::{
 };
 use std::io;
 
+use crate::frameworks::FrameworkType;
 use crate::presets::{Preset, PRESET_REGISTRY};
 use crate::tui::{restore_terminal, setup_terminal};
 
@@ -103,6 +104,7 @@ impl SelectionOption {
 /// # Keyboard Controls
 ///
 /// - Up/Down arrows: Navigate options
+/// - P: Preview details of highlighted preset
 /// - Enter: Select highlighted option
 /// - Esc: Cancel selection
 ///
@@ -166,6 +168,14 @@ fn run_selection_loop(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> 
             match key.code {
                 KeyCode::Up => select_previous(&mut state, options.len()),
                 KeyCode::Down => select_next(&mut state, options.len()),
+                KeyCode::Char('p') | KeyCode::Char('P') => {
+                    // Show preview for currently selected preset
+                    if let Some(selected) = state.selected() {
+                        if let SelectionKind::Preset(idx) = &options[selected].kind {
+                            show_preset_preview(terminal, &PRESET_REGISTRY[*idx])?;
+                        }
+                    }
+                }
                 KeyCode::Enter => {
                     if let Some(selected) = state.selected() {
                         return match &options[selected].kind {
@@ -277,11 +287,230 @@ fn render_ui(
     f.render_stateful_widget(list, chunks[1], state);
 
     // Footer with help text
-    let footer = Paragraph::new("↑↓: Navigate | Enter: Select | Esc: Cancel")
+    let footer = Paragraph::new("↑↓: Navigate | P: Preview | Enter: Select | Esc: Cancel")
         .style(Style::default().fg(Color::DarkGray))
         .alignment(Alignment::Center)
         .block(Block::default().borders(Borders::ALL));
     f.render_widget(footer, chunks[2]);
+}
+
+/// Show detailed preview screen for a preset
+///
+/// Displays comprehensive information about the preset including:
+/// - Full description
+/// - Framework details
+/// - Prompt engine configuration
+/// - Complete plugin list with descriptions
+/// - Estimated startup time
+///
+/// Returns to selection on Esc key press.
+fn show_preset_preview(
+    terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
+    preset: &Preset,
+) -> Result<()> {
+    loop {
+        // Render preview screen
+        terminal.draw(|f| {
+            render_preview(f, preset);
+        })?;
+
+        // Wait for Esc key to return
+        if let Event::Key(key) = event::read()? {
+            if matches!(key.code, KeyCode::Esc) {
+                return Ok(());
+            }
+        }
+    }
+}
+
+/// Render the preview screen for a preset
+fn render_preview(f: &mut Frame, preset: &Preset) {
+    // Create main layout: title, content, footer
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(3),  // Title
+            Constraint::Min(10),    // Content
+            Constraint::Length(3),  // Footer
+        ])
+        .split(f.area());
+
+    // Title with preset name and icon
+    let title = Paragraph::new(format!("{} {} - Details", preset.icon, preset.name))
+        .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .alignment(Alignment::Center)
+        .block(Block::default().borders(Borders::ALL));
+    f.render_widget(title, chunks[0]);
+
+    // Build content lines
+    let mut content_lines = Vec::new();
+
+    // Description section
+    content_lines.push(Line::from(vec![
+        Span::styled("Description:", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+    ]));
+    content_lines.push(Line::from(Span::styled(
+        format!("  {}", preset.description),
+        Style::default().fg(Color::White),
+    )));
+    content_lines.push(Line::from(""));
+
+    // Target user
+    content_lines.push(Line::from(vec![
+        Span::styled("Best For:", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+    ]));
+    content_lines.push(Line::from(Span::styled(
+        format!("  {}", preset.target_user),
+        Style::default().fg(Color::White),
+    )));
+    content_lines.push(Line::from(""));
+
+    // Framework section
+    content_lines.push(Line::from(vec![
+        Span::styled("Framework:", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+    ]));
+    content_lines.push(Line::from(Span::styled(
+        format!("  {}", preset.config.framework.name()),
+        Style::default().fg(Color::Green),
+    )));
+    content_lines.push(Line::from(""));
+
+    // Prompt configuration
+    content_lines.push(Line::from(vec![
+        Span::styled("Prompt Configuration:", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+    ]));
+    if let Some(engine) = preset.config.prompt_engine {
+        content_lines.push(Line::from(Span::styled(
+            format!("  Prompt Engine: {}", engine),
+            Style::default().fg(Color::Green),
+        )));
+    } else if let Some(theme) = preset.config.framework_theme {
+        content_lines.push(Line::from(Span::styled(
+            format!("  Framework Theme: {}", theme),
+            Style::default().fg(Color::Green),
+        )));
+    } else {
+        content_lines.push(Line::from(Span::styled(
+            "  Default framework prompt",
+            Style::default().fg(Color::DarkGray),
+        )));
+    }
+    content_lines.push(Line::from(""));
+
+    // Plugins section
+    content_lines.push(Line::from(vec![
+        Span::styled(
+            format!("Plugins ({} configured):", preset.config.plugins.len()),
+            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+        ),
+    ]));
+    for plugin in preset.config.plugins {
+        content_lines.push(Line::from(Span::styled(
+            format!("  • {}", plugin),
+            Style::default().fg(Color::Cyan),
+        )));
+    }
+    content_lines.push(Line::from(""));
+
+    // Shell options section
+    if !preset.config.shell_options.is_empty() {
+        content_lines.push(Line::from(vec![
+            Span::styled(
+                "Shell Options:",
+                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+            ),
+        ]));
+        for option in preset.config.shell_options {
+            content_lines.push(Line::from(Span::styled(
+                format!("  • {}", option),
+                Style::default().fg(Color::Magenta),
+            )));
+        }
+        content_lines.push(Line::from(""));
+    }
+
+    // Environment variables section (if any)
+    if !preset.config.env_vars.is_empty() {
+        content_lines.push(Line::from(vec![
+            Span::styled(
+                "Environment Variables:",
+                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+            ),
+        ]));
+        for (key, value) in preset.config.env_vars {
+            content_lines.push(Line::from(Span::styled(
+                format!("  {}={}", key, value),
+                Style::default().fg(Color::Blue),
+            )));
+        }
+        content_lines.push(Line::from(""));
+    }
+
+    // Estimated startup time (based on framework and plugin count)
+    let startup_estimate = estimate_startup_time(preset);
+    content_lines.push(Line::from(vec![
+        Span::styled("Estimated Startup Time:", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+    ]));
+    content_lines.push(Line::from(Span::styled(
+        format!("  {}", startup_estimate),
+        Style::default().fg(Color::White),
+    )));
+
+    // Render content paragraph
+    let content = Paragraph::new(content_lines)
+        .block(Block::default().borders(Borders::ALL).title("Details"))
+        .wrap(ratatui::widgets::Wrap { trim: true });
+    f.render_widget(content, chunks[1]);
+
+    // Footer
+    let footer = Paragraph::new("Esc: Return to selection")
+        .style(Style::default().fg(Color::DarkGray))
+        .alignment(Alignment::Center)
+        .block(Block::default().borders(Borders::ALL));
+    f.render_widget(footer, chunks[2]);
+}
+
+/// Estimate startup time based on framework and plugin count
+fn estimate_startup_time(preset: &Preset) -> &'static str {
+    let plugin_count = preset.config.plugins.len();
+
+    match preset.config.framework {
+        FrameworkType::Zap => {
+            if plugin_count <= 3 {
+                "< 100ms (very fast)"
+            } else {
+                "100-200ms (fast)"
+            }
+        }
+        FrameworkType::Zinit => {
+            if plugin_count <= 5 {
+                "100-200ms (fast)"
+            } else {
+                "200-400ms (moderate)"
+            }
+        }
+        FrameworkType::Zimfw => {
+            if plugin_count <= 8 {
+                "200-400ms (moderate)"
+            } else {
+                "400-600ms (slower)"
+            }
+        }
+        FrameworkType::OhMyZsh => {
+            if plugin_count <= 10 {
+                "500-800ms (slower)"
+            } else {
+                "800ms-1.2s (slow)"
+            }
+        }
+        FrameworkType::Prezto => {
+            if plugin_count <= 8 {
+                "300-500ms (moderate)"
+            } else {
+                "500-800ms (slower)"
+            }
+        }
+    }
 }
 
 /// Move selection to previous item (with wrapping)

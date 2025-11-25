@@ -353,3 +353,7 @@ from Preset   wizard)
 - Preset customization UI (v0.3.0)
 - User-created/shared presets (v0.4.0)
 - Preset marketplace (future)
+
+### Post-Review Follow-ups (Story 2.5)
+- [ ] [High] Implement prompt engine installation logic in `installer.rs` or `create_from_preset.rs` (AC #2)
+- [ ] [Med] Add integration tests for `create_from_preset` flow (using a mockable filesystem or isolated test env)

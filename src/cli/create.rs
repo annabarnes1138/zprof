@@ -87,14 +87,13 @@ pub fn execute(args: CreateArgs) -> Result<()> {
                         .context("Preset selection cancelled. Profile creation aborted.")?;
 
                     match preset_choice {
-                        preset_select::PresetChoice::Preset(_preset) => {
-                            // TODO Story 2.5: Implement create_from_preset()
-                            // For now, show helpful message that Story 2.5 is needed
-                            bail!(
-                                "✗ Preset-based profile creation not yet implemented.\n\
-                                 → This feature will be available in Story 2.5 (Create Profile from Preset).\n\
-                                 → For now, please use Custom Setup instead."
-                            );
+                        preset_select::PresetChoice::Preset(preset) => {
+                            // Story 2.5: Create profile from preset
+                            crate::cli::create_from_preset::create_from_preset(&args.name, preset, true)
+                                .context("Failed to create profile from preset")?;
+                            
+                            // Return early as create_from_preset handles everything including success message
+                            return Ok(());
                         }
                         preset_select::PresetChoice::Custom => {
                             // User chose "Customize (advanced)" - fall through to custom wizard
@@ -138,12 +137,18 @@ pub fn execute(args: CreateArgs) -> Result<()> {
                 PromptMode::PromptEngine { .. } => String::new(),
             };
 
+            let prompt_engine = match &prompt_mode {
+                PromptMode::PromptEngine { engine } => Some(engine.clone()),
+                PromptMode::FrameworkTheme { .. } => None,
+            };
+
             // Show confirmation screen (Story 1.8)
             let wizard_state = WizardState {
                 profile_name: args.name.clone(),
                 framework: selected.clone(),
                 plugins: plugins.clone(),
                 theme: theme.clone(),
+                prompt_engine: prompt_engine.clone(),
             };
 
             let confirmed = theme_select::show_confirmation_screen(&wizard_state)
@@ -210,13 +215,19 @@ pub fn execute(args: CreateArgs) -> Result<()> {
             PromptMode::PromptEngine { .. } => String::new(),
         };
 
-        // Show confirmation screen (Story 1.8)
-        let wizard_state = WizardState {
-            profile_name: args.name.clone(),
-            framework: selected.clone(),
-            plugins: plugins.clone(),
-            theme: theme.clone(),
-        };
+            let prompt_engine = match &prompt_mode {
+                PromptMode::PromptEngine { engine } => Some(engine.clone()),
+                PromptMode::FrameworkTheme { .. } => None,
+            };
+
+            // Show confirmation screen (Story 1.8)
+            let wizard_state = WizardState {
+                profile_name: args.name.clone(),
+                framework: selected.clone(),
+                plugins: plugins.clone(),
+                theme: theme.clone(),
+                prompt_engine: prompt_engine.clone(),
+            };
 
         let confirmed = theme_select::show_confirmation_screen(&wizard_state)
             .context("Failed to show confirmation screen")?;
@@ -272,6 +283,10 @@ pub fn execute(args: CreateArgs) -> Result<()> {
             framework: selected_framework.clone(),
             plugins: framework_info.plugins.clone(),
             theme: selected_theme.clone(),
+            // For now, if we came from import, we don't have prompt engine info easily available
+            // If we came from wizard, we lost it because FrameworkInfo doesn't store it
+            // TODO: Update FrameworkInfo to store prompt_engine
+            prompt_engine: None, 
         };
 
         println!(); // Blank line before progress indicator
@@ -294,7 +309,7 @@ pub fn execute(args: CreateArgs) -> Result<()> {
     update_global_config(&args.name)?;
 
     // 8. Display success message
-    display_success(&args.name, &framework_info, &profile_dir)?;
+    display_success(&args.name, &framework_info, &profile_dir, true)?;
 
     Ok(())
 }
@@ -305,7 +320,7 @@ pub fn execute(args: CreateArgs) -> Result<()> {
 /// - Be non-empty
 /// - Contain only alphanumeric characters and hyphens
 /// - Not contain path traversal attempts
-fn validate_profile_name(name: &str) -> Result<()> {
+pub(crate) fn validate_profile_name(name: &str) -> Result<()> {
     if name.is_empty() {
         bail!("✗ Error: Profile name cannot be empty");
     }
@@ -329,7 +344,7 @@ fn validate_profile_name(name: &str) -> Result<()> {
 }
 
 /// Get the profile directory path
-fn get_profile_dir(name: &str) -> Result<PathBuf> {
+pub(crate) fn get_profile_dir(name: &str) -> Result<PathBuf> {
     let base_dir = get_zprof_dir()?;
     Ok(base_dir.join("profiles").join(name))
 }
@@ -428,7 +443,7 @@ fn copy_framework_files(
 }
 
 /// Update global config to track new profile
-fn update_global_config(profile_name: &str) -> Result<()> {
+pub(crate) fn update_global_config(profile_name: &str) -> Result<()> {
     let base_dir = get_zprof_dir()?;
     let config_path = base_dir.join("config.toml");
 
@@ -451,16 +466,21 @@ fn update_global_config(profile_name: &str) -> Result<()> {
 }
 
 /// Display success message with profile details and optionally switch to the profile
-fn display_success(
+pub(crate) fn display_success(
     name: &str,
     _framework_info: &crate::frameworks::FrameworkInfo,
     profile_dir: &Path,
+    interactive: bool,
 ) -> Result<()> {
     println!("\n✓ Profile '{name}' created successfully");
     println!("  Location: {}", profile_dir.display());
 
     // Display profile details using shared function
     crate::cli::show::display_profile_details(name)?;
+
+    if !interactive {
+        return Ok(());
+    }
 
     // Ask if user wants to switch to the new profile
     let should_switch = Confirm::new()
