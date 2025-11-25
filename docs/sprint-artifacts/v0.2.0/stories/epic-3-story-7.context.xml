@@ -1,0 +1,229 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>7</storyId>
+    <title>Handle Edge Cases and Validation</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/v0.2.0/stories/epic-3-story-7.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>robust error handling for uninstall</iWant>
+    <soThat>users don't end up in broken states</soThat>
+    <tasks>
+      - Validate preconditions
+      - Handle missing pre-zprof backup gracefully
+      - Handle file conflicts during restoration
+      - Handle partial restoration failures
+      - Add comprehensive error messages
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - Validate preconditions
+    - Handle missing pre-zprof backup gracefully
+    - Handle file conflicts during restoration
+    - Handle partial restoration failures
+    - Add comprehensive error messages
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Error Handling Flow
+        snippet: "At any step if error occurs: capture with context, check if revertible, rollback or document partial state, display error with recovery instructions, offer retry."
+
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Reliability/Availability - Error Recovery
+        snippet: "Rollback for failed restorations (restore pre-uninstall state from safety backup). Atomic file operations where possible. Partial cleanup recovery with manual steps. Idempotency: re-running is safe."
+
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Failure Modes Table
+        snippet: "Insufficient disk space: check before backup, abort with message. Permission denied: display file, suggest manual fix. Concurrent modification: checksum mismatch, abort, preserve safety backup. Missing pre-zprof backup: disable Restore option."
+
+      - path: docs/sprint-artifacts/v0.2.0/epic-3-uninstall.md
+        title: Epic 3 User Stories
+        section: Story 3.7
+        snippet: "Validate zprof installed, write permissions, no active shells (warn). Handle missing backup gracefully. Handle file conflicts (prompt or backup). Roll back partial failures. Add comprehensive errors."
+    </docs>
+
+    <code>
+      - path: src/cli/uninstall.rs
+        kind: module
+        symbol: execute
+        lines: N/A
+        reason: NEW (Story 3.3) - Orchestrates validation and error handling throughout uninstall flow
+
+      - path: src/backup/pre_zprof.rs
+        kind: module
+        symbol: backup_exists, validate_backup
+        lines: N/A
+        reason: NEW (Story 3.1) - Validate pre-zprof backup before offering restore option
+
+      - path: src/backup/restore.rs
+        kind: module
+        symbol: restore_pre_zprof, promote_profile
+        lines: N/A
+        reason: NEW (Story 3.3) - Restoration logic with checksum validation and rollback
+
+      - path: src/core/filesystem.rs
+        kind: module
+        symbol: is_initialized
+        lines: 12-16
+        reason: Validate zprof is installed before attempting uninstall
+
+      - path: Cargo.toml
+        kind: config
+        symbol: dependencies
+        lines: 16
+        reason: Already has anyhow (1.0) for error context and Result types
+    </code>
+
+    <dependencies>
+      rust:
+        - anyhow: 1.0 (error handling with context chains)
+        - std::fs: stdlib (check permissions, file metadata)
+        - std::path: stdlib (path validation)
+        - sha2: (via std) SHA256 for checksum validation
+        - std::env: stdlib (check HOME environment variable)
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Must validate ALL preconditions before starting destructive operations
+    - Must preserve safety backup if any operation fails
+    - Must provide actionable error messages (tell user what to do)
+    - Must validate checksums during restoration to detect corruption
+    - Must handle symlinks securely (no path traversal attacks)
+    - Rollback must restore pre-uninstall state (or document recovery steps)
+    - Must detect and warn about active shell sessions if possible
+    - File conflicts must prompt user or create backup with clear naming
+    - Partial failures must be logged with full context for debugging
+    - Must work gracefully when HOME environment variable is missing
+    - Error messages must include recovery instructions using safety backup
+  </constraints>
+
+  <interfaces>
+    - name: validate_preconditions
+      kind: function signature
+      signature: fn validate_preconditions() -> Result<ValidationReport>
+      path: src/cli/uninstall.rs (NEW)
+
+    - name: ValidationReport
+      kind: struct
+      signature: |
+        struct ValidationReport {
+            pub zprof_installed: bool,
+            pub has_write_permissions: bool,
+            pub home_dir_valid: bool,
+            pub pre_zprof_backup_exists: bool,
+            pub warnings: Vec<String>,
+        }
+      path: src/cli/uninstall.rs (NEW)
+
+    - name: handle_file_conflict
+      kind: function signature
+      signature: fn handle_file_conflict(path: &Path, interactive: bool) -> Result<ConflictResolution>
+      path: src/backup/restore.rs (NEW)
+
+    - name: ConflictResolution
+      kind: enum
+      signature: |
+        enum ConflictResolution {
+            Overwrite,
+            Backup,
+            Skip,
+        }
+      path: src/backup/restore.rs (NEW)
+
+    - name: rollback_restoration
+      kind: function signature
+      signature: fn rollback_restoration(safety_backup: &Path) -> Result<()>
+      path: src/backup/restore.rs (NEW)
+
+    - name: validate_checksum
+      kind: function signature
+      signature: fn validate_checksum(file: &Path, expected: &str) -> Result<bool>
+      path: src/backup/restore.rs (NEW)
+
+    - name: check_disk_space
+      kind: function signature
+      signature: fn check_disk_space(required_bytes: u64) -> Result<bool>
+      path: src/backup/snapshot.rs (NEW)
+
+    - name: detect_active_shells
+      kind: function signature
+      signature: fn detect_active_shells() -> Result<Vec<String>>
+      path: src/cli/uninstall.rs (NEW)
+  </interfaces>
+
+  <tests>
+    <standards>
+      - Use cargo test for all tests
+      - Use tempfile crate for isolated test environments
+      - Edge case tests in dedicated test suite
+      - Integration tests in tests/ directory
+      - Target 80%+ code coverage via cargo tarpaulin
+      - All tests must pass on both macOS and Linux
+      - Use serial_test for tests modifying HOME
+    </standards>
+
+    <locations>
+      - tests/integration/uninstall_edge_cases_test.rs (NEW - 15+ edge case scenarios)
+      - tests/integration/uninstall_validation_test.rs (NEW - precondition validation)
+      - src/cli/uninstall.rs #[cfg(test)] (inline unit tests)
+      - src/backup/restore.rs #[cfg(test)] (inline unit tests)
+    </locations>
+
+    <ideas>
+      AC1: Validate preconditions
+        - Test error if zprof not installed (.zsh-profiles/ doesn't exist)
+        - Test error if HOME environment variable not set
+        - Test error if no write permissions to HOME
+        - Test validation report includes all checks
+        - Test warnings shown but don't abort (e.g., active shells warning)
+
+      AC2: Handle missing pre-zprof backup gracefully
+        - Test "Restore Original" option disabled if no pre-zprof backup
+        - Test TUI shows only "Promote Profile" and "Clean Removal" options
+        - Test error message explains why Restore unavailable
+        - Test warning message suggests alternatives
+
+      AC3: Handle file conflicts during restoration
+        - Test prompt shown when .zshrc already exists in HOME
+        - Test overwrite option works correctly
+        - Test backup option creates .zshrc.zprofbackup
+        - Test skip option leaves existing file untouched
+        - Test non-interactive mode defaults to backup
+
+      AC4: Handle partial restoration failures
+        - Test rollback triggered when restoration fails mid-process
+        - Test safety backup preserved after rollback
+        - Test error message includes full recovery instructions
+        - Test partial state documented in error logs
+        - Test retry option offered to user
+
+      AC5: Add comprehensive error messages
+        - Test insufficient disk space error message clear and actionable
+        - Test permission denied error includes affected file path
+        - Test checksum mismatch error suggests corruption and recovery
+        - Test all error messages include "Your data is safe in: [backup path]"
+        - Test error messages formatted for readability
+
+      Additional Edge Cases (from tech spec):
+        - Test symlink points outside HOME (skip with warning)
+        - Test corrupted backup manifest (abort with suggestion)
+        - Test empty profiles directory (handle gracefully)
+        - Test .zshenv is read-only (attempt chmod or warn)
+        - Test history file missing (continue without history)
+        - Test framework directory massive (don't backup binaries)
+        - Test concurrent modification (checksum fails, abort)
+    </ideas>
+  </tests>
+</story-context>

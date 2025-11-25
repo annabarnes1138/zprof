@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story_context>
+    <metadata>
+        <epic>Epic 4</epic>
+        <story_number>5</story_number>
+        <story_title>Implement Font Download</story_title>
+        <status>TODO</status>
+        <priority>P1</priority>
+    </metadata>
+
+    <user_story>
+        <text>As a user who selected a font, I want it downloaded automatically, So that I don't have to manually find and download it</text>
+    </user_story>
+
+    <acceptance_criteria>
+        <criteria>Create src/fonts/download.rs</criteria>
+        <criteria>Download from nerdfonts.com GitHub releases</criteria>
+        <criteria>Show progress bar</criteria>
+        <criteria>Verify download</criteria>
+        <criteria>Extract zip/tar.gz</criteria>
+        <criteria>Handle errors (network, timeout)</criteria>
+        <criteria>Retry logic</criteria>
+        <criteria>Clean up temp files</criteria>
+    </acceptance_criteria>
+
+    <technical_specification>
+        <architecture_section>
+            <module_structure>
+                <module>src/fonts/mod.rs</module>
+                <module>src/fonts/download.rs</module>
+            </module_structure>
+            <integration_points>
+                <point>src/fonts/nerd_fonts.rs: Get download_url from NerdFont struct</point>
+                <point>src/fonts/installer.rs: Pass downloaded files for installation</point>
+                <point>src/cli/create.rs: Show download progress during create workflow</point>
+            </integration_points>
+        </architecture_section>
+
+        <data_models>
+            <struct name="DownloadProgress">
+                <field name="total_bytes">Total download size</field>
+                <field name="downloaded_bytes">Bytes downloaded so far</field>
+                <field name="speed">Download speed (bytes/sec)</field>
+                <field name="eta">Estimated time remaining</field>
+            </struct>
+            <struct name="DownloadResult">
+                <field name="archive_path">Path to downloaded archive file</field>
+                <field name="extracted_files">Vector of extracted font file paths</field>
+                <field name="font_files">Vector of .ttf/.otf files only</field>
+            </struct>
+        </data_models>
+
+        <constraints>
+            <constraint>Only download from github.com/ryanoasis/nerd-fonts/releases/*</constraint>
+            <constraint>Validate file size: 1MB &lt; size &lt; 50MB</constraint>
+            <constraint>30-second timeout for HTTP requests</constraint>
+            <constraint>Retry failed downloads up to 2 times with exponential backoff (1s, 2s)</constraint>
+            <constraint>Use streaming download to avoid memory overhead</constraint>
+            <constraint>Delete temp files on error or after successful extraction</constraint>
+            <constraint>Extract only .ttf and .otf files from archives</constraint>
+        </constraints>
+    </technical_specification>
+
+    <dependencies>
+        <rust_dependencies>
+            <dependency>reqwest = { version = "0.12", features = ["blocking", "stream"] } (NEW)</dependency>
+            <dependency>zip = "2.1" (NEW)</dependency>
+            <dependency>bytes = "1.5" (NEW)</dependency>
+            <dependency>indicatif (existing)</dependency>
+            <dependency>anyhow (existing)</dependency>
+            <dependency>log (existing)</dependency>
+            <dependency>dirs (existing)</dependency>
+        </rust_dependencies>
+        <story_dependencies>
+            <dependency>Story 4.1 (Font Registry) for download URLs</dependency>
+        </story_dependencies>
+    </dependencies>
+
+    <testing_strategy>
+        <unit_tests>
+            <test>Test URL validation (accept GitHub, reject others)</test>
+            <test>Test file size validation (1MB-50MB range)</test>
+            <test>Test ZIP extraction logic with mock archive</test>
+            <test>Test font file filtering (.ttf, .otf only)</test>
+            <test>Test retry backoff calculation</test>
+        </unit_tests>
+        <integration_tests>
+            <test>Real download test (marked slow, run in CI nightly)</test>
+            <test>Test with mock HTTP server (simulate network errors)</test>
+            <test>Test extraction with real Nerd Font ZIP</test>
+            <test>Test cleanup on error (verify temp files deleted)</test>
+            <test>Test cleanup on success (archive deleted, fonts retained)</test>
+        </integration_tests>
+        <validation>
+            <check>Progress bar updates smoothly during download</check>
+            <check>Download completes successfully from GitHub</check>
+            <check>All font variants extracted (Regular, Bold, Italic, etc.)</check>
+            <check>Network errors show clear error messages</check>
+            <check>Retry logic triggers on transient failures</check>
+        </validation>
+    </testing_strategy>
+
+    <code_artifacts>
+        <existing_code>
+            <file path="src/fonts/nerd_fonts.rs">NerdFont.download_url field</file>
+            <file path="Cargo.toml">Dependencies configuration</file>
+        </existing_code>
+        <new_code>
+            <file path="src/fonts/download.rs">Download and extraction implementation</file>
+            <file path="tests/font_download_test.rs">Integration tests for download</file>
+            <file path="Cargo.toml">Add reqwest, zip, bytes dependencies</file>
+        </new_code>
+    </code_artifacts>
+</story_context>

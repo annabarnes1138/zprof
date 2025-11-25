@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story_context>
+    <metadata>
+        <epic>Epic 4</epic>
+        <story_number>2</story_number>
+        <story_title>Detect Font Requirements from Prompt Engine</story_title>
+        <status>TODO</status>
+        <priority>P1</priority>
+    </metadata>
+
+    <user_story>
+        <text>As a user selecting a prompt engine, I want to know if it requires Nerd Fonts, So that I can install them if needed</text>
+    </user_story>
+
+    <acceptance_criteria>
+        <criteria>Add requires_nerd_font bool to PromptEngine</criteria>
+        <criteria>Mark engines (Starship, P10k, OhMyPosh, Spaceship = true; Pure = false)</criteria>
+        <criteria>Show Nerd Font requirement in TUI</criteria>
+        <criteria>Add icon for fonts required</criteria>
+        <criteria>Add unit tests</criteria>
+    </acceptance_criteria>
+
+    <technical_specification>
+        <architecture_section>
+            <module_structure>
+                <module>src/prompts/engine.rs</module>
+                <module>src/tui/prompt_engine_select.rs</module>
+            </module_structure>
+            <integration_points>
+                <point>src/prompts/engine.rs: requires_nerd_font field already exists in EngineMetadata</point>
+                <point>src/tui/prompt_engine_select.rs: Add visual indicator for font requirements</point>
+            </integration_points>
+        </architecture_section>
+
+        <data_models>
+            <struct name="EngineMetadata">
+                <field name="requires_nerd_font">Boolean flag indicating Nerd Font requirement (already exists)</field>
+            </struct>
+        </data_models>
+
+        <constraints>
+            <constraint>Starship, Powerlevel10k, Oh-My-Posh, Spaceship require Nerd Fonts</constraint>
+            <constraint>Pure does not require Nerd Fonts</constraint>
+            <constraint>TUI must clearly indicate font requirements without cluttering interface</constraint>
+        </constraints>
+    </technical_specification>
+
+    <dependencies>
+        <rust_dependencies>
+            <dependency>serde (existing)</dependency>
+            <dependency>ratatui (existing)</dependency>
+            <dependency>crossterm (existing)</dependency>
+        </rust_dependencies>
+        <story_dependencies>
+            <dependency>Epic 1 for PromptEngine integration</dependency>
+        </story_dependencies>
+    </dependencies>
+
+    <testing_strategy>
+        <unit_tests>
+            <test>Verify requires_nerd_font() returns correct values for each engine</test>
+            <test>Test Starship.requires_nerd_font() == true</test>
+            <test>Test Powerlevel10k.requires_nerd_font() == true</test>
+            <test>Test OhMyPosh.requires_nerd_font() == true</test>
+            <test>Test Spaceship.requires_nerd_font() == true</test>
+            <test>Test Pure.requires_nerd_font() == false</test>
+        </unit_tests>
+        <validation>
+            <check>TUI displays font icon/indicator for engines requiring fonts</check>
+            <check>Font requirement is visible without user interaction</check>
+            <check>Help text explains font requirement meaning</check>
+        </validation>
+    </testing_strategy>
+
+    <code_artifacts>
+        <existing_code>
+            <file path="src/prompts/engine.rs">PromptEngine enum and EngineMetadata with requires_nerd_font field</file>
+            <file path="src/tui/prompt_engine_select.rs">Existing prompt engine selection TUI</file>
+        </existing_code>
+        <new_code>
+            <file path="src/tui/prompt_engine_select.rs">Add visual font requirement indicator (icon/badge)</file>
+        </new_code>
+    </code_artifacts>
+</story_context>

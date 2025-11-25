@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story_context>
+    <metadata>
+        <epic>Epic 4</epic>
+        <story_number>6</story_number>
+        <story_title>Platform-Specific Font Installation</story_title>
+        <status>TODO</status>
+        <priority>P1</priority>
+    </metadata>
+
+    <user_story>
+        <text>As a user on macOS or Linux, I want fonts automatically installed to correct location, So that they are available system-wide</text>
+    </user_story>
+
+    <acceptance_criteria>
+        <criteria>Create src/fonts/installer.rs</criteria>
+        <criteria>macOS: Copy to ~/Library/Fonts/, run fc-cache</criteria>
+        <criteria>Linux: Copy to ~/.local/share/fonts/, run fc-cache -fv</criteria>
+        <criteria>Show installation progress</criteria>
+        <criteria>Handle permission errors</criteria>
+        <criteria>Offer manual instructions if auto-install fails</criteria>
+        <criteria>Platform-specific tests</criteria>
+    </acceptance_criteria>
+
+    <technical_specification>
+        <architecture_section>
+            <module_structure>
+                <module>src/fonts/mod.rs</module>
+                <module>src/fonts/installer.rs</module>
+            </module_structure>
+            <integration_points>
+                <point>src/fonts/download.rs: Receive extracted font files for installation</point>
+                <point>src/fonts/detector.rs: Use Platform enum for platform detection</point>
+                <point>src/cli/create.rs: Display installation progress and results</point>
+            </integration_points>
+        </architecture_section>
+
+        <data_models>
+            <struct name="Platform">
+                <field name="MacOS">macOS platform</field>
+                <field name="Linux">Linux platform</field>
+                <field name="Unsupported">Windows or unknown platforms</field>
+            </struct>
+            <struct name="InstallationResult">
+                <field name="success">Boolean indicating overall success</field>
+                <field name="files_installed">Count of font files successfully installed</field>
+                <field name="install_path">PathBuf to installation directory</field>
+                <field name="errors">Vector of error messages for partial failures</field>
+                <field name="cache_refreshed">Boolean indicating if fc-cache ran successfully</field>
+            </struct>
+        </data_models>
+
+        <constraints>
+            <constraint>Only install to user directories (no sudo/root required)</constraint>
+            <constraint>macOS: ~/Library/Fonts/ (create if doesn't exist)</constraint>
+            <constraint>Linux: ~/.local/share/fonts/ (create if doesn't exist)</constraint>
+            <constraint>File permissions: 0644 (rw-r--r--)</constraint>
+            <constraint>Verify directory writable before copying</constraint>
+            <constraint>Run fc-cache gracefully (warn if missing, don't fail)</constraint>
+            <constraint>Never overwrite existing fonts with same name</constraint>
+            <constraint>Validate font file paths to prevent directory traversal</constraint>
+        </constraints>
+    </technical_specification>
+
+    <dependencies>
+        <rust_dependencies>
+            <dependency>dirs (existing)</dependency>
+            <dependency>anyhow (existing)</dependency>
+            <dependency>log (existing)</dependency>
+        </rust_dependencies>
+        <external_dependencies>
+            <dependency>fc-cache (optional - Linux font cache)</dependency>
+        </external_dependencies>
+        <story_dependencies>
+            <dependency>Story 4.5 (Download) for extracted font files</dependency>
+            <dependency>Story 4.3 (Detection) for Platform enum</dependency>
+        </story_dependencies>
+    </dependencies>
+
+    <testing_strategy>
+        <unit_tests>
+            <test>Test platform detection logic</test>
+            <test>Test installation path construction (macOS, Linux)</test>
+            <test>Test file permission setting (0644)</test>
+            <test>Test fc-cache command construction</test>
+            <test>Test path validation (reject .. and absolute paths in font names)</test>
+        </unit_tests>
+        <integration_tests>
+            <test>Install fonts to temp directory, verify files copied</test>
+            <test>Test permission checks (unwritable directory)</test>
+            <test>Test directory creation (if doesn't exist)</test>
+            <test>Test fc-cache execution (mock command on test systems)</test>
+            <test>Test graceful degradation if fc-cache missing</test>
+            <test>Test partial failure handling (some files succeed, some fail)</test>
+        </integration_tests>
+        <validation>
+            <check>Fonts install successfully on macOS to ~/Library/Fonts/</check>
+            <check>Fonts install successfully on Linux to ~/.local/share/fonts/</check>
+            <check>fc-cache runs without blocking on Linux</check>
+            <check>Permission errors show actionable error messages</check>
+            <check>Windows shows clear unsupported platform message</check>
+        </validation>
+    </testing_strategy>
+
+    <code_artifacts>
+        <existing_code>
+            <file path="src/frameworks/installer.rs">Platform-specific installation patterns</file>
+            <file path="src/fonts/detector.rs">Platform enum definition</file>
+        </existing_code>
+        <new_code>
+            <file path="src/fonts/installer.rs">Font installation implementation</file>
+            <file path="tests/font_install_test.rs">Integration tests with temp directories</file>
+        </new_code>
+    </code_artifacts>
+</story_context>

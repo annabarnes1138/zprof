@@ -1,0 +1,115 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>4</storyId>
+    <title>Update All Documentation References</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/v0.2.0/stories/epic-5-story-4.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user reading documentation</asA>
+    <iWant>no references to deprecated command</iWant>
+    <soThat>not confused about which to use</soThat>
+    <tasks>
+      - Search all docs for 'rollback'
+      - Replace with 'uninstall' where appropriate
+      - Add deprecation notice to commands.md
+      - Verify no broken examples
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Search all docs for 'rollback'</criterion>
+    <criterion id="AC2">Replace with 'uninstall' where appropriate</criterion>
+    <criterion id="AC3">Add deprecation notice to commands.md</criterion>
+    <criterion id="AC4">Verify no broken examples</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Remove Deprecated Rollback Command</title>
+        <section>Acceptance Criteria AC-7</section>
+        <snippet>All rollback occurrences must be replaced with uninstall in command examples, updated with deprecation notes for historical references, or linked to migration guide for transition scenarios.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Remove Deprecated Rollback Command</title>
+        <section>Workflows → Documentation Update Process</section>
+        <snippet>1. Search all docs for "rollback" keyword, 2. Review each occurrence (replace examples, add deprecation notes, reference migration guide), 3. Verify consistency.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Remove Deprecated Rollback Command</title>
+        <section>Open Questions QUESTION-5</section>
+        <snippet>Recommendation: Use `grep -r "rollback" docs/` to identify, manual review to validate replacements.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>docs/user-guide/*.md</path>
+        <kind>user documentation</kind>
+        <symbol>N/A</symbol>
+        <lines>all</lines>
+        <reason>All user guide files need audit for rollback references</reason>
+      </artifact>
+      <artifact>
+        <path>README.md</path>
+        <kind>main project documentation</kind>
+        <symbol>N/A</symbol>
+        <lines>all</lines>
+        <reason>Main README likely has rollback references in examples</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <tools>
+        <tool>grep/ripgrep for searching documentation files</tool>
+      </tools>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Do not remove historical context - add deprecation notes instead</constraint>
+    <constraint>All command examples must use uninstall, not rollback</constraint>
+    <constraint>Link to migration guide for users needing transition help</constraint>
+    <constraint>Preserve existing documentation structure and style</constraint>
+    <constraint>Verify all examples work after replacement</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Documentation Audit Checklist</name>
+      <kind>process</kind>
+      <signature>
+1. grep -r "rollback" docs/
+2. Review each match
+3. Replace or annotate
+4. Verify no broken examples
+5. Link to migration guide
+      </signature>
+      <path>N/A</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Manual checklist-based review. Use grep to find all occurrences. Test all command examples. Verify markdown links are not broken.
+    </standards>
+    <locations>
+      - docs/user-guide/*.md (all user documentation)
+      - README.md (main documentation)
+      - docs/README.md (documentation index)
+    </locations>
+    <ideas>
+      <test criterion="AC1" idea="Run `grep -r rollback docs/` and verify all occurrences are identified"/>
+      <test criterion="AC2" idea="Review each rollback reference and verify appropriate action taken"/>
+      <test criterion="AC3" idea="Verify commands.md or equivalent has deprecation notice"/>
+      <test criterion="AC4" idea="Test all code examples in updated documentation work correctly"/>
+      <test criterion="all" idea="Verify migration guide links work from all references"/>
+    </ideas>
+  </tests>
+</story-context>

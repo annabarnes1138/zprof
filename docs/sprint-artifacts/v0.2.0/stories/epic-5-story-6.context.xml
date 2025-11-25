@@ -1,0 +1,109 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>6</storyId>
+    <title>Update Release Notes</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/v0.2.0/stories/epic-5-story-6.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user upgrading to v0.2.0</asA>
+    <iWant>clear communication about the change</iWant>
+    <soThat>not surprised by deprecation warnings</soThat>
+    <tasks>
+      - Add to v0.2.0 release notes (Deprecated section)
+      - Include migration guide link
+      - Explain why (benefits of uninstall)
+      - Add to Breaking Changes section
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Add to v0.2.0 release notes (Deprecated section)</criterion>
+    <criterion id="AC2">Include migration guide link</criterion>
+    <criterion id="AC3">Explain why (benefits of uninstall)</criterion>
+    <criterion id="AC4">Add to Breaking Changes section</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Remove Deprecated Rollback Command</title>
+        <section>Acceptance Criteria AC-8</section>
+        <snippet>Release notes must document deprecation in "Deprecated" section with clear statement, removal timeline (v0.3.0), migration guidance link, and rationale.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Remove Deprecated Rollback Command</title>
+        <section>Dependencies → Documentation Integration</section>
+        <snippet>Release notes integrate with v0.2.0 changelog structure.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>CHANGELOG.md</path>
+        <kind>changelog documentation</kind>
+        <symbol>N/A</symbol>
+        <lines>all</lines>
+        <reason>Main changelog where v0.2.0 deprecation notice needs to be added</reason>
+      </artifact>
+      <artifact>
+        <path>docs/releases/v0.2.0.md</path>
+        <kind>release notes</kind>
+        <symbol>N/A</symbol>
+        <lines>all</lines>
+        <reason>Detailed release notes document (if exists) where deprecation should be prominently featured</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <markdown>
+        <reference>Keep-a-Changelog format for CHANGELOG.md structure</reference>
+      </markdown>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Follow Keep-a-Changelog format for CHANGELOG.md</constraint>
+    <constraint>Deprecation must be in "Deprecated" section, not "Changed"</constraint>
+    <constraint>Must explain benefits of uninstall over rollback</constraint>
+    <constraint>Must include migration guide link</constraint>
+    <constraint>Must specify v0.3.0 as removal version</constraint>
+    <constraint>Tone should be helpful and informative, not apologetic</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>CHANGELOG Entry</name>
+      <kind>markdown documentation</kind>
+      <signature>
+## [0.2.0] - 2025-XX-XX
+
+### Deprecated
+- **`zprof rollback` command**: Deprecated in favor of `zprof uninstall`...
+  See [Migration Guide](docs/user-guide/migration-rollback-to-uninstall.md)
+      </signature>
+      <path>CHANGELOG.md</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Manual review of release notes for clarity and completeness. Verify all links work. Check formatting renders correctly in markdown viewers.
+    </standards>
+    <locations>
+      - CHANGELOG.md (updated with deprecation notice)
+      - docs/releases/v0.2.0.md (if exists)
+    </locations>
+    <ideas>
+      <test criterion="AC1" idea="Verify CHANGELOG.md has Deprecated section with rollback entry"/>
+      <test criterion="AC2" idea="Verify migration guide link in changelog works and points to correct file"/>
+      <test criterion="AC3" idea="Review changelog entry explains uninstall benefits clearly"/>
+      <test criterion="AC4" idea="Verify entry mentions v0.3.0 removal timeline"/>
+      <test criterion="all" idea="Check markdown formatting renders correctly"/>
+    </ideas>
+  </tests>
+</story-context>

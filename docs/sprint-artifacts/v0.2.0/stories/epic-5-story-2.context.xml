@@ -1,0 +1,113 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>2</storyId>
+    <title>Update CLI Help Text</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/v0.2.0/stories/epic-5-story-2.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user running zprof --help</asA>
+    <iWant>see that rollback is deprecated</iWant>
+    <soThat>use the correct command</soThat>
+    <tasks>
+      - Update command list with (deprecated) marker
+      - Update rollback --help with migration info
+      - Ensure rollback still appears for discoverability
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Update command list with (deprecated) marker</criterion>
+    <criterion id="AC2">Update rollback --help with migration info</criterion>
+    <criterion id="AC3">Ensure rollback still appears for discoverability</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Remove Deprecated Rollback Command</title>
+        <section>Modified Help Output</section>
+        <snippet>Main help shows rollback with "(deprecated) Use 'uninstall' instead" suffix. Rollback-specific help shows migration-focused message with uninstall benefits.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Remove Deprecated Rollback Command</title>
+        <section>Acceptance Criteria AC-4 and AC-5</section>
+        <snippet>AC-4: Help text shows "(deprecated)" marker. AC-5: Rollback help shows deprecation message, migration guidance, uninstall benefits, and reference to uninstall help.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/main.rs</path>
+        <kind>main application entry</kind>
+        <symbol>Commands enum</symbol>
+        <lines>29-62</lines>
+        <reason>Command registration where rollback doc comment needs "(deprecated)" marker added</reason>
+      </artifact>
+      <artifact>
+        <path>src/cli/rollback.rs</path>
+        <kind>cli command module</kind>
+        <symbol>RollbackArgs</symbol>
+        <lines>10-19</lines>
+        <reason>Clap attributes on struct where about/long_about text can be modified for deprecation notice</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <dependency name="clap" version="4.5.51" features="derive">CLI framework that generates help text from doc comments and attributes</dependency>
+      </rust>
+      <dev>
+        <dependency name="insta" version="1.34">Snapshot testing for help text validation</dependency>
+      </dev>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Rollback must remain visible in command list - do not hide it</constraint>
+    <constraint>Use clap doc comments and attributes for help text (idiomatic Rust CLI pattern)</constraint>
+    <constraint>Help text must reference "zprof uninstall --help" for details</constraint>
+    <constraint>Deprecation message must be clear and concise</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Commands::Rollback doc comment</name>
+      <kind>clap derive attribute</kind>
+      <signature>
+/// Restore original shell configuration (deprecated - use 'uninstall' instead)
+Rollback(cli::rollback::RollbackArgs),
+      </signature>
+      <path>src/main.rs</path>
+    </interface>
+    <interface>
+      <name>RollbackArgs about attribute</name>
+      <kind>clap derive attribute</kind>
+      <signature>
+#[command(about = "Deprecated: Use 'zprof uninstall' instead")]
+#[command(long_about = "This command is deprecated...")]
+pub struct RollbackArgs { ... }
+      </signature>
+      <path>src/cli/rollback.rs</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Snapshot tests using insta crate for help text validation. Run `cargo insta review` after changes. Test help output for both main command list and rollback-specific help.
+    </standards>
+    <locations>
+      - tests/rollback_deprecation_test.rs (help text snapshot tests)
+    </locations>
+    <ideas>
+      <test criterion="AC1" idea="Snapshot test for `zprof --help` output showing (deprecated) marker on rollback"/>
+      <test criterion="AC2" idea="Snapshot test for `zprof rollback --help` showing full migration guidance"/>
+      <test criterion="AC3" idea="Verify rollback appears in command list (not hidden)"/>
+      <test criterion="all" idea="Test that help text includes reference to 'zprof uninstall --help'"/>
+    </ideas>
+  </tests>
+</story-context>

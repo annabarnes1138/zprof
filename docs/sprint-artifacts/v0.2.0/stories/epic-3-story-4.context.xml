@@ -1,0 +1,185 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>4</storyId>
+    <title>Implement Safety Backup Before Uninstall</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/v0.2.0/stories/epic-3-story-4.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user running uninstall</asA>
+    <iWant>a final backup created before removal</iWant>
+    <soThat>recover if something goes wrong</soThat>
+    <tasks>
+      - Create .zsh-profiles/backups/final-snapshot-{timestamp}.tar.gz
+      - Archive all profiles, history, backups
+      - Show backup location
+      - Abort if backup fails
+      - Add --no-backup flag
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - Create .zsh-profiles/backups/final-snapshot-{timestamp}.tar.gz
+    - Archive all profiles, history, backups
+    - Show backup location
+    - Abort if backup fails
+    - Add --no-backup flag
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Uninstall Workflow Sequence (Step 7)
+        snippet: "Create safety backup (unless --no-backup). Archive entire ~/.zsh-profiles/ to final-snapshot-{timestamp}.tar.gz. Display path and size. Abort uninstall if backup creation fails."
+
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Module Design - snapshot.rs
+        snippet: "src/backup/snapshot.rs - Create safety tarball before uninstall. Function: create_final_snapshot() returns Result<u64> (tarball size)."
+
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Performance NFRs
+        snippet: "Safety snapshot creation: < 10 seconds for typical profile sizes (2-5 MB). Progress feedback required for operations > 1 second."
+
+      - path: docs/sprint-artifacts/v0.2.0/epic-3-uninstall.md
+        title: Epic 3 User Stories
+        section: Story 3.4
+        snippet: "Create safety backup before destructive operations. Archive includes all profiles, shared history, backups, config.toml. Show location and size. Abort if fails. --no-backup flag for scripting."
+    </docs>
+
+    <code>
+      - path: src/cli/uninstall.rs
+        kind: module
+        symbol: execute
+        lines: N/A
+        reason: NEW (Story 3.3) - Orchestrates uninstall workflow, calls create_final_snapshot() before destructive operations
+
+      - path: Cargo.toml
+        kind: config
+        symbol: dependencies
+        lines: 27-28
+        reason: Already has tar (0.4) and flate2 (1.0) for tarball creation with gzip compression
+
+      - path: Cargo.toml
+        kind: config
+        symbol: dependencies
+        lines: 26
+        reason: Already has indicatif (0.18) for progress bars during snapshot creation
+
+      - path: src/core/filesystem.rs
+        kind: module
+        symbol: get_zprof_dir
+        lines: 6-10
+        reason: Get base zprof directory path to archive entire .zsh-profiles/
+    </code>
+
+    <dependencies>
+      rust:
+        - tar: 0.4 (tarball creation)
+        - flate2: 1.0 (gzip compression)
+        - indicatif: 0.18 (progress bars)
+        - chrono: 0.4 (timestamp for filename)
+        - anyhow: 1.0 (error handling)
+        - std::fs: stdlib (file operations, metadata)
+        - std::path: stdlib (path handling)
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Safety backup must be created BEFORE any destructive operations
+    - Backup must include entire .zsh-profiles/ directory recursively
+    - Backup must use standard tar.gz format (extractable with system tar)
+    - Backup filename must include timestamp: final-snapshot-YYYYMMDD-HHMMSS.tar.gz
+    - Backup must be stored in .zsh-profiles/backups/ (survives cleanup if --keep-backups)
+    - Must check available disk space before creating backup
+    - Abort entire uninstall if backup creation fails (safety-first)
+    - Must show progress for large profiles (> 5 MB)
+    - Backup file permissions: 600 (owner read/write only)
+    - Must handle special files (symlinks, pipes) correctly in archive
+    - --no-backup flag bypasses safety backup (for automation/scripting)
+  </constraints>
+
+  <interfaces>
+    - name: create_final_snapshot
+      kind: function signature
+      signature: pub fn create_final_snapshot(profiles_dir: &Path, output_path: &Path) -> Result<u64>
+      path: src/backup/snapshot.rs (NEW)
+
+    - name: calculate_archive_size
+      kind: function signature
+      signature: fn calculate_archive_size(dir: &Path) -> Result<u64>
+      path: src/backup/snapshot.rs (NEW)
+
+    - name: create_tar_gz
+      kind: function signature
+      signature: fn create_tar_gz(source: &Path, output: &Path, progress: &ProgressBar) -> Result<()>
+      path: src/backup/snapshot.rs (NEW)
+
+    - name: SafetySummary
+      kind: struct
+      signature: |
+        #[derive(Debug)]
+        pub struct SafetySummary {
+            pub backup_path: PathBuf,
+            pub backup_size: u64,
+        }
+      path: src/backup/snapshot.rs (NEW)
+  </interfaces>
+
+  <tests>
+    <standards>
+      - Use cargo test for all tests
+      - Use tempfile crate for isolated test environments
+      - Integration tests in tests/ directory
+      - Unit tests in #[cfg(test)] mod tests within modules
+      - Target 80%+ code coverage via cargo tarpaulin
+      - All tests must pass on both macOS and Linux
+    </standards>
+
+    <locations>
+      - tests/integration/uninstall_safety_backup_test.rs (NEW)
+      - src/backup/snapshot.rs #[cfg(test)] (inline unit tests)
+    </locations>
+
+    <ideas>
+      AC1: Create final-snapshot-{timestamp}.tar.gz
+        - Test tarball created at correct path
+        - Test filename includes timestamp in correct format
+        - Test tarball is valid tar.gz format
+        - Test tarball can be extracted with system tar command
+
+      AC2: Archive all profiles, history, backups
+        - Test all profiles/ subdirectories included in archive
+        - Test shared/ directory included
+        - Test backups/ directory included (including pre-zprof backup)
+        - Test config.toml included
+        - Test cache/ directory included
+        - Test symlinks preserved correctly in archive
+        - Test file permissions preserved in archive
+
+      AC3: Show backup location
+        - Test output message includes full path to tarball
+        - Test output shows human-readable size (MB, not bytes)
+        - Test progress bar shown for large profiles
+        - Snapshot test: output message format
+
+      AC4: Abort if backup fails
+        - Test insufficient disk space causes abort
+        - Test permission denied causes abort
+        - Test error message includes recovery instructions
+        - Test no files modified if backup fails
+        - Test uninstall doesn't proceed after backup failure
+
+      AC5: Add --no-backup flag
+        - Test --no-backup skips snapshot creation
+        - Test uninstall proceeds without safety backup when flag used
+        - Test warning message shown when --no-backup used
+    </ideas>
+  </tests>
+</story-context>

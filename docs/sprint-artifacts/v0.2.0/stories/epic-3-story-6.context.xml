@@ -1,0 +1,206 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>6</storyId>
+    <title>Add Uninstall Confirmation Screen</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/v0.2.0/stories/epic-3-story-6.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user about to uninstall</asA>
+    <iWant>see a summary and confirm my choice</iWant>
+    <soThat>don't accidentally remove shell config</soThat>
+    <tasks>
+      - Show detailed summary (restoration plan, cleanup plan, safety backup)
+      - Default to No
+      - Add --yes flag to skip
+      - Include file counts and sizes
+      - Highlight destructive operations
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - Show detailed summary (restoration plan, cleanup plan, safety backup)
+    - Default to No
+    - Add --yes flag to skip
+    - Include file counts and sizes
+    - Highlight destructive operations
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Uninstall Workflow Sequence (Step 6)
+        snippet: "Show confirmation summary (unless --yes). Display restoration plan (option, file count, history entries, source date), cleanup plan (profile count, total size, directories), safety backup path. Default: No. User must explicitly confirm."
+
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Data Models - UninstallSummary
+        snippet: "UninstallSummary with RestorationSummary (option, file_count, history_entries, source_date), CleanupSummary (profile_count, total_size, directories), SafetySummary (backup_path, backup_size)."
+
+      - path: docs/sprint-artifacts/v0.2.0/epic-3-uninstall.md
+        title: Epic 3 User Stories
+        section: Story 3.6
+        snippet: "Show detailed summary before proceeding. Include restoration plan, cleanup plan, safety backup info. Default to No. --yes flag skips confirmation. Show file counts, sizes, timestamps. Highlight destructive operations in red."
+    </docs>
+
+    <code>
+      - path: src/cli/uninstall.rs
+        kind: module
+        symbol: execute
+        lines: N/A
+        reason: NEW (Story 3.3) - Calls show_confirmation() before proceeding with uninstall
+
+      - path: src/backup/restore.rs
+        kind: module
+        symbol: create_restoration_plan
+        lines: N/A
+        reason: NEW (Story 3.3) - Creates RestorationPlan used to build summary
+
+      - path: src/cleanup/mod.rs
+        kind: module
+        symbol: CleanupConfig
+        lines: N/A
+        reason: NEW (Story 3.5) - CleanupConfig used to calculate cleanup summary
+
+      - path: Cargo.toml
+        kind: config
+        symbol: dependencies
+        lines: 23
+        reason: Already has dialoguer (0.11) for confirmation prompts with default values
+    </code>
+
+    <dependencies>
+      rust:
+        - dialoguer: 0.11 (Confirm prompt with default value)
+        - anyhow: 1.0 (error handling)
+        - chrono: 0.4 (format timestamps in summary)
+        - std::fs: stdlib (calculate file sizes)
+        - colored: (optional) for highlighting destructive operations
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Confirmation must default to "No" (user must explicitly type 'y' or 'yes')
+    - Summary must be shown BEFORE any destructive operations
+    - --yes flag bypasses confirmation completely (for scripting)
+    - Summary must be clear and comprehensive (no hidden operations)
+    - File sizes must be human-readable (KB, MB, GB - not bytes)
+    - Timestamps must be human-readable (e.g., "Jan 15, 2025" not epoch)
+    - Destructive operations should be visually distinct (bold, red, or warning symbol)
+    - Summary must accurately reflect what will happen (no surprises)
+    - Must handle missing data gracefully (e.g., if no pre-zprof backup, show "N/A")
+    - Must work in both interactive and non-interactive terminals
+  </constraints>
+
+  <interfaces>
+    - name: show_confirmation
+      kind: function signature
+      signature: pub fn show_confirmation(summary: &UninstallSummary) -> Result<bool>
+      path: src/tui/uninstall_confirm.rs (NEW)
+
+    - name: format_summary
+      kind: function signature
+      signature: fn format_summary(summary: &UninstallSummary) -> String
+      path: src/tui/uninstall_confirm.rs (NEW)
+
+    - name: UninstallSummary
+      kind: struct
+      signature: |
+        #[derive(Debug)]
+        pub struct UninstallSummary {
+            pub restoration: RestorationSummary,
+            pub cleanup: CleanupSummary,
+            pub safety: SafetySummary,
+        }
+      path: src/tui/uninstall_confirm.rs (NEW)
+
+    - name: RestorationSummary
+      kind: struct
+      signature: |
+        #[derive(Debug)]
+        pub struct RestorationSummary {
+            pub option: RestoreOption,
+            pub file_count: usize,
+            pub history_entries: Option<usize>,
+            pub source_date: Option<DateTime<Utc>>,
+        }
+      path: src/tui/uninstall_confirm.rs (NEW)
+
+    - name: SafetySummary
+      kind: struct
+      signature: |
+        #[derive(Debug)]
+        pub struct SafetySummary {
+            pub backup_path: PathBuf,
+            pub backup_size: u64,
+        }
+      path: src/tui/uninstall_confirm.rs (NEW)
+
+    - name: format_size
+      kind: function signature
+      signature: fn format_size(bytes: u64) -> String
+      path: src/tui/uninstall_confirm.rs (NEW)
+
+    - name: format_timestamp
+      kind: function signature
+      signature: fn format_timestamp(dt: &DateTime<Utc>) -> String
+      path: src/tui/uninstall_confirm.rs (NEW)
+  </interfaces>
+
+  <tests>
+    <standards>
+      - Use cargo test for all tests
+      - Use insta crate for snapshot testing confirmation output
+      - Integration tests in tests/ directory
+      - Unit tests in #[cfg(test)] mod tests within modules
+      - Target 80%+ code coverage via cargo tarpaulin
+      - All tests must pass on both macOS and Linux
+    </standards>
+
+    <locations>
+      - tests/snapshots/uninstall_confirm/ (snapshot tests for summary formatting)
+      - tests/integration/uninstall_test.rs (integration tests with confirmation)
+      - src/tui/uninstall_confirm.rs #[cfg(test)] (inline unit tests)
+    </locations>
+
+    <ideas>
+      AC1: Show detailed summary
+        - Snapshot test: Restore Original summary format
+        - Snapshot test: Promote Profile summary format
+        - Snapshot test: Clean Removal summary format
+        - Test summary includes all required sections
+        - Test summary shows file counts correctly
+        - Test summary shows sizes in human-readable format
+        - Test summary shows timestamps in readable format
+
+      AC2: Default to No
+        - Test Confirm::default(false) used
+        - Test user must explicitly type 'y' to proceed
+        - Test pressing Enter without input returns false
+        - Test typing 'n' returns false
+
+      AC3: Add --yes flag to skip
+        - Test --yes flag bypasses show_confirmation()
+        - Test uninstall proceeds immediately when --yes used
+        - Test warning message shown when --yes used (non-interactive mode)
+
+      AC4: Include file counts and sizes
+        - Test restoration section shows file count
+        - Test cleanup section shows profile count
+        - Test cleanup section shows total size
+        - Test safety section shows backup size
+        - Test history entries count shown if applicable
+
+      AC5: Highlight destructive operations
+        - Test "Remove" operations highlighted differently
+        - Test warning message about irreversibility
+        - Test safety backup location emphasized
+        - Snapshot test: visual highlighting correct
+    </ideas>
+  </tests>
+</story-context>

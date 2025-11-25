@@ -1,0 +1,111 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>3</storyId>
+    <title>Add Migration Guide</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/v0.2.0/stories/epic-5-story-3.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user of the rollback command</asA>
+    <iWant>documentation on migrating to uninstall</iWant>
+    <soThat>understand differences and benefits</soThat>
+    <tasks>
+      - Create migration guide document
+      - Comparison table (rollback vs uninstall)
+      - Migration examples
+      - FAQ about the change
+      - Add to docs index
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Create migration guide document</criterion>
+    <criterion id="AC2">Comparison table (rollback vs uninstall)</criterion>
+    <criterion id="AC3">Migration examples</criterion>
+    <criterion id="AC4">FAQ about the change</criterion>
+    <criterion id="AC5">Add to docs index</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Remove Deprecated Rollback Command</title>
+        <section>Acceptance Criteria AC-6</section>
+        <snippet>Migration guide must exist with: why rollback is deprecated, feature comparison table, migration examples, and FAQ addressing common concerns.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Remove Deprecated Rollback Command</title>
+        <section>Dependencies → Documentation Integration</section>
+        <snippet>Migration guide links to existing uninstall command documentation and integrates with consolidated command list.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>README.md</path>
+        <kind>documentation</kind>
+        <symbol>N/A</symbol>
+        <lines>all</lines>
+        <reason>Main documentation entry point that may need migration guide link</reason>
+      </artifact>
+      <artifact>
+        <path>docs/README.md</path>
+        <kind>documentation index</kind>
+        <symbol>N/A</symbol>
+        <lines>all</lines>
+        <reason>Documentation index where migration guide needs to be added</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <markdown>
+        <reference>GitHub Flavored Markdown for documentation formatting</reference>
+      </markdown>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Migration guide must be clear and beginner-friendly</constraint>
+    <constraint>Comparison table must highlight uninstall benefits over rollback</constraint>
+    <constraint>Examples must show command equivalents (rollback → uninstall)</constraint>
+    <constraint>FAQ must address concerns about forced migration</constraint>
+    <constraint>Documentation must follow existing docs structure and style</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Migration Guide Document</name>
+      <kind>markdown documentation</kind>
+      <signature>
+# Migrating from Rollback to Uninstall
+
+## Why the Change?
+## Feature Comparison
+## Migration Examples
+## FAQ
+      </signature>
+      <path>docs/user-guide/migration-rollback-to-uninstall.md</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Manual documentation review checklist. Verify all code examples are accurate and work as documented. Check markdown rendering in GitHub.
+    </standards>
+    <locations>
+      - docs/user-guide/migration-rollback-to-uninstall.md (new file)
+      - docs/README.md (updated index)
+    </locations>
+    <ideas>
+      <test criterion="AC1" idea="Verify migration guide file exists and is properly formatted"/>
+      <test criterion="AC2" idea="Review comparison table for completeness and accuracy"/>
+      <test criterion="AC3" idea="Test all command examples in migration guide work correctly"/>
+      <test criterion="AC4" idea="Review FAQ for common user concerns coverage"/>
+      <test criterion="AC5" idea="Verify migration guide appears in docs index with appropriate link"/>
+    </ideas>
+  </tests>
+</story-context>

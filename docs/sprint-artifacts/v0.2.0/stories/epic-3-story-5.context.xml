@@ -1,0 +1,223 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>5</storyId>
+    <title>Implement Cleanup Logic</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/v0.2.0/stories/epic-3-story-5.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user completing uninstall</asA>
+    <iWant>all zprof files removed cleanly</iWant>
+    <soThat>system is back to pre-zprof state</soThat>
+    <tasks>
+      - Remove .zsh-profiles/ directory
+      - Remove zprof .zshenv
+      - Remove symlinks
+      - Handle errors gracefully
+      - Show progress during cleanup
+      - Add --keep-backups flag
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - Remove .zsh-profiles/ directory
+    - Remove zprof .zshenv
+    - Remove symlinks
+    - Handle errors gracefully
+    - Show progress during cleanup
+    - Add --keep-backups flag
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Uninstall Workflow Sequence (Step 9)
+        snippet: "Execute cleanup: Remove ~/.zsh-profiles/profiles/, shared/, config.toml, zprof-generated ~/.zshenv. Keep backups/ if --keep-backups. Otherwise remove entire ~/.zsh-profiles/."
+
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Module Design - cleanup/mod.rs
+        snippet: "src/cleanup/mod.rs - Remove zprof files and directories. Functions: remove_profiles_dir(), remove_zprof_zshenv(), cleanup_all(). Returns CleanupReport with removed files/dirs and errors."
+
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Filesystem Layout
+        snippet: "~/.zsh-profiles/ contains config.toml, profiles/, shared/, backups/. All except backups/ (if --keep-backups) should be removed. ~/.zshenv is zprof-generated file to remove."
+
+      - path: docs/sprint-artifacts/v0.2.0/epic-3-uninstall.md
+        title: Epic 3 User Stories
+        section: Story 3.5
+        snippet: "Remove entire .zsh-profiles/ directory, zprof .zshenv, symlinks. Preserve restored configuration. Handle errors gracefully. Show progress. --keep-backups preserves backups/ only."
+    </docs>
+
+    <code>
+      - path: src/cli/uninstall.rs
+        kind: module
+        symbol: execute
+        lines: N/A
+        reason: NEW (Story 3.3) - Orchestrates uninstall, calls cleanup_all() after restoration
+
+      - path: src/core/filesystem.rs
+        kind: module
+        symbol: get_zprof_dir
+        lines: 6-10
+        reason: Get base zprof directory to remove
+
+      - path: src/shell/generator.rs
+        kind: module
+        symbol: generate_zshenv
+        lines: N/A
+        reason: Reference for understanding zprof-generated .zshenv structure (what to remove)
+
+      - path: Cargo.toml
+        kind: config
+        symbol: dependencies
+        lines: 14-30
+        reason: Has std::fs for file removal, anyhow for error handling, indicatif for progress
+    </code>
+
+    <dependencies>
+      rust:
+        - std::fs: stdlib (remove_dir_all, remove_file)
+        - std::path: stdlib (path handling)
+        - anyhow: 1.0 (error handling with context)
+        - indicatif: 0.18 (progress feedback during cleanup)
+        - dirs: 5.0 (get HOME directory for .zshenv)
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Cleanup must only run AFTER restoration completes successfully
+    - Must preserve restored configuration files in HOME
+    - Must not remove .zsh_history if restored from backup or profile
+    - Must handle partial cleanup failures gracefully (document what succeeded/failed)
+    - Directory removal must be recursive (rm -rf equivalent)
+    - Must validate paths are within expected directories (prevent accidental deletion)
+    - --keep-backups flag preserves only .zsh-profiles/backups/ directory
+    - Must handle read-only files (attempt to change permissions or report error)
+    - Must handle files in use (report error with helpful message)
+    - Symlink removal must not follow links (delete link, not target)
+    - Must work on both macOS and Linux filesystems
+  </constraints>
+
+  <interfaces>
+    - name: cleanup_all
+      kind: function signature
+      signature: pub fn cleanup_all(config: &CleanupConfig) -> Result<CleanupReport>
+      path: src/cleanup/mod.rs (NEW)
+
+    - name: remove_profiles_dir
+      kind: function signature
+      signature: pub fn remove_profiles_dir(profiles_dir: &Path, keep_backups: bool) -> Result<()>
+      path: src/cleanup/mod.rs (NEW)
+
+    - name: remove_zprof_zshenv
+      kind: function signature
+      signature: pub fn remove_zprof_zshenv(home_dir: &Path) -> Result<()>
+      path: src/cleanup/mod.rs (NEW)
+
+    - name: CleanupConfig
+      kind: struct
+      signature: |
+        pub struct CleanupConfig {
+            pub profiles_dir: PathBuf,
+            pub home_dir: PathBuf,
+            pub keep_backups: bool,
+        }
+      path: src/cleanup/mod.rs (NEW)
+
+    - name: CleanupReport
+      kind: struct
+      signature: |
+        pub struct CleanupReport {
+            pub removed_files: Vec<PathBuf>,
+            pub removed_dirs: Vec<PathBuf>,
+            pub errors: Vec<CleanupError>,
+        }
+      path: src/cleanup/mod.rs (NEW)
+
+    - name: CleanupError
+      kind: struct
+      signature: |
+        pub struct CleanupError {
+            pub path: PathBuf,
+            pub error: String,
+        }
+      path: src/cleanup/mod.rs (NEW)
+
+    - name: CleanupSummary
+      kind: struct
+      signature: |
+        #[derive(Debug)]
+        pub struct CleanupSummary {
+            pub profile_count: usize,
+            pub total_size: u64,
+            pub directories: Vec<PathBuf>,
+        }
+      path: src/cleanup/mod.rs (NEW)
+  </interfaces>
+
+  <tests>
+    <standards>
+      - Use cargo test for all tests
+      - Use tempfile crate for isolated test environments
+      - Integration tests in tests/ directory
+      - Unit tests in #[cfg(test)] mod tests within modules
+      - Target 80%+ code coverage via cargo tarpaulin
+      - All tests must pass on both macOS and Linux
+      - Use serial_test for tests modifying HOME
+    </standards>
+
+    <locations>
+      - tests/integration/uninstall_cleanup_test.rs (NEW)
+      - tests/integration/uninstall_test.rs (full uninstall flows)
+      - src/cleanup/mod.rs #[cfg(test)] (inline unit tests)
+    </locations>
+
+    <ideas>
+      AC1: Remove .zsh-profiles/ directory
+        - Test entire directory removed when --keep-backups not set
+        - Test only backups/ remains when --keep-backups set
+        - Test profiles/ subdirectory removed
+        - Test shared/ subdirectory removed
+        - Test cache/ subdirectory removed
+        - Test config.toml removed
+        - Test recursive removal (nested directories)
+
+      AC2: Remove zprof .zshenv
+        - Test zprof-generated .zshenv removed from HOME
+        - Test restored .zshenv (from backup) NOT removed
+        - Test error if .zshenv is read-only
+        - Test no error if .zshenv doesn't exist
+
+      AC3: Remove symlinks
+        - Test .zshrc symlink to active profile removed
+        - Test symlink target NOT removed (only link itself)
+        - Test broken symlinks handled gracefully
+
+      AC4: Handle errors gracefully
+        - Test permission denied logged but doesn't abort
+        - Test file in use logged but continues
+        - Test partial cleanup documented in CleanupReport
+        - Test CleanupReport includes succeeded and failed operations
+        - Test helpful error messages for manual recovery
+
+      AC5: Show progress during cleanup
+        - Test progress messages shown for each step
+        - Test checkmarks for successful operations
+        - Test error icons for failed operations
+        - Snapshot test: progress output format
+
+      AC6: Add --keep-backups flag
+        - Test --keep-backups preserves .zsh-profiles/backups/
+        - Test --keep-backups removes everything else
+        - Test final snapshot remains accessible after cleanup
+        - Test pre-zprof backup remains accessible
+    </ideas>
+  </tests>
+</story-context>

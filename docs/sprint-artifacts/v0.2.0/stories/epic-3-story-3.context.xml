@@ -1,0 +1,234 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>3</storyId>
+    <title>Create Uninstall Command with Restoration Options</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/v0.2.0/stories/epic-3-story-3.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user who wants to remove zprof</asA>
+    <iWant>choose what happens to my shell config</iWant>
+    <soThat>restore original or promote a profile</soThat>
+    <tasks>
+      - Create zprof uninstall command
+      - Show restoration options TUI (Restore / Promote / Clean removal)
+      - Implement restore original option
+      - Implement promote profile option
+      - Implement clean removal option
+      - Add --yes flag for non-interactive
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - Create zprof uninstall command
+    - Show restoration options TUI (Restore / Promote / Clean removal)
+    - Implement restore original option
+    - Implement promote profile option
+    - Implement clean removal option
+    - Add --yes flag for non-interactive
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Uninstall Workflow Sequence
+        snippet: "User runs: zprof uninstall. Select restoration option (Restore Original/Promote Profile/Clean Removal). Show summary, confirm, create safety backup, restore config, cleanup."
+
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: CLI Command Interface
+        snippet: "UninstallArgs with --yes (skip confirmation), --no-backup (skip safety backup), --keep-backups (preserve backups dir), --restore (specify restoration option directly)."
+
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Data Models - RestoreOption & RestorationPlan
+        snippet: "RestoreOption enum: PreZprof, PromoteProfile(String), NoRestore. RestorationPlan with files_to_restore, files_to_remove, backup_source, history_handling."
+
+      - path: docs/sprint-artifacts/v0.2.0/epic-3-uninstall.md
+        title: Epic 3 User Stories
+        section: Story 3.3
+        snippet: "Create uninstall command with TUI for selecting restoration options. Restore original copies from pre-zprof backup. Promote profile copies selected profile to HOME. Clean removal just removes zprof files."
+    </docs>
+
+    <code>
+      - path: src/cli/mod.rs
+        kind: module
+        symbol: Commands enum
+        lines: 1-50
+        reason: Need to add Uninstall variant to Commands enum and wire up to uninstall module
+
+      - path: src/cli/init.rs
+        kind: command
+        symbol: execute_with_input
+        lines: 50-148
+        reason: Reference pattern for command structure with UserInput trait for testability
+
+      - path: src/core/config.rs
+        kind: module
+        symbol: Config
+        lines: 1-100
+        reason: Read global config to find profiles directory and active profile
+
+      - path: src/core/filesystem.rs
+        kind: module
+        symbol: get_zprof_dir
+        lines: 6-10
+        reason: Get base zprof directory path for restoration and cleanup
+
+      - path: src/backup/pre_zprof.rs
+        kind: module
+        symbol: validate_backup
+        lines: N/A
+        reason: NEW (Story 3.1) - Validate pre-zprof backup exists before offering Restore Original option
+
+      - path: Cargo.toml
+        kind: config
+        symbol: dependencies
+        lines: 14-30
+        reason: Already has clap (CLI parsing), dialoguer (prompts), ratatui/crossterm (TUI), anyhow (errors)
+    </code>
+
+    <dependencies>
+      rust:
+        - clap: 4.5.51 (CLI argument parsing for UninstallArgs)
+        - anyhow: 1.0 (error handling)
+        - dialoguer: 0.11 (confirmation prompts)
+        - ratatui: 0.29.0 (TUI framework for restoration menu)
+        - crossterm: 0.29.0 (terminal control for TUI)
+        - std::fs: stdlib (file operations)
+        - std::path: stdlib (path handling)
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Must validate zprof is installed before proceeding
+    - Must check pre-zprof backup exists before offering "Restore Original" option
+    - Must validate profile exists before offering for promotion
+    - Cancel option must exit cleanly without any changes
+    - Non-interactive mode (--yes) requires --restore flag to specify option
+    - Must handle missing HOME environment variable gracefully
+    - All file operations must preserve permissions
+    - Must not modify files until user confirms (show summary first)
+    - TUI must be keyboard-navigable (up/down arrows, enter, escape)
+  </constraints>
+
+  <interfaces>
+    - name: execute
+      kind: function signature
+      signature: pub fn execute(args: UninstallArgs) -> Result<()>
+      path: src/cli/uninstall.rs (NEW)
+
+    - name: UninstallArgs
+      kind: struct
+      signature: |
+        #[derive(Debug, Args)]
+        pub struct UninstallArgs {
+            #[arg(long, short = 'y')]
+            pub yes: bool,
+            #[arg(long)]
+            pub no_backup: bool,
+            #[arg(long)]
+            pub keep_backups: bool,
+            #[arg(long, value_enum)]
+            pub restore: Option<RestoreOptionCli>,
+        }
+      path: src/cli/uninstall.rs (NEW)
+
+    - name: RestoreOption
+      kind: enum
+      signature: |
+        pub enum RestoreOption {
+            PreZprof,
+            PromoteProfile(String),
+            NoRestore,
+        }
+      path: src/backup/restore.rs (NEW)
+
+    - name: select_restoration_option
+      kind: function signature
+      signature: pub fn select_restoration_option() -> Result<Option<RestoreOption>>
+      path: src/tui/uninstall_select.rs (NEW)
+
+    - name: select_profile_for_promotion
+      kind: function signature
+      signature: pub fn select_profile_for_promotion(profiles: Vec<String>) -> Result<Option<String>>
+      path: src/tui/uninstall_select.rs (NEW)
+
+    - name: restore_pre_zprof
+      kind: function signature
+      signature: pub fn restore_pre_zprof(backup_dir: &Path, home_dir: &Path) -> Result<()>
+      path: src/backup/restore.rs (NEW)
+
+    - name: promote_profile
+      kind: function signature
+      signature: pub fn promote_profile(profile_name: &str, home_dir: &Path) -> Result<()>
+      path: src/backup/restore.rs (NEW)
+  </interfaces>
+
+  <tests>
+    <standards>
+      - Use cargo test for all tests
+      - Use insta crate for snapshot testing TUI output
+      - Use tempfile crate for isolated test environments
+      - Integration tests in tests/ directory
+      - Unit tests in #[cfg(test)] mod tests within modules
+      - Target 80%+ code coverage via cargo tarpaulin
+      - All tests must pass on both macOS and Linux
+      - Use serial_test for tests modifying HOME (run serially)
+    </standards>
+
+    <locations>
+      - tests/integration/uninstall_test.rs (NEW - integration tests)
+      - tests/snapshots/ (TUI snapshot tests)
+      - src/cli/uninstall.rs #[cfg(test)] (inline unit tests)
+      - src/backup/restore.rs #[cfg(test)] (inline unit tests)
+      - src/tui/uninstall_select.rs #[cfg(test)] (inline unit tests)
+    </locations>
+
+    <ideas>
+      AC1: Create zprof uninstall command
+        - Test command registered in CLI
+        - Test command can be invoked
+        - Test --help shows usage
+        - Test error if zprof not installed
+
+      AC2: Show restoration options TUI
+        - Snapshot test: TUI menu rendering
+        - Test keyboard navigation (up/down arrows)
+        - Test option selection (enter key)
+        - Test cancel (escape key)
+        - Test all three options displayed with descriptions
+
+      AC3: Implement restore original option
+        - Test files restored from pre-zprof backup to HOME
+        - Test checksums validated during restoration
+        - Test history file restored
+        - Test error if pre-zprof backup missing
+        - Test original files remain in backup after restore
+        - Test permissions preserved
+
+      AC4: Implement promote profile option
+        - Test profile selection TUI shows available profiles
+        - Test selected profile configs copied to HOME
+        - Test profile history copied to .zsh_history
+        - Test error if profile doesn't exist
+        - Test shared history merged if enabled
+
+      AC5: Implement clean removal option
+        - Test no restoration performed
+        - Test HOME directory left clean (no new configs)
+        - Test zprof files still removed properly
+
+      AC6: Add --yes flag for non-interactive
+        - Test --yes with --restore=original skips prompts
+        - Test --yes with --restore=promote skips prompts (needs profile name)
+        - Test --yes with --restore=clean skips prompts
+        - Test --yes without --restore shows error
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,140 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>5</storyId>
+    <title>Remove Rollback Code (v0.3.0 Placeholder)</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/v0.2.0/stories/epic-5-story-5.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a plan for complete removal</iWant>
+    <soThat>cleanly remove code in v0.3.0</soThat>
+    <tasks>
+      - Create tracking issue for v0.3.0
+      - Document files to delete
+      - Document code to update
+      - Add TODO comments in code
+      - Add to v0.3.0 planning
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Create tracking issue for v0.3.0</criterion>
+    <criterion id="AC2">Document files to delete</criterion>
+    <criterion id="AC3">Document code to update</criterion>
+    <criterion id="AC4">Add TODO comments in code</criterion>
+    <criterion id="AC5">Add to v0.3.0 planning</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Remove Deprecated Rollback Command</title>
+        <section>Acceptance Criteria AC-9</section>
+        <snippet>Code must have TODO(v0.3.0) comments marking removal points at module and function level indicating this is temporary code.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Remove Deprecated Rollback Command</title>
+        <section>Overview</section>
+        <snippet>This epic lays groundwork for complete removal in v0.3.0 by adding TODO comments marking areas for removal.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/cli/rollback.rs</path>
+        <kind>cli command module</kind>
+        <symbol>entire module</symbol>
+        <lines>all</lines>
+        <reason>Entire module will be deleted in v0.3.0 - needs TODO marker at top</reason>
+      </artifact>
+      <artifact>
+        <path>src/main.rs</path>
+        <kind>main application entry</kind>
+        <symbol>Commands::Rollback</symbol>
+        <lines>54-55</lines>
+        <reason>Rollback command registration needs TODO marker for removal</reason>
+      </artifact>
+      <artifact>
+        <path>src/main.rs</path>
+        <kind>main application entry</kind>
+        <symbol>Commands::Rollback match arm</symbol>
+        <lines>83</lines>
+        <reason>Match arm for rollback execution needs TODO marker</reason>
+      </artifact>
+      <artifact>
+        <path>src/cli/mod.rs</path>
+        <kind>cli module registry</kind>
+        <symbol>pub mod rollback</symbol>
+        <lines>13</lines>
+        <reason>Module export needs TODO marker for removal</reason>
+      </artifact>
+      <artifact>
+        <path>tests/rollback_test.rs</path>
+        <kind>integration test</kind>
+        <symbol>entire file</symbol>
+        <lines>all</lines>
+        <reason>Test file will be deleted in v0.3.0 - needs TODO marker</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <planning>
+        <reference>v0.3.0 planning documents (to be created)</reference>
+      </planning>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>TODO comments must use consistent format: // TODO(v0.3.0): Remove this...</constraint>
+    <constraint>Planning document must be comprehensive - list all files and symbols to remove</constraint>
+    <constraint>Planning document should estimate removal effort</constraint>
+    <constraint>Tracking issue should reference planning document</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>TODO Comment Format</name>
+      <kind>code comment convention</kind>
+      <signature>// TODO(v0.3.0): Remove this entire module - rollback deprecated in v0.2.0</signature>
+      <path>src/cli/rollback.rs</path>
+    </interface>
+    <interface>
+      <name>Removal Planning Document</name>
+      <kind>markdown documentation</kind>
+      <signature>
+# Rollback Command Removal Plan (v0.3.0)
+
+## Files to Delete
+## Code to Update
+## Testing Requirements
+## Estimated Effort
+      </signature>
+      <path>docs/planning/v0.3.0/remove-rollback.md</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Manual code review to verify TODO comments are present. Verify planning document completeness. Check that all affected files are documented.
+    </standards>
+    <locations>
+      - docs/planning/v0.3.0/remove-rollback.md (new planning document)
+      - src/cli/rollback.rs (TODO markers)
+      - src/main.rs (TODO markers)
+      - src/cli/mod.rs (TODO markers)
+      - tests/rollback_test.rs (TODO markers)
+    </locations>
+    <ideas>
+      <test criterion="AC1" idea="Verify tracking issue exists and links to planning document"/>
+      <test criterion="AC2" idea="Review planning doc files-to-delete section for completeness"/>
+      <test criterion="AC3" idea="Review planning doc code-to-update section for all affected areas"/>
+      <test criterion="AC4" idea="Grep for TODO(v0.3.0) comments and verify all rollback-related code is marked"/>
+      <test criterion="AC5" idea="Verify v0.3.0 planning documents include rollback removal task"/>
+    </ideas>
+  </tests>
+</story-context>

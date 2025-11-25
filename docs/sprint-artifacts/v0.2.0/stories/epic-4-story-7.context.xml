@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story_context>
+    <metadata>
+        <epic>Epic 4</epic>
+        <story_number>7</story_number>
+        <story_title>Generate Terminal Configuration Instructions</story_title>
+        <status>TODO</status>
+        <priority>P1</priority>
+    </metadata>
+
+    <user_story>
+        <text>As a user who installed a Nerd Font, I want clear instructions to configure my terminal, So that the font displays correctly</text>
+    </user_story>
+
+    <acceptance_criteria>
+        <criteria>Create src/fonts/terminal_config.rs</criteria>
+        <criteria>Detect terminal via $TERM_PROGRAM</criteria>
+        <criteria>Generate terminal-specific instructions (iTerm2, VS Code, Terminal.app, Alacritty, Kitty, etc.)</criteria>
+        <criteria>Show exact font name</criteria>
+        <criteria>Add troubleshooting tips</criteria>
+        <criteria>Store in manifest</criteria>
+    </acceptance_criteria>
+
+    <technical_specification>
+        <architecture_section>
+            <module_structure>
+                <module>src/fonts/mod.rs</module>
+                <module>src/fonts/terminal_config.rs</module>
+                <module>src/tui/terminal_instructions.rs</module>
+            </module_structure>
+            <integration_points>
+                <point>src/fonts/nerd_fonts.rs: Get font display name for instructions</point>
+                <point>src/cli/create.rs: Display instructions after installation</point>
+                <point>src/core/manifest.rs: Store font selection in manifest</point>
+            </integration_points>
+        </architecture_section>
+
+        <data_models>
+            <struct name="Terminal">
+                <field name="ITerm2">iTerm2 on macOS</field>
+                <field name="AppleTerminal">Terminal.app on macOS</field>
+                <field name="VSCode">VS Code integrated terminal</field>
+                <field name="Alacritty">Alacritty cross-platform terminal</field>
+                <field name="Kitty">Kitty cross-platform terminal</field>
+                <field name="GnomeTerminal">GNOME Terminal on Linux</field>
+                <field name="Konsole">KDE Konsole on Linux</field>
+                <field name="Unknown">Fallback for undetected terminals</field>
+            </struct>
+            <struct name="TerminalInstructions">
+                <field name="terminal">Detected Terminal type</field>
+                <field name="font_name">Full font name to configure</field>
+                <field name="steps">Vector of instruction steps</field>
+                <field name="config_file">Optional path to config file</field>
+                <field name="requires_restart">Boolean if restart needed</field>
+            </struct>
+        </data_models>
+
+        <constraints>
+            <constraint>Detect terminal from $TERM_PROGRAM environment variable</constraint>
+            <constraint>Fallback to generic instructions if terminal unknown</constraint>
+            <constraint>Instructions must be step-by-step and actionable</constraint>
+            <constraint>Include exact font name from NerdFont struct</constraint>
+            <constraint>Mention restart requirement explicitly</constraint>
+            <constraint>Provide troubleshooting link for common issues</constraint>
+        </constraints>
+    </technical_specification>
+
+    <dependencies>
+        <rust_dependencies>
+            <dependency>anyhow (existing)</dependency>
+            <dependency>log (existing)</dependency>
+        </rust_dependencies>
+        <story_dependencies>
+            <dependency>Story 4.1 (Font Registry) for font display names</dependency>
+            <dependency>Story 4.6 (Installation) to trigger after install</dependency>
+        </story_dependencies>
+    </dependencies>
+
+    <testing_strategy>
+        <unit_tests>
+            <test>Test terminal detection from $TERM_PROGRAM values</test>
+            <test>Test iTerm2 detection (TERM_PROGRAM=iTerm.app)</test>
+            <test>Test VSCode detection (TERM_PROGRAM=vscode)</test>
+            <test>Test Apple Terminal detection (TERM_PROGRAM=Apple_Terminal)</test>
+            <test>Test fallback to Unknown for unset variable</test>
+            <test>Test instruction generation for each terminal type</test>
+        </unit_tests>
+        <snapshot_tests>
+            <test>iTerm2 instructions format and content</test>
+            <test>VSCode instructions format and content</test>
+            <test>Alacritty config file instructions</test>
+            <test>Generic fallback instructions</test>
+            <test>Troubleshooting tips section</test>
+        </snapshot_tests>
+        <validation>
+            <check>All supported terminals have specific instructions</check>
+            <check>Font name correctly substituted in instructions</check>
+            <check>Restart requirement clearly stated</check>
+            <check>Config file paths accurate for each terminal</check>
+            <check>Instructions tested on real terminals</check>
+        </validation>
+    </testing_strategy>
+
+    <code_artifacts>
+        <existing_code>
+            <file path="src/fonts/nerd_fonts.rs">NerdFont.display_name field</file>
+            <file path="src/core/manifest.rs">Manifest structure</file>
+        </existing_code>
+        <new_code>
+            <file path="src/fonts/terminal_config.rs">Terminal detection and instruction generation</file>
+            <file path="src/tui/terminal_instructions.rs">TUI for displaying instructions</file>
+            <file path="src/core/manifest.rs">Add nerd_font field to prompt section</file>
+        </new_code>
+    </code_artifacts>
+</story_context>

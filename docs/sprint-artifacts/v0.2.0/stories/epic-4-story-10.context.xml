@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story_context>
+    <metadata>
+        <epic>Epic 4</epic>
+        <story_number>10</story_number>
+        <story_title>Update Documentation</story_title>
+        <status>TODO</status>
+        <priority>P1</priority>
+    </metadata>
+
+    <user_story>
+        <text>As a user, I want documentation about Nerd Fonts, So that I understand why they're needed and how to manage them</text>
+    </user_story>
+
+    <acceptance_criteria>
+        <criteria>Create nerd-fonts.md guide</criteria>
+        <criteria>Update quick-start with font installation</criteria>
+        <criteria>Document font commands</criteria>
+        <criteria>Add troubleshooting section</criteria>
+        <criteria>Add FAQ entries</criteria>
+        <criteria>Add screenshots/examples</criteria>
+    </acceptance_criteria>
+
+    <technical_specification>
+        <architecture_section>
+            <module_structure>
+                <module>docs/user-guide/nerd-fonts.md</module>
+                <module>docs/user-guide/quick-start.md</module>
+                <module>docs/user-guide/commands.md</module>
+                <module>docs/user-guide/troubleshooting.md</module>
+                <module>docs/user-guide/faq.md</module>
+            </module_structure>
+            <integration_points>
+                <point>Reference terminal configuration instructions from terminal_config.rs</point>
+                <point>Document font commands from font.rs CLI</point>
+                <point>Link to Nerd Fonts official documentation</point>
+            </integration_points>
+        </architecture_section>
+
+        <data_models>
+            <struct name="Documentation">
+                <field name="overview">What are Nerd Fonts and why zprof uses them</field>
+                <field name="installation_flow">Step-by-step guide for automatic installation</field>
+                <field name="terminal_config">Terminal-specific configuration guides</field>
+                <field name="commands_reference">CLI command documentation</field>
+                <field name="troubleshooting">Common issues and solutions</field>
+                <field name="faq">Frequently asked questions</field>
+            </struct>
+        </data_models>
+
+        <constraints>
+            <constraint>Documentation must be beginner-friendly (avoid technical jargon)</constraint>
+            <constraint>Include screenshots of TUI and terminal output</constraint>
+            <constraint>Cover all supported terminals (iTerm2, Terminal.app, VS Code, Alacritty, Kitty, GNOME Terminal, Konsole)</constraint>
+            <constraint>Provide manual installation instructions as fallback</constraint>
+            <constraint>Link to official Nerd Fonts website for detailed font information</constraint>
+            <constraint>Document how to skip/disable font installation</constraint>
+            <constraint>Explain what to do if fonts don't display correctly</constraint>
+        </constraints>
+    </technical_specification>
+
+    <dependencies>
+        <story_dependencies>
+            <dependency>Story 4.4 (Font Selection TUI) for screenshots</dependency>
+            <dependency>Story 4.7 (Terminal Config) for terminal instructions</dependency>
+            <dependency>Story 4.8 (Workflow Integration) for create flow documentation</dependency>
+            <dependency>Story 4.9 (Font Commands) for command reference</dependency>
+        </story_dependencies>
+    </dependencies>
+
+    <testing_strategy>
+        <unit_tests>
+            <test>N/A (documentation story)</test>
+        </unit_tests>
+        <validation>
+            <check>All CLI commands documented with examples</check>
+            <check>Quick-start guide includes font installation step</check>
+            <check>Troubleshooting covers common issues (fonts not displaying, download failures)</check>
+            <check>FAQ answers typical user questions</check>
+            <check>Screenshots current and accurate</check>
+            <check>Links to external resources valid</check>
+            <check>Documentation reviewed for clarity and completeness</check>
+        </validation>
+    </testing_strategy>
+
+    <code_artifacts>
+        <existing_code>
+            <file path="src/fonts/terminal_config.rs">Terminal configuration instruction templates</file>
+            <file path="src/cli/font.rs">Font management CLI commands</file>
+        </existing_code>
+        <new_code>
+            <file path="docs/user-guide/nerd-fonts.md">Comprehensive Nerd Fonts guide</file>
+            <file path="docs/user-guide/quick-start.md">Add font installation section</file>
+            <file path="docs/user-guide/commands.md">Document font subcommands</file>
+            <file path="docs/user-guide/troubleshooting.md">Add font-related troubleshooting</file>
+            <file path="docs/user-guide/faq.md">Add Nerd Font FAQ entries</file>
+        </new_code>
+        <documentation_sections>
+            <section name="nerd-fonts.md">
+                <subsection>What are Nerd Fonts?</subsection>
+                <subsection>Why zprof needs Nerd Fonts</subsection>
+                <subsection>Automatic installation during create</subsection>
+                <subsection>Manual installation</subsection>
+                <subsection>Font recommendations by prompt engine</subsection>
+                <subsection>Terminal configuration guides</subsection>
+            </section>
+            <section name="commands.md">
+                <subsection>zprof font list</subsection>
+                <subsection>zprof font install</subsection>
+                <subsection>zprof font info &lt;name&gt;</subsection>
+            </section>
+            <section name="troubleshooting.md">
+                <subsection>Fonts showing boxes/question marks</subsection>
+                <subsection>Download failures</subsection>
+                <subsection>Installation permission errors</subsection>
+                <subsection>Terminal not detecting font</subsection>
+                <subsection>fc-cache issues on Linux</subsection>
+            </section>
+            <section name="faq.md">
+                <subsection>Can I use my own Nerd Font?</subsection>
+                <subsection>Can I skip font installation?</subsection>
+                <subsection>Which font is best?</subsection>
+                <subsection>Do I need to restart my terminal?</subsection>
+                <subsection>Why aren't icons displaying?</subsection>
+                <subsection>Can I uninstall a font?</subsection>
+            </section>
+        </documentation_sections>
+    </code_artifacts>
+</story_context>

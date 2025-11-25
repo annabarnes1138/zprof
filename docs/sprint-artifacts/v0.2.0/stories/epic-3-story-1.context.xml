@@ -1,0 +1,223 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>1</storyId>
+    <title>Enhance Init to Create Pre-zprof Backup</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/v0.2.0/stories/epic-3-story-1.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user running zprof init</asA>
+    <iWant>my current shell config automatically backed up</iWant>
+    <soThat>restore it later if needed</soThat>
+    <tasks>
+      - Create .zsh-profiles/backups/pre-zprof/ directory
+      - Backup all root shell config files (.zshrc, .zshenv, etc.)
+      - Backup .zsh_history
+      - Create backup-manifest.toml with metadata
+      - Skip if already exists
+      - Add unit tests
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - Create .zsh-profiles/backups/pre-zprof/ directory
+    - Backup all root shell config files (.zshrc, .zshenv, etc.)
+    - Backup .zsh_history
+    - Create backup-manifest.toml with metadata
+    - Skip if already exists
+    - Add unit tests
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Pre-zprof Backup System
+        snippet: "Automatic backup of pre-zprof shell configurations during `zprof init`. The backup system creates backups in .zsh-profiles/backups/pre-zprof/ with backup-manifest.toml containing timestamps, checksums, and framework detection."
+
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Data Models - BackupManifest
+        snippet: "BackupManifest struct with metadata (created_at, zsh_version, os), detected_framework (name, path, config_files), and files list (path, size, checksum, permissions, symlink info)."
+
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Module Design
+        snippet: "src/backup/pre_zprof.rs - Create and validate pre-zprof backups during init. Functions: create_backup(), BackupManifest::save(), validate_backup()"
+    </docs>
+
+    <code>
+      - path: src/cli/init.rs
+        kind: command
+        symbol: execute_with_input
+        lines: 50-148
+        reason: Main init command that needs to be enhanced to call pre-zprof backup creation before creating zprof structure
+
+      - path: src/cli/init.rs
+        kind: function
+        symbol: import_framework
+        lines: 159-287
+        reason: Shows existing backup pattern - creates backups in cache/backups directory, can inform backup structure
+
+      - path: src/core/filesystem.rs
+        kind: module
+        symbol: create_zprof_structure
+        lines: 27-49
+        reason: Creates base zprof directory structure including cache/backups - needs to also create backups/pre-zprof directory
+
+      - path: src/core/filesystem.rs
+        kind: function
+        symbol: create_shared_history
+        lines: 57-100
+        reason: Example of idempotent file creation with permissions setting - pattern for backup creation
+
+      - path: src/frameworks/detector.rs
+        kind: module
+        symbol: FrameworkInfo
+        lines: 33-45
+        reason: Struct for detected framework info - will be used in backup manifest to record detected framework
+
+      - path: Cargo.toml
+        kind: config
+        symbol: dependencies
+        lines: 14-30
+        reason: Already has toml, serde, chrono, anyhow - all dependencies needed for backup manifest serialization
+    </code>
+
+    <dependencies>
+      rust:
+        - toml: 0.9 (TOML serialization for manifest)
+        - serde: 1.0 (serialize BackupManifest struct)
+        - chrono: 0.4 (timestamps in manifest)
+        - anyhow: 1.0 (error handling)
+        - sha2: stdlib (SHA256 checksums)
+        - std::fs: stdlib (file operations)
+        - std::path: stdlib (path handling)
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Must be idempotent - skip backup if pre-zprof directory already exists (don't overwrite on re-init)
+    - Must preserve all file permissions during backup
+    - Backup must complete BEFORE any destructive operations in init
+    - Must handle symlinks correctly (resolve and backup target)
+    - Must work on both macOS and Linux filesystems
+    - No external dependencies beyond existing Cargo.toml crates
+    - Backup directory permissions: 700 (owner read/write/execute only)
+    - Manifest file permissions: 600 (owner read/write only)
+    - Must not modify original files in HOME (read-only operations)
+    - Framework detection is optional - continue if detection fails
+  </constraints>
+
+  <interfaces>
+    - name: create_backup
+      kind: function signature
+      signature: pub fn create_backup(home_dir: &Path, backup_dir: &Path) -> Result<BackupManifest>
+      path: src/backup/pre_zprof.rs (NEW)
+
+    - name: validate_backup
+      kind: function signature
+      signature: pub fn validate_backup(backup_dir: &Path) -> Result<BackupManifest>
+      path: src/backup/pre_zprof.rs (NEW)
+
+    - name: backup_exists
+      kind: function signature
+      signature: pub fn backup_exists(backup_dir: &Path) -> bool
+      path: src/backup/pre_zprof.rs (NEW)
+
+    - name: BackupManifest
+      kind: struct
+      signature: |
+        #[derive(Debug, Serialize, Deserialize)]
+        pub struct BackupManifest {
+            pub metadata: BackupMetadata,
+            pub detected_framework: Option<DetectedFramework>,
+            pub files: Vec<BackedUpFile>,
+        }
+      path: src/core/backup_manifest.rs (NEW)
+
+    - name: BackupMetadata
+      kind: struct
+      signature: |
+        #[derive(Debug, Serialize, Deserialize)]
+        pub struct BackupMetadata {
+            pub created_at: DateTime<Utc>,
+            pub zsh_version: String,
+            pub os: String,
+            pub zprof_version: String,
+        }
+      path: src/core/backup_manifest.rs (NEW)
+
+    - name: BackedUpFile
+      kind: struct
+      signature: |
+        #[derive(Debug, Serialize, Deserialize)]
+        pub struct BackedUpFile {
+            pub path: PathBuf,
+            pub size: u64,
+            pub checksum: String,
+            pub permissions: u32,
+            pub is_symlink: bool,
+            pub symlink_target: Option<PathBuf>,
+        }
+      path: src/core/backup_manifest.rs (NEW)
+  </interfaces>
+
+  <tests>
+    <standards>
+      - Use cargo test for all tests
+      - Use insta crate for snapshot testing
+      - Use tempfile crate for isolated test environments
+      - Integration tests in tests/ directory
+      - Unit tests in #[cfg(test)] mod tests within modules
+      - Target 80%+ code coverage via cargo tarpaulin
+      - All tests must pass on both macOS and Linux
+      - Use serial_test for tests modifying HOME (run serially)
+    </standards>
+
+    <locations>
+      - tests/unit/ (unit tests)
+      - tests/integration/ (integration tests)
+      - src/backup/pre_zprof.rs #[cfg(test)] (inline unit tests)
+      - src/core/backup_manifest.rs #[cfg(test)] (inline unit tests)
+    </locations>
+
+    <ideas>
+      AC1: Create backup directory
+        - Test backup directory created at correct path
+        - Test directory permissions are 700
+        - Test idempotency (skip if exists)
+
+      AC2: Backup shell config files
+        - Test .zshrc, .zshenv, .zprofile, .zlogin, .zlogout backed up
+        - Test original files remain untouched in HOME
+        - Test file permissions preserved
+        - Test symlinks handled correctly (resolve and backup target)
+
+      AC3: Backup .zsh_history
+        - Test .zsh_history copied to backup
+        - Test large history files (> 10MB)
+        - Test missing history file handled gracefully
+
+      AC4: Create backup-manifest.toml
+        - Test manifest serialization
+        - Test timestamp, checksums, metadata recorded correctly
+        - Test framework detection info included if framework exists
+        - Test manifest file permissions are 600
+
+      AC5: Skip if already exists
+        - Test re-init doesn't overwrite existing backup
+        - Test warning message shown when backup exists
+
+      AC6: Unit tests
+        - Test checksum calculation
+        - Test manifest TOML format
+        - Test backup_exists() function
+        - Test validate_backup() verifies checksums
+    </ideas>
+  </tests>
+</story-context>

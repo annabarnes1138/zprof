@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story_context>
+    <metadata>
+        <epic>Epic 4</epic>
+        <story_number>3</story_number>
+        <story_title>Check for Existing Nerd Font Installation</story_title>
+        <status>TODO</status>
+        <priority>P1</priority>
+    </metadata>
+
+    <user_story>
+        <text>As a user, I want zprof to detect if I already have Nerd Fonts, So that I'm not prompted if unnecessary</text>
+    </user_story>
+
+    <acceptance_criteria>
+        <criteria>Create src/fonts/detector.rs</criteria>
+        <criteria>Implement macOS detection (~/Library/Fonts, /Library/Fonts)</criteria>
+        <criteria>Implement Linux detection (~/.local/share/fonts, /usr/share/fonts)</criteria>
+        <criteria>Search for *Nerd*.{ttf,otf} patterns</criteria>
+        <criteria>Cache detection result</criteria>
+        <criteria>Add unit and integration tests</criteria>
+    </acceptance_criteria>
+
+    <technical_specification>
+        <architecture_section>
+            <module_structure>
+                <module>src/fonts/mod.rs</module>
+                <module>src/fonts/detector.rs</module>
+            </module_structure>
+            <integration_points>
+                <point>src/cli/create.rs: Call detection before showing font selection TUI</point>
+                <point>src/fonts/mod.rs: Export public detection API</point>
+            </integration_points>
+        </architecture_section>
+
+        <data_models>
+            <struct name="Platform">
+                <field name="MacOS">macOS platform variant</field>
+                <field name="Linux">Linux platform variant</field>
+                <field name="Unsupported">Unsupported platform (Windows, etc.)</field>
+            </struct>
+            <struct name="FontDetectionResult">
+                <field name="has_nerd_font">Boolean indicating if any Nerd Font found</field>
+                <field name="fonts_found">Vector of detected font names</field>
+                <field name="searched_paths">Vector of paths searched for debugging</field>
+            </struct>
+        </data_models>
+
+        <constraints>
+            <constraint>Only search standard user and system font directories</constraint>
+            <constraint>Pattern matching: *Nerd*.ttf or *Nerd*.otf (case insensitive)</constraint>
+            <constraint>Detection must complete in under 100ms</constraint>
+            <constraint>Cache result for session to avoid repeated filesystem scans</constraint>
+            <constraint>No elevated privileges required</constraint>
+        </constraints>
+    </technical_specification>
+
+    <dependencies>
+        <rust_dependencies>
+            <dependency>dirs (existing - for user directory paths)</dependency>
+            <dependency>anyhow (existing - for error handling)</dependency>
+            <dependency>log (existing - for debug logging)</dependency>
+        </rust_dependencies>
+        <story_dependencies>
+            <dependency>Story 4.1 (Font Registry) for NerdFont types</dependency>
+        </story_dependencies>
+    </dependencies>
+
+    <testing_strategy>
+        <unit_tests>
+            <test>Test platform detection (macOS, Linux, unsupported)</test>
+            <test>Test font file pattern matching (*Nerd*.ttf, *Nerd*.otf)</test>
+            <test>Test path construction for each platform</test>
+            <test>Test caching behavior (repeated calls return cached result)</test>
+        </unit_tests>
+        <integration_tests>
+            <test>Create temp directory with mock Nerd Font files, verify detection</test>
+            <test>Create temp directory without Nerd Fonts, verify no detection</test>
+            <test>Test with mixed font types (Nerd and non-Nerd), verify filtering</test>
+            <test>Test permission handling (unreadable directory)</test>
+        </integration_tests>
+        <validation>
+            <check>Detection works on macOS with fonts in ~/Library/Fonts/</check>
+            <check>Detection works on Linux with fonts in ~/.local/share/fonts/</check>
+            <check>False positives avoided (non-Nerd fonts ignored)</check>
+            <check>Performance within 100ms target</check>
+        </validation>
+    </testing_strategy>
+
+    <code_artifacts>
+        <existing_code>
+            <file path="src/frameworks/installer.rs">Platform detection pattern reference</file>
+        </existing_code>
+        <new_code>
+            <file path="src/fonts/mod.rs">Public module interface</file>
+            <file path="src/fonts/detector.rs">Font detection implementation</file>
+            <file path="tests/font_detection_test.rs">Integration tests with mock filesystem</file>
+        </new_code>
+    </code_artifacts>
+</story_context>

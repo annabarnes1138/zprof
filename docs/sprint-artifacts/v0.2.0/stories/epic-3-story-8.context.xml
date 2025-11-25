@@ -1,0 +1,174 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>8</storyId>
+    <title>Update Documentation</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/v0.2.0/stories/epic-3-story-8.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>clear documentation about uninstall</iWant>
+    <soThat>understand options and recovery</soThat>
+    <tasks>
+      - Update commands.md with uninstall command
+      - Create uninstalling.md guide
+      - Update installation.md
+      - Update FAQ with uninstall questions
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - Update commands.md with uninstall command
+    - Create uninstalling.md guide
+    - Update installation.md
+    - Update FAQ with uninstall questions
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Overview
+        snippet: "Comprehensive uninstall system with three restoration options (restore original, promote profile, clean removal), safety mechanisms, and validation to prevent data loss."
+
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Uninstall Workflow Sequence
+        snippet: "Complete workflow from zprof uninstall through restoration option selection, confirmation, safety backup, restoration, cleanup, and completion message."
+
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: CLI Command Interface
+        snippet: "Full UninstallArgs with --yes, --no-backup, --keep-backups, --restore flags. Examples of usage for all three restoration options."
+
+      - path: docs/sprint-artifacts/v0.2.0/epic-3-uninstall.md
+        title: Epic 3 User Stories
+        section: Story 3.8
+        snippet: "Update commands.md with full syntax/flags/options/recovery. Create uninstalling.md with step-by-step guide, what happens, manual restore, troubleshooting. Update installation.md to mention safe removal. Update FAQ with common questions."
+    </docs>
+
+    <code>
+      - path: src/cli/uninstall.rs
+        kind: module
+        symbol: UninstallArgs
+        lines: N/A
+        reason: NEW (Story 3.3) - Document CLI interface with all flags and options
+
+      - path: src/backup/snapshot.rs
+        kind: module
+        symbol: create_final_snapshot
+        lines: N/A
+        reason: NEW (Story 3.4) - Document safety backup location and extraction
+
+      - path: src/backup/restore.rs
+        kind: module
+        symbol: restore_pre_zprof, promote_profile
+        lines: N/A
+        reason: NEW (Story 3.3) - Document restoration options and behavior
+    </code>
+
+    <dependencies>
+      N/A - Documentation only, no code dependencies
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Documentation must be accurate and match implementation exactly
+    - All CLI flags must be documented with examples
+    - Recovery procedures must be step-by-step (not just conceptual)
+    - Examples must cover common use cases
+    - Troubleshooting section must address known edge cases
+    - Documentation must be accessible to non-technical users
+    - Must explain what happens to history, profiles, and backups
+    - Must include warnings about destructive operations
+    - Must link between related documentation sections
+    - Must be written in clear, friendly language (not overly technical)
+  </constraints>
+
+  <interfaces>
+    N/A - Documentation story, no code interfaces
+  </interfaces>
+
+  <tests>
+    <standards>
+      - Manual review checklist for documentation completeness
+      - Verify all CLI flags documented
+      - Verify all restoration options explained
+      - Verify recovery procedures tested manually
+      - Check documentation accuracy against implementation
+      - Verify examples are copy-pasteable and work correctly
+    </standards>
+
+    <locations>
+      - docs/user-guide/commands.md (UPDATE)
+      - docs/user-guide/uninstalling.md (NEW)
+      - docs/user-guide/installation.md (UPDATE)
+      - docs/user-guide/faq.md (UPDATE)
+    </locations>
+
+    <ideas>
+      AC1: Update commands.md with uninstall command
+        - Document full command syntax: zprof uninstall [OPTIONS]
+        - Document all flags: --yes, --no-backup, --keep-backups, --restore
+        - Explain each restoration option with examples
+        - Document safety backup creation and location
+        - Document recovery procedures (manual extraction from tarball)
+        - Include exit codes and error scenarios
+        - Add "See Also" links to uninstalling.md
+
+      AC2: Create uninstalling.md guide
+        - Step-by-step uninstall guide for each restoration option
+        - Explain what happens during each step
+        - Document file locations and what gets removed/restored
+        - Include screenshots or TUI output examples
+        - Add "What happens to my history?" section
+        - Add "What happens to my profiles?" section
+        - Add troubleshooting section with common issues:
+          - Pre-zprof backup missing
+          - Permission denied errors
+          - File conflicts during restoration
+          - Partial uninstall failures
+        - Add manual recovery section:
+          - How to extract safety backup
+          - How to manually restore files
+          - How to manually clean up if uninstall failed
+        - Add FAQ-style Q&A for common concerns
+
+      AC3: Update installation.md
+        - Add note in introduction: "zprof can be completely removed at any time"
+        - Add "Removing zprof" section with link to uninstalling.md
+        - Mention safety backup creation during uninstall
+        - Reassure users about safe experimentation
+
+      AC4: Update FAQ with uninstall questions
+        - Q: "Can I remove zprof and go back to my old setup?"
+          A: Yes, use `zprof uninstall` with "Restore original" option
+        - Q: "What happens to my command history when I uninstall?"
+          A: Depends on option - restored from backup or promoted from profile
+        - Q: "Where are my backups stored?"
+          A: ~/.zsh-profiles/backups/ with details on pre-zprof and final snapshot
+        - Q: "What if something goes wrong during uninstall?"
+          A: Safety backup created first, can manually extract and recover
+        - Q: "Can I keep some profiles after uninstall?"
+          A: No full uninstall only, but can promote one profile to root config
+        - Q: "Will uninstall break my active shell sessions?"
+          A: Yes, restart shell after uninstall: exec zsh
+
+      Manual Review Checklist:
+        - [ ] All code examples tested and work correctly
+        - [ ] All file paths accurate (use actual paths like ~/.zsh-profiles/)
+        - [ ] All CLI flags match implementation
+        - [ ] All restoration options explained clearly
+        - [ ] Recovery procedures verified by manual testing
+        - [ ] Screenshots/output examples match actual TUI
+        - [ ] Links between docs work correctly
+        - [ ] Language is accessible and friendly
+        - [ ] No technical jargon without explanation
+        - [ ] Covers all edge cases from Story 3.7
+    </ideas>
+  </tests>
+</story-context>

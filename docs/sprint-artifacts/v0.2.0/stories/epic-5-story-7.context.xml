@@ -1,0 +1,139 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>7</storyId>
+    <title>Add Integration Test for Deprecation Warning</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/v0.2.0/stories/epic-5-story-7.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>tests verifying the deprecation warning</iWant>
+    <soThat>ensure users see helpful messages</soThat>
+    <tasks>
+      - Test deprecation warning is shown
+      - Test user can decline
+      - Test --force flag skips warning
+      - Test help text shows (deprecated)
+      - Snapshot test for message format
+      - Verify rollback still works if confirmed
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Test deprecation warning is shown</criterion>
+    <criterion id="AC2">Test user can decline</criterion>
+    <criterion id="AC3">Test --force flag skips warning</criterion>
+    <criterion id="AC4">Test help text shows (deprecated)</criterion>
+    <criterion id="AC5">Snapshot test for message format</criterion>
+    <criterion id="AC6">Verify rollback still works if confirmed</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Remove Deprecated Rollback Command</title>
+        <section>Acceptance Criteria AC-10</section>
+        <snippet>Integration tests must pass verifying: deprecation warning displays correctly (snapshot), user can decline gracefully, --force skips warning, help text shows deprecated marker, rollback works when confirmed (backward compatibility).</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Remove Deprecated Rollback Command</title>
+        <section>Test Strategy Summary → Integration Tests</section>
+        <snippet>Primary test focus on integration tests in tests/rollback_deprecation_test.rs covering deprecation warning display, user confirmation flow, force flag, non-interactive handling, help text, and backward compatibility.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-5.md</path>
+        <title>Epic Technical Specification: Remove Deprecated Rollback Command</title>
+        <section>Test Strategy → Snapshot Tests</section>
+        <snippet>Use insta crate for warning message format, help text output validation. Update process: cargo insta review after changes.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>tests/rollback_test.rs</path>
+        <kind>integration test</kind>
+        <symbol>N/A</symbol>
+        <lines>all</lines>
+        <reason>Existing rollback tests showing patterns for testing rollback functionality with tempfile and serial_test</reason>
+      </artifact>
+      <artifact>
+        <path>src/cli/rollback.rs</path>
+        <kind>cli command module</kind>
+        <symbol>execute</symbol>
+        <lines>35-57</lines>
+        <reason>Function being tested - needs to be understood for test scenarios</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <rust>
+        <dependency name="insta" version="1.34">Snapshot testing for help text and warning messages</dependency>
+        <dependency name="tempfile" version="3.8">Test isolation - create temporary test environments</dependency>
+        <dependency name="serial_test" version="3.0">Serialize tests that modify HOME directory or global state</dependency>
+      </rust>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Follow existing test patterns from tests/rollback_test.rs</constraint>
+    <constraint>Use tempfile for test isolation</constraint>
+    <constraint>Use serial_test for tests modifying environment variables</constraint>
+    <constraint>Snapshot tests must be reviewed with `cargo insta review`</constraint>
+    <constraint>Tests must not leave artifacts in filesystem</constraint>
+    <constraint>All tests must be deterministic and repeatable</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>rollback_deprecation_test.rs</name>
+      <kind>integration test file</kind>
+      <signature>
+use insta::assert_snapshot;
+use serial_test::serial;
+use tempfile::TempDir;
+
+#[test]
+fn test_deprecation_warning_displayed() { ... }
+
+#[test]
+fn test_user_declines_rollback() { ... }
+
+#[test]
+fn test_force_flag_skips_warning() { ... }
+
+#[test]
+fn test_help_text_shows_deprecated() { ... }
+      </signature>
+      <path>tests/rollback_deprecation_test.rs</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Integration tests using Rust test framework with #[test] attribute. Snapshot tests with insta crate for output validation. Use tempfile for isolated test environments. Serial execution for tests modifying global state.
+    </standards>
+    <locations>
+      - tests/rollback_deprecation_test.rs (new test file)
+    </locations>
+    <ideas>
+      <test criterion="AC1" idea="Test that running rollback without --force shows deprecation warning"/>
+      <test criterion="AC1" idea="Snapshot test for exact warning message format and content"/>
+      <test criterion="AC2" idea="Test that entering 'n' cancels rollback without error"/>
+      <test criterion="AC2" idea="Test that pressing Enter (default) cancels rollback"/>
+      <test criterion="AC2" idea="Test cancellation message directs user to uninstall command"/>
+      <test criterion="AC3" idea="Test --force flag completely bypasses deprecation prompt"/>
+      <test criterion="AC3" idea="Test --force executes rollback immediately without interaction"/>
+      <test criterion="AC4" idea="Snapshot test for `zprof --help` showing (deprecated) marker"/>
+      <test criterion="AC4" idea="Snapshot test for `zprof rollback --help` migration message"/>
+      <test criterion="AC5" idea="Insta snapshot for warning message to detect unintended changes"/>
+      <test criterion="AC5" idea="Insta snapshot for help text to detect format regressions"/>
+      <test criterion="AC6" idea="Test that confirming with 'y' executes rollback successfully"/>
+      <test criterion="AC6" idea="Test rollback functionality unchanged when user confirms"/>
+      <test criterion="AC6" idea="Verify existing rollback_test.rs tests continue passing"/>
+    </ideas>
+  </tests>
+</story-context>

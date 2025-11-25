@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story_context>
+    <metadata>
+        <epic>Epic 4</epic>
+        <story_number>8</story_number>
+        <story_title>Integrate Font Installation into Create Workflow</story_title>
+        <status>TODO</status>
+        <priority>P1</priority>
+    </metadata>
+
+    <user_story>
+        <text>As a user creating profile with Starship, I want automatic font installation offered, So that my prompt works immediately</text>
+    </user_story>
+
+    <acceptance_criteria>
+        <criteria>After prompt engine selection, check if Nerd Font required</criteria>
+        <criteria>Show font selection TUI if needed</criteria>
+        <criteria>Download and install selected font</criteria>
+        <criteria>Show terminal config instructions</criteria>
+        <criteria>Handle skip gracefully</criteria>
+        <criteria>Store font choice in manifest</criteria>
+        <criteria>Integration test</criteria>
+    </acceptance_criteria>
+
+    <technical_specification>
+        <architecture_section>
+            <module_structure>
+                <module>src/cli/create.rs</module>
+                <module>src/cli/create_wizard.rs</module>
+                <module>src/core/manifest.rs</module>
+            </module_structure>
+            <integration_points>
+                <point>src/prompts/engine.rs: Check requires_nerd_font after engine selection</point>
+                <point>src/fonts/detector.rs: Check for existing installation</point>
+                <point>src/tui/font_select.rs: Show font selection TUI</point>
+                <point>src/fonts/download.rs: Download selected font</point>
+                <point>src/fonts/installer.rs: Install font files</point>
+                <point>src/fonts/terminal_config.rs: Generate and display instructions</point>
+                <point>src/core/manifest.rs: Store font selection in profile manifest</point>
+            </integration_points>
+        </architecture_section>
+
+        <data_models>
+            <struct name="CreateWizardState">
+                <field name="selected_engine">PromptEngine choice</field>
+                <field name="font_required">Boolean from engine.requires_nerd_font()</field>
+                <field name="font_installed">Optional font name if installed</field>
+                <field name="font_skipped">Boolean if user skipped installation</field>
+            </struct>
+            <struct name="ProfileManifest">
+                <field name="prompt.nerd_font">Optional String with installed font name</field>
+                <field name="prompt.nerd_font_skipped">Optional Boolean tracking skip</field>
+            </struct>
+        </data_models>
+
+        <constraints>
+            <constraint>Font workflow only triggers if engine.requires_nerd_font() == true</constraint>
+            <constraint>Skip font check if any Nerd Font already detected</constraint>
+            <constraint>Allow profile creation to continue even if font installation fails</constraint>
+            <constraint>Display warning if user skips font installation</constraint>
+            <constraint>Wait for user acknowledgment after showing terminal instructions</constraint>
+            <constraint>Profile creation must not fail due to font issues</constraint>
+        </constraints>
+    </technical_specification>
+
+    <dependencies>
+        <rust_dependencies>
+            <dependency>anyhow (existing)</dependency>
+            <dependency>log (existing)</dependency>
+            <dependency>dialoguer (existing)</dependency>
+        </rust_dependencies>
+        <story_dependencies>
+            <dependency>Story 4.2 (Detect Requirements) for engine check</dependency>
+            <dependency>Story 4.3 (Detection) for existing font check</dependency>
+            <dependency>Story 4.4 (Font Selection TUI) for user selection</dependency>
+            <dependency>Story 4.5 (Download) for font download</dependency>
+            <dependency>Story 4.6 (Installation) for font installation</dependency>
+            <dependency>Story 4.7 (Terminal Config) for instructions</dependency>
+        </story_dependencies>
+    </dependencies>
+
+    <testing_strategy>
+        <unit_tests>
+            <test>Test font workflow logic (required vs not required)</test>
+            <test>Test skip path (manifest flag set correctly)</test>
+            <test>Test early exit if font already installed</test>
+            <test>Test error handling (download failure, install failure)</test>
+        </unit_tests>
+        <integration_tests>
+            <test>Full create workflow with Starship (requires font)</test>
+            <test>Full create workflow with Pure (no font required)</test>
+            <test>Create workflow with existing Nerd Font detected</test>
+            <test>Create workflow with user skip</test>
+            <test>Create workflow with font installation failure (continues gracefully)</test>
+            <test>Verify manifest contains font selection</test>
+        </integration_tests>
+        <validation>
+            <check>Font installation prompt appears after engine selection</check>
+            <check>Font workflow skipped for Pure engine</check>
+            <check>Font workflow skipped if fonts already present</check>
+            <check>Warning displayed when user skips</check>
+            <check>Terminal instructions shown after successful install</check>
+            <check>Profile creation completes regardless of font outcome</check>
+        </validation>
+    </testing_strategy>
+
+    <code_artifacts>
+        <existing_code>
+            <file path="src/cli/create.rs">Profile creation orchestration</file>
+            <file path="src/cli/create_wizard.rs">Create wizard state management</file>
+            <file path="src/core/manifest.rs">Profile manifest structure</file>
+            <file path="src/prompts/engine.rs">PromptEngine with requires_nerd_font</file>
+        </existing_code>
+        <new_code>
+            <file path="src/cli/create.rs">Add handle_font_installation() function</file>
+            <file path="src/core/manifest.rs">Add nerd_font and nerd_font_skipped fields</file>
+        </new_code>
+    </code_artifacts>
+</story_context>

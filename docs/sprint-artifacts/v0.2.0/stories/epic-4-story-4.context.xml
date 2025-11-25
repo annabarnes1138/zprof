@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story_context>
+    <metadata>
+        <epic>Epic 4</epic>
+        <story_number>4</story_number>
+        <story_title>Create Font Selection TUI</story_title>
+        <status>TODO</status>
+        <priority>P1</priority>
+    </metadata>
+
+    <user_story>
+        <text>As a user who needs a Nerd Font, I want to choose which font to install, So that I can pick one matching my preferences</text>
+    </user_story>
+
+    <acceptance_criteria>
+        <criteria>Create src/tui/font_select.rs</criteria>
+        <criteria>Display font cards with details</criteria>
+        <criteria>Highlight recommended fonts</criteria>
+        <criteria>Show preview characters</criteria>
+        <criteria>Allow skipping</criteria>
+        <criteria>Keyboard navigation</criteria>
+        <criteria>Help text</criteria>
+    </acceptance_criteria>
+
+    <technical_specification>
+        <architecture_section>
+            <module_structure>
+                <module>src/tui/mod.rs</module>
+                <module>src/tui/font_select.rs</module>
+            </module_structure>
+            <integration_points>
+                <point>src/fonts/nerd_fonts.rs: Query font registry for display</point>
+                <point>src/prompts/engine.rs: Get recommended fonts for selected engine</point>
+                <point>src/cli/create.rs: Call font selection TUI in create workflow</point>
+                <point>src/tui/mod.rs: Export font_select module</point>
+            </integration_points>
+        </architecture_section>
+
+        <data_models>
+            <struct name="FontSelectState">
+                <field name="fonts">Vector of available NerdFont entries</field>
+                <field name="selected_index">Current cursor position</field>
+                <field name="recommended_engine">Optional PromptEngine for recommendations</field>
+                <field name="show_help">Boolean for help overlay</field>
+            </struct>
+            <struct name="FontSelectResult">
+                <field name="selected_font">Optional NerdFont (None if skipped)</field>
+                <field name="skipped">Boolean indicating user skipped</field>
+            </struct>
+        </data_models>
+
+        <constraints>
+            <constraint>Follow existing TUI patterns from framework_select.rs and preset_select.rs</constraint>
+            <constraint>Use ratatui for rendering, crossterm for input</constraint>
+            <constraint>Display must fit in 80x24 terminal minimum</constraint>
+            <constraint>Keyboard-only navigation (up/down arrows, enter, q/esc)</constraint>
+            <constraint>Preview characters must be visible ASCII representation of glyphs</constraint>
+        </constraints>
+    </technical_specification>
+
+    <dependencies>
+        <rust_dependencies>
+            <dependency>ratatui (existing)</dependency>
+            <dependency>crossterm (existing)</dependency>
+            <dependency>anyhow (existing)</dependency>
+        </rust_dependencies>
+        <story_dependencies>
+            <dependency>Story 4.1 (Font Registry) for NerdFont data</dependency>
+            <dependency>Story 4.2 (Detect Requirements) for engine recommendations</dependency>
+        </story_dependencies>
+    </dependencies>
+
+    <testing_strategy>
+        <unit_tests>
+            <test>Test font list rendering with mock data</test>
+            <test>Test keyboard navigation (up/down/enter)</test>
+            <test>Test skip functionality (q or dedicated skip option)</test>
+            <test>Test recommended font highlighting logic</test>
+        </unit_tests>
+        <snapshot_tests>
+            <test>TUI layout snapshot with all fonts displayed</test>
+            <test>Font card format with preview characters</test>
+            <test>Help overlay content and formatting</test>
+            <test>Recommended badge/indicator display</test>
+        </snapshot_tests>
+        <validation>
+            <check>All 5-6 registry fonts displayed</check>
+            <check>Recommended fonts visually distinct (color/badge)</check>
+            <check>Preview characters render correctly</check>
+            <check>Skip option clearly visible</check>
+            <check>Keyboard navigation smooth and intuitive</check>
+        </validation>
+    </testing_strategy>
+
+    <code_artifacts>
+        <existing_code>
+            <file path="src/tui/framework_select.rs">Pattern for selection TUI</file>
+            <file path="src/tui/preset_select.rs">Pattern for card-based selection with details</file>
+            <file path="src/tui/mod.rs">TUI module exports</file>
+            <file path="src/fonts/nerd_fonts.rs">Font registry data</file>
+        </existing_code>
+        <new_code>
+            <file path="src/tui/font_select.rs">Font selection TUI implementation</file>
+        </new_code>
+    </code_artifacts>
+</story_context>

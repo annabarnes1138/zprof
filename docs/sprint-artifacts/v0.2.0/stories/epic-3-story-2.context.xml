@@ -1,0 +1,122 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>2</storyId>
+    <title>Move Root Configs After Backup</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-24</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/v0.2.0/stories/epic-3-story-2.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user completing zprof init</asA>
+    <iWant>my root configs moved out of the way</iWant>
+    <soThat>don't get confused about which config is active</soThat>
+    <tasks>
+      - Move root configs to backup location
+      - Leave only zprof .zshenv in root
+      - Create .zshrc symlink to active profile
+      - Handle edge cases (symlinks, read-only)
+      - Update init integration test
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - Move root configs to backup location
+    - Leave only zprof .zshenv in root
+    - Create .zshrc symlink to active profile
+    - Handle edge cases (symlinks, read-only)
+    - Update init integration test
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      - path: docs/sprint-artifacts/tech-spec-epic-3.md
+        title: Epic 3 Technical Specification
+        section: Init Enhancement Sequence
+        snippet: "After backing up, move (not copy) root configs to .zsh-profiles/backups/pre-zprof/. Leave only zprof-generated .zshenv in root"
+
+      - path: docs/sprint-artifacts/v0.2.0/epic-3-uninstall.md
+        title: Epic 3 User Stories
+        section: Story 3.2
+        snippet: "After backing up, move root config files to backup location. Leave only zprof-generated .zshenv in root. Create .zshrc symlink to active profile."
+    </docs>
+
+    <code>
+      - path: src/cli/init.rs
+        kind: command
+        symbol: execute_with_input
+        lines: 50-148
+        reason: Init command that needs to call move operation after backup creation
+
+      - path: src/backup/pre_zprof.rs
+        kind: module
+        symbol: create_backup
+        lines: N/A
+        reason: NEW - Will contain backup creation and move logic
+
+      - path: src/core/filesystem.rs
+        kind: module
+        symbol: fs operations
+        lines: 1-100
+        reason: Safe file operations including copy and move patterns
+    </code>
+
+    <dependencies>
+      rust:
+        - std::fs: stdlib (file move operations)
+        - std::path: stdlib (path handling)
+        - anyhow: 1.0 (error handling)
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Must move files atomically where possible
+    - Must preserve original files until move confirmed successful
+    - Must handle symlinks (resolve before moving)
+    - Must handle read-only files (preserve permissions)
+    - Must validate backup complete before moving files
+    - Only move files that were successfully backed up
+  </constraints>
+
+  <interfaces>
+    - name: move_configs_to_backup
+      kind: function signature
+      signature: pub fn move_configs_to_backup(backup_dir: &Path, files: &[BackedUpFile]) -> Result<()>
+      path: src/backup/pre_zprof.rs
+  </interfaces>
+
+  <tests>
+    <standards>
+      - Use cargo test for all tests
+      - Use tempfile for isolated test environments
+      - Integration tests in tests/
+      - Target 80%+ code coverage
+    </standards>
+
+    <locations>
+      - tests/init_test.rs (integration test)
+      - src/backup/pre_zprof.rs #[cfg(test)]
+    </locations>
+
+    <ideas>
+      AC1: Move root configs to backup
+        - Test files moved (not copied) to backup directory
+        - Test original HOME directory only has .zshenv
+
+      AC2: Leave only zprof .zshenv
+        - Test only zprof-generated .zshenv remains in HOME
+        - Test other config files removed from HOME
+
+      AC3: Create .zshrc symlink
+        - Test symlink created pointing to active profile
+        - Test symlink valid and readable
+
+      AC4: Handle edge cases
+        - Test symlink files resolved before moving
+        - Test read-only files preserve permissions
+        - Test missing files don't cause errors
+    </ideas>
+  </tests>
+</story-context>

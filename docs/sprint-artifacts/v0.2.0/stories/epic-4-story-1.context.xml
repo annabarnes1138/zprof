@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story_context>
+    <metadata>
+        <epic>Epic 4</epic>
+        <story_number>1</story_number>
+        <story_title>Create Nerd Font Registry</story_title>
+        <status>TODO</status>
+        <priority>P1</priority>
+    </metadata>
+
+    <user_story>
+        <text>As a developer, I want a registry of recommended Nerd Fonts, So that users have curated, tested options</text>
+    </user_story>
+
+    <acceptance_criteria>
+        <criteria>Create src/fonts/nerd_fonts.rs</criteria>
+        <criteria>Define NerdFont struct (name, description, download_url, etc.)</criteria>
+        <criteria>Add 5-6 popular Nerd Fonts (FiraCode, JetBrainsMono, Meslo, Hack, CascadiaCode, UbuntuMono)</criteria>
+        <criteria>Create NERD_FONTS registry constant</criteria>
+        <criteria>Add unit tests</criteria>
+    </acceptance_criteria>
+
+    <technical_specification>
+        <architecture_section>
+            <module_structure>
+                <module>src/fonts/mod.rs</module>
+                <module>src/fonts/nerd_fonts.rs</module>
+            </module_structure>
+            <integration_points>
+                <point>src/prompts/engine.rs: Add requires_nerd_font field</point>
+                <point>src/core/manifest.rs: Add nerd_font field</point>
+            </integration_points>
+        </architecture_section>
+
+        <data_models>
+            <struct name="NerdFont">
+                <field name="id">Static string identifier</field>
+                <field name="name">Full font name</field>
+                <field name="display_name">Font display variant</field>
+                <field name="description">Font characteristics</field>
+                <field name="preview_chars">Glyph preview</field>
+                <field name="download_url">GitHub release URL</field>
+                <field name="file_format">TrueType or OpenType</field>
+                <field name="recommended">Boolean flag</field>
+                <field name="recommended_for">Vec of recommended PromptEngines</field>
+            </struct>
+        </data_models>
+
+        <constraints>
+            <constraint>Hardcoded download URLs from nerdfonts.com</constraint>
+            <constraint>Only fonts from official Nerd Fonts GitHub releases</constraint>
+            <constraint>5-6 curated fonts with complete metadata</constraint>
+        </constraints>
+    </technical_specification>
+
+    <dependencies>
+        <rust_dependencies>
+            <dependency>serde (for serialization)</dependency>
+            <dependency>reqwest (for downloads)</dependency>
+            <dependency>bytes (for byte handling)</dependency>
+        </rust_dependencies>
+    </dependencies>
+
+    <testing_strategy>
+        <unit_tests>
+            <test>Verify font registry queries</test>
+            <test>Validate NerdFont struct metadata</test>
+            <test>Check URL formats</test>
+            <test>Verify recommended fonts logic</test>
+        </unit_tests>
+        <validation>
+            <check>All fonts have valid download URLs</check>
+            <check>Preview characters display correctly</check>
+            <check>Metadata is complete for each font</check>
+        </validation>
+    </testing_strategy>
+
+    <code_artifacts>
+        <existing_code>
+            <file path="src/prompts/engine.rs">PromptEngine struct with requires_nerd_font field</file>
+            <file path="src/core/manifest.rs">Manifest structure for storing font selection</file>
+        </existing_code>
+        <new_code>
+            <file path="src/fonts/nerd_fonts.rs">Nerd Font registry implementation</file>
+            <file path="src/fonts/mod.rs">Public module interface for font operations</file>
+        </new_code>
+    </code_artifacts>
+</story_context>

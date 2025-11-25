@@ -59,47 +59,47 @@ development_status:
   epic-2-story-2: done # ✅ APPROVED - Preset catalog defined, 27/27 tests passing, comprehensive docs, zero issues
   epic-2-story-3: done # ✅ APPROVED - Setup mode selection complete, 9/9 tests passing, zero issues, perfect pattern consistency
   epic-2-story-4: done # ✅ APPROVED - Preset selection TUI complete, integrated, 246/246 tests passing, clippy clean
-  epic-2-story-5: ready-for-dev
-  epic-2-story-6: ready-for-dev
+  epic-2-story-5: done # ✅ APPROVED - Review fixes implemented (prompt engine support + integration tests)
+  epic-2-story-6: done # ✅ APPROVED - Preset preview complete, 247/247 tests passing, excellent code quality
   epic-2-story-7: ready-for-dev
   epic-2-story-8: ready-for-dev
   epic-2-retrospective: optional
 
-  epic-3: backlog
-  epic-3-story-1: drafted
-  epic-3-story-2: drafted
-  epic-3-story-3: drafted
-  epic-3-story-4: drafted
-  epic-3-story-5: drafted
-  epic-3-story-6: drafted
-  epic-3-story-7: drafted
-  epic-3-story-8: drafted
+  epic-3: contexted
+  epic-3-story-1: ready-for-dev
+  epic-3-story-2: ready-for-dev
+  epic-3-story-3: ready-for-dev
+  epic-3-story-4: ready-for-dev
+  epic-3-story-5: ready-for-dev
+  epic-3-story-6: ready-for-dev
+  epic-3-story-7: ready-for-dev
+  epic-3-story-8: ready-for-dev
   epic-3-retrospective: optional
 
-  epic-4: backlog
-  epic-4-story-1: drafted
-  epic-4-story-2: drafted
-  epic-4-story-3: drafted
-  epic-4-story-4: drafted
-  epic-4-story-5: drafted
-  epic-4-story-6: drafted
-  epic-4-story-7: drafted
-  epic-4-story-8: drafted
-  epic-4-story-9: drafted
-  epic-4-story-10: drafted
+  epic-4: contexted
+  epic-4-story-1: ready-for-dev
+  epic-4-story-2: ready-for-dev
+  epic-4-story-3: ready-for-dev
+  epic-4-story-4: ready-for-dev
+  epic-4-story-5: ready-for-dev
+  epic-4-story-6: ready-for-dev
+  epic-4-story-7: ready-for-dev
+  epic-4-story-8: ready-for-dev
+  epic-4-story-9: ready-for-dev
+  epic-4-story-10: ready-for-dev
   epic-4-retrospective: optional
 
-  epic-5: backlog
-  epic-5-story-1: drafted
-  epic-5-story-2: drafted
-  epic-5-story-3: drafted
-  epic-5-story-4: drafted
-  epic-5-story-5: drafted
-  epic-5-story-6: drafted
-  epic-5-story-7: drafted
+  epic-5: contexted
+  epic-5-story-1: ready-for-dev
+  epic-5-story-2: ready-for-dev
+  epic-5-story-3: ready-for-dev
+  epic-5-story-4: ready-for-dev
+  epic-5-story-5: ready-for-dev
+  epic-5-story-6: ready-for-dev
+  epic-5-story-7: ready-for-dev
   epic-5-retrospective: optional
 
-  epic-6: backlog
+  epic-6: contexted
   epic-6-story-1: ready-for-dev
   epic-6-story-2: ready-for-dev
   epic-6-story-3: ready-for-dev

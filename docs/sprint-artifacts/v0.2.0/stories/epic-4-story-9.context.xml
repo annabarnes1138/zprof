@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story_context>
+    <metadata>
+        <epic>Epic 4</epic>
+        <story_number>9</story_number>
+        <story_title>Add Font Management Command</story_title>
+        <status>TODO</status>
+        <priority>P1</priority>
+    </metadata>
+
+    <user_story>
+        <text>As a user, I want to install or change fonts later, So that I'm not locked into my initial choice</text>
+    </user_story>
+
+    <acceptance_criteria>
+        <criteria>Create zprof font command with subcommands</criteria>
+        <criteria>zprof font list (show installed)</criteria>
+        <criteria>zprof font install (install new)</criteria>
+        <criteria>zprof font info &lt;name&gt; (show terminal config)</criteria>
+        <criteria>Update CLI help</criteria>
+        <criteria>Integration tests</criteria>
+        <criteria>Documentation</criteria>
+    </acceptance_criteria>
+
+    <technical_specification>
+        <architecture_section>
+            <module_structure>
+                <module>src/cli/mod.rs</module>
+                <module>src/cli/font.rs</module>
+                <module>src/main.rs</module>
+            </module_structure>
+            <integration_points>
+                <point>src/fonts/detector.rs: List installed fonts</point>
+                <point>src/fonts/nerd_fonts.rs: Query font registry</point>
+                <point>src/tui/font_select.rs: Launch interactive font selection</point>
+                <point>src/fonts/download.rs: Download selected font</point>
+                <point>src/fonts/installer.rs: Install font</point>
+                <point>src/fonts/terminal_config.rs: Generate instructions for info command</point>
+                <point>src/core/manifest.rs: Query which profiles use which fonts</point>
+            </integration_points>
+        </architecture_section>
+
+        <data_models>
+            <struct name="FontCommand">
+                <field name="List">List installed Nerd Fonts</field>
+                <field name="Install">Install new font (interactive)</field>
+                <field name="Info">Show details for specific font</field>
+            </struct>
+            <struct name="FontListOutput">
+                <field name="installed_fonts">Vector of installed font names</field>
+                <field name="profiles_using">Map of font name to profile names</field>
+            </struct>
+            <struct name="FontInfoOutput">
+                <field name="font_metadata">NerdFont struct details</field>
+                <field name="installation_status">Installed or not</field>
+                <field name="installation_path">Optional PathBuf if installed</field>
+                <field name="terminal_instructions">Generated instructions</field>
+                <field name="profiles_using">Vector of profile names</field>
+            </struct>
+        </data_models>
+
+        <constraints>
+            <constraint>List command shows both system fonts and zprof-installed fonts</constraint>
+            <constraint>Install command reuses font selection TUI from create workflow</constraint>
+            <constraint>Info command accepts font ID or partial name match</constraint>
+            <constraint>All commands provide helpful error messages for missing fonts</constraint>
+            <constraint>List command indicates which profiles use each font</constraint>
+        </constraints>
+    </technical_specification>
+
+    <dependencies>
+        <rust_dependencies>
+            <dependency>clap (existing - CLI parsing)</dependency>
+            <dependency>anyhow (existing)</dependency>
+            <dependency>log (existing)</dependency>
+        </rust_dependencies>
+        <story_dependencies>
+            <dependency>Story 4.1 (Font Registry) for font metadata</dependency>
+            <dependency>Story 4.3 (Detection) for listing installed fonts</dependency>
+            <dependency>Story 4.4 (Font Selection TUI) for install command</dependency>
+            <dependency>Story 4.5 (Download) for install command</dependency>
+            <dependency>Story 4.6 (Installation) for install command</dependency>
+            <dependency>Story 4.7 (Terminal Config) for info command</dependency>
+        </story_dependencies>
+    </dependencies>
+
+    <testing_strategy>
+        <unit_tests>
+            <test>Test CLI argument parsing for each subcommand</test>
+            <test>Test font name matching (exact and partial)</test>
+            <test>Test profile usage query logic</test>
+        </unit_tests>
+        <integration_tests>
+            <test>zprof font list with no fonts installed</test>
+            <test>zprof font list with fonts installed</test>
+            <test>zprof font install interactive flow</test>
+            <test>zprof font info FiraCode (existing font)</test>
+            <test>zprof font info NonExistent (error handling)</test>
+            <test>Verify list shows profile associations</test>
+        </integration_tests>
+        <snapshot_tests>
+            <test>font list output format</test>
+            <test>font info output format</test>
+            <test>help text for font command</test>
+        </snapshot_tests>
+        <validation>
+            <check>All subcommands accessible via CLI</check>
+            <check>List command shows accurate installation status</check>
+            <check>Install command works standalone (outside create workflow)</check>
+            <check>Info command displays all relevant details</check>
+            <check>Help text clear and comprehensive</check>
+        </validation>
+    </testing_strategy>
+
+    <code_artifacts>
+        <existing_code>
+            <file path="src/cli/mod.rs">CLI module structure and routing</file>
+            <file path="src/main.rs">Main CLI entry point</file>
+            <file path="src/fonts/detector.rs">Font detection API</file>
+            <file path="src/fonts/nerd_fonts.rs">Font registry</file>
+            <file path="src/tui/font_select.rs">Font selection TUI</file>
+        </existing_code>
+        <new_code>
+            <file path="src/cli/font.rs">Font management command implementation</file>
+            <file path="src/cli/mod.rs">Add font subcommand routing</file>
+            <file path="src/main.rs">Register font command in clap</file>
+        </new_code>
+    </code_artifacts>
+</story_context>
