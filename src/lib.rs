@@ -4,6 +4,7 @@
 //! including framework detection, profile management, and configuration.
 
 pub mod archive;
+pub mod backup;
 pub mod cli;
 pub mod core;
 pub mod frameworks;

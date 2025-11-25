@@ -4,6 +4,7 @@ use dialoguer::{Confirm, Input};
 use log::{info, warn};
 use std::fs;
 
+use crate::backup::pre_zprof;
 use crate::core::config::Config;
 use crate::core::filesystem;
 use crate::core::manifest::Manifest;
@@ -55,6 +56,33 @@ pub fn execute_with_input(_args: InitArgs, input: &dyn UserInput) -> Result<()> 
         return Ok(());
     }
 
+    // Create pre-zprof backup BEFORE creating directory structure
+    // This ensures user's original shell config is backed up before any modifications
+    let home_dir = dirs::home_dir()
+        .context("Failed to get home directory")?;
+    let backup_dir = home_dir.join(".zsh-profiles/backups/pre-zprof");
+
+    // Create the backup directory first (needed before create_zprof_structure)
+    fs::create_dir_all(&backup_dir)
+        .context("Failed to create pre-zprof backup directory")?;
+
+    // Create backup of existing shell configs
+    match pre_zprof::create_backup(&home_dir, &backup_dir) {
+        Ok(manifest) => {
+            if manifest.files.is_empty() {
+                println!("✓ No existing shell configs found to backup");
+            } else {
+                println!("✓ Backed up your existing shell config to {}", backup_dir.display());
+                println!("  {} file(s) preserved", manifest.files.len());
+            }
+        }
+        Err(e) => {
+            warn!("Failed to create pre-zprof backup: {}", e);
+            println!("⚠ Warning: Could not create backup of existing shell configs");
+            println!("  Continuing with initialization...");
+        }
+    }
+
     // Create directory structure
     let base_dir = filesystem::create_zprof_structure()
         .context("Failed to create zprof directory structure")?;
@@ -62,6 +90,7 @@ pub fn execute_with_input(_args: InitArgs, input: &dyn UserInput) -> Result<()> 
     println!("✓ Created directory structure at {}", base_dir.display());
     println!("  ├── profiles/");
     println!("  ├── shared/");
+    println!("  ├── backups/");
     println!("  └── cache/");
 
     // Create shared history file

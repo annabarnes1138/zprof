@@ -45,6 +45,12 @@ pub fn create_zprof_structure() -> Result<PathBuf> {
     create_directory(base_dir.join("cache/downloads"))
         .context("Failed to create cache/downloads subdirectory")?;
 
+    // Create backups subdirectories
+    create_directory(base_dir.join("backups"))
+        .context("Failed to create backups subdirectory")?;
+    create_directory(base_dir.join("backups/pre-zprof"))
+        .context("Failed to create backups/pre-zprof subdirectory")?;
+
     Ok(base_dir)
 }
 

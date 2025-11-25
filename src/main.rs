@@ -1,4 +1,5 @@
 mod archive;
+mod backup;
 mod cli;
 mod core;
 mod frameworks;

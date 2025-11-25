@@ -28,6 +28,7 @@ tar = "0.4"
 flate2 = "1.0"
 serde_json = "1.0"
 git2 = "0.20"
+sha2 = "0.10"
 
 [dev-dependencies]
 insta = "1.34"
