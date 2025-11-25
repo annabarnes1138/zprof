@@ -6,11 +6,12 @@
 //! - Clean removal without restoration
 
 use anyhow::{bail, Context, Result};
+use chrono::Local;
 use clap::{Args, ValueEnum};
 use log::info;
 use std::path::Path;
 
-use crate::backup::pre_zprof;
+use crate::backup::{pre_zprof, snapshot, SafetySummary};
 use crate::core::{config, profile};
 use crate::tui::uninstall_select;
 
@@ -24,6 +25,10 @@ pub struct UninstallArgs {
     /// Specify restoration option directly (skip TUI menu)
     #[arg(long, value_enum)]
     pub restore: Option<RestoreOptionCli>,
+
+    /// Skip creating safety backup before uninstall
+    #[arg(long)]
+    pub no_backup: bool,
 }
 
 /// CLI representation of restoration options
@@ -103,6 +108,14 @@ pub fn execute(args: UninstallArgs) -> Result<()> {
             return Ok(());
         }
 
+    // Step 4.5: Create safety backup (unless --no-backup)
+    let safety_backup_summary = if !args.no_backup {
+        create_safety_backup(&home_dir)?
+    } else {
+        println!("\n⚠️  Skipping safety backup (--no-backup flag set)");
+        None
+    };
+
     // Step 5: Execute restoration
     info!("Executing restoration: {:?}", restore_option);
     match restore_option {
@@ -122,9 +135,46 @@ pub fn execute(args: UninstallArgs) -> Result<()> {
     remove_zprof_files(&home_dir)?;
 
     // Step 7: Display success message
-    display_success_message(&restore_option)?;
+    display_success_message(&restore_option, safety_backup_summary.as_ref())?;
 
     Ok(())
+}
+
+/// Create a safety backup of the entire .zsh-profiles directory
+fn create_safety_backup(home_dir: &Path) -> Result<Option<SafetySummary>> {
+    println!();
+    println!("📦 Creating safety backup...");
+
+    let profiles_dir = home_dir.join(".zsh-profiles");
+
+    if !profiles_dir.exists() {
+        // Nothing to backup
+        return Ok(None);
+    }
+
+    // Create backup directory if it doesn't exist
+    let backups_dir = profiles_dir.join("backups");
+    std::fs::create_dir_all(&backups_dir)
+        .context("Failed to create backups directory")?;
+
+    // Generate timestamped filename
+    let timestamp = Local::now().format("%Y%m%d-%H%M%S");
+    let backup_filename = format!("final-snapshot-{}.tar.gz", timestamp);
+    let backup_path = backups_dir.join(&backup_filename);
+
+    // Create the snapshot
+    let size = snapshot::create_final_snapshot(&profiles_dir, &backup_path)
+        .context("Failed to create safety backup")?;
+
+    // Display result
+    let size_mb = size as f64 / 1_048_576.0;
+    println!("✓ Safety backup created: {} ({:.2} MB)", backup_filename, size_mb);
+    println!("  Location: {}", backup_path.display());
+
+    Ok(Some(SafetySummary {
+        backup_path,
+        backup_size: size,
+    }))
 }
 
 /// Validate that zprof is installed
@@ -269,7 +319,7 @@ fn remove_zprof_files(home_dir: &Path) -> Result<()> {
 }
 
 /// Display success message
-fn display_success_message(restore_option: &RestoreOption) -> Result<()> {
+fn display_success_message(restore_option: &RestoreOption, safety_backup: Option<&SafetySummary>) -> Result<()> {
     println!("\n✅ zprof uninstalled successfully");
     println!();
 
@@ -284,6 +334,15 @@ fn display_success_message(restore_option: &RestoreOption) -> Result<()> {
             println!("  All zprof files have been removed.");
             println!("  You can now configure your shell manually or install a different tool.");
         }
+    }
+
+    // Show safety backup information if created
+    if let Some(summary) = safety_backup {
+        let size_mb = summary.backup_size as f64 / 1_048_576.0;
+        println!();
+        println!("  Safety backup available ({:.2} MB):", size_mb);
+        println!("  {}", summary.backup_path.display());
+        println!("  You can extract this backup if you need to recover any data.");
     }
 
     println!();
