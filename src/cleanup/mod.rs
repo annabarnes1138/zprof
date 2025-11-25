@@ -46,6 +46,7 @@ pub struct CleanupSummary {
     /// Total size of removed data in bytes
     pub total_size: u64,
     /// Directories that were removed
+    #[allow(dead_code)]
     pub directories: Vec<PathBuf>,
 }
 

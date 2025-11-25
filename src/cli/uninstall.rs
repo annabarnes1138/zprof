@@ -11,7 +11,7 @@ use clap::{Args, ValueEnum};
 use log::info;
 use std::path::Path;
 
-use crate::backup::{pre_zprof, snapshot, SafetySummary};
+use crate::backup::{pre_zprof, restore, snapshot, SafetySummary};
 use crate::cleanup::{self, CleanupConfig, CleanupSummary};
 use crate::core::{config, profile};
 use crate::tui::{uninstall_confirm, uninstall_select};
@@ -59,8 +59,28 @@ pub enum RestoreOption {
 pub fn execute(args: UninstallArgs) -> Result<()> {
     info!("Starting uninstall process");
 
-    // Step 1: Validate zprof is installed
-    validate_zprof_installed()?;
+    // Step 1: Validate preconditions
+    let validation_report = restore::validate_preconditions()
+        .context("Failed to validate preconditions")?;
+
+    // Check for critical issues
+    if !validation_report.is_valid() {
+        let issues = validation_report.get_issues();
+        bail!(
+            "Cannot proceed with uninstall due to validation failures:\n  - {}\n\n\
+             Please resolve these issues before attempting to uninstall.",
+            issues.join("\n  - ")
+        );
+    }
+
+    // Display warnings if any
+    if !validation_report.warnings.is_empty() {
+        println!("\n⚠️  Warnings:");
+        for warning in &validation_report.warnings {
+            println!("  • {}", warning);
+        }
+        println!();
+    }
 
     // Step 2: Load configuration
     let home_dir = dirs::home_dir()
@@ -140,7 +160,9 @@ pub fn execute(args: UninstallArgs) -> Result<()> {
     info!("Executing restoration: {:?}", restore_option);
     match restore_option {
         RestoreOption::Original => {
-            restore_original(&home_dir, &backup_dir)?;
+            // Use new validation and rollback-enabled restoration
+            let interactive = !args.yes;
+            restore::restore_pre_zprof_with_validation(&home_dir, &backup_dir, interactive)?;
         }
         RestoreOption::Promote(ref profile_name) => {
             promote_profile(&home_dir, &profiles_dir, profile_name)?;
@@ -209,72 +231,6 @@ fn create_safety_backup(home_dir: &Path) -> Result<Option<SafetySummary>> {
     }))
 }
 
-/// Validate that zprof is installed
-fn validate_zprof_installed() -> Result<()> {
-    let home = dirs::home_dir()
-        .context("Failed to determine home directory")?;
-    let zprof_dir = home.join(".zsh-profiles");
-
-    if !zprof_dir.exists() {
-        bail!(
-            "zprof is not installed\n\n\
-             The ~/.zsh-profiles directory does not exist.\n\
-             There is nothing to uninstall."
-        );
-    }
-
-    let config_path = zprof_dir.join("config.toml");
-    if !config_path.exists() {
-        bail!(
-            "zprof installation appears incomplete\n\n\
-             The configuration file (config.toml) is missing.\n\
-             You may need to remove ~/.zsh-profiles manually."
-        );
-    }
-
-    Ok(())
-}
-
-/// Restore original pre-zprof backup
-fn restore_original(home_dir: &Path, backup_dir: &Path) -> Result<()> {
-    println!("\n🔄 Restoring original shell configuration...");
-
-    // Validate backup
-    let manifest = pre_zprof::validate_backup(backup_dir)
-        .context("Failed to validate pre-zprof backup")?;
-
-    println!("  Backup created: {}", manifest.metadata.created_at.format("%Y-%m-%d %H:%M"));
-    println!("  Files to restore: {}", manifest.files.len());
-
-    // Restore each file from backup
-    for backed_up_file in &manifest.files {
-        let source = backup_dir.join(&backed_up_file.path);
-        let dest = home_dir.join(&backed_up_file.path);
-
-        if !source.exists() {
-            eprintln!("  ⚠ Warning: Backup file missing: {}", backed_up_file.path.display());
-            continue;
-        }
-
-        // Copy file from backup to HOME
-        std::fs::copy(&source, &dest)
-            .with_context(|| format!("Failed to restore {}", backed_up_file.path.display()))?;
-
-        // Restore permissions on Unix
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let permissions = std::fs::Permissions::from_mode(backed_up_file.permissions);
-            std::fs::set_permissions(&dest, permissions)
-                .with_context(|| format!("Failed to set permissions on {}", backed_up_file.path.display()))?;
-        }
-
-        println!("  ✓ Restored {}", backed_up_file.path.display());
-    }
-
-    println!("✓ Original configuration restored");
-    Ok(())
-}
 
 /// Promote a profile to root configuration
 fn promote_profile(home_dir: &Path, profiles_dir: &Path, profile_name: &str) -> Result<()> {
