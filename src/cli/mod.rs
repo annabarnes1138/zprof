@@ -12,5 +12,6 @@ pub mod list;
 pub mod regenerate;
 pub mod rollback;
 pub mod show;
+pub mod uninstall;
 pub mod use_cmd;
 pub mod version;

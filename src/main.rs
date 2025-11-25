@@ -56,6 +56,8 @@ enum Commands {
     Rollback(cli::rollback::RollbackArgs),
     /// Show detailed information about a profile
     Show(cli::show::ShowArgs),
+    /// Uninstall zprof and optionally restore shell configuration
+    Uninstall(cli::uninstall::UninstallArgs),
     /// Switch to a different profile
     Use(cli::use_cmd::UseArgs),
     /// Display version information
@@ -83,6 +85,7 @@ fn main() -> Result<()> {
         Commands::Regenerate(args) => cli::regenerate::execute(args),
         Commands::Rollback(args) => cli::rollback::execute(args),
         Commands::Show(args) => cli::show::execute(args),
+        Commands::Uninstall(args) => cli::uninstall::execute(args),
         Commands::Use(args) => cli::use_cmd::execute(args),
         Commands::Version(args) => cli::version::execute(args),
     }

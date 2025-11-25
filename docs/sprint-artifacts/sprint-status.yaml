@@ -68,7 +68,7 @@ development_status:
   epic-3: contexted
   epic-3-story-1: done # ✅ APPROVED - Pre-zprof backup complete, 6/6 ACs verified, 263+ tests passing, zero issues
   epic-3-story-2: done # ✅ APPROVED - Move configs complete, 5/5 ACs verified, 268+ tests passing, zero regressions
-  epic-3-story-3: ready-for-dev
+  epic-3-story-3: done # ✅ APPROVED - Uninstall command complete, 6/6 ACs verified, 278+ tests passing, zero issues
   epic-3-story-4: ready-for-dev
   epic-3-story-5: ready-for-dev
   epic-3-story-6: ready-for-dev
