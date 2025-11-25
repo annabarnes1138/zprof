@@ -182,6 +182,90 @@ fn get_zsh_version() -> Result<String> {
     Ok(version_str.trim().to_string())
 }
 
+/// Move backed-up config files from HOME to backup directory
+///
+/// This function moves (not copies) files that were previously backed up
+/// from the user's HOME directory to the backup location. It should be called
+/// after `create_backup` successfully completes.
+///
+/// # Arguments
+///
+/// * `home_dir` - User's HOME directory
+/// * `files` - List of files that were backed up
+///
+/// # Returns
+///
+/// Number of files successfully moved
+///
+/// # Errors
+///
+/// Returns error if:
+/// - File move operations fail
+///
+/// # Example
+///
+/// ```no_run
+/// use std::path::Path;
+/// use zprof::backup::pre_zprof::{create_backup, move_configs_to_backup};
+///
+/// let home = dirs::home_dir().unwrap();
+/// let backup_dir = home.join(".zsh-profiles/backups/pre-zprof");
+/// let manifest = create_backup(&home, &backup_dir).unwrap();
+/// let moved = move_configs_to_backup(&home, &manifest.files).unwrap();
+/// ```
+pub fn move_configs_to_backup(home_dir: &Path, files: &[BackedUpFile]) -> Result<usize> {
+
+    let mut moved_count = 0;
+
+    for file_entry in files {
+        let source_path = home_dir.join(&file_entry.path);
+
+        // Skip if file doesn't exist (may have been removed already)
+        if !source_path.exists() {
+            info!("Skipping {} (no longer exists in HOME)", file_entry.path.display());
+            continue;
+        }
+
+        // Check if file is a symlink - resolve and backup the target
+        let is_symlink = source_path.is_symlink();
+        if is_symlink {
+            info!("Resolving symlink: {}", file_entry.path.display());
+            // The symlink was already resolved during backup, so we can safely remove it
+        }
+
+        // Remove the file from HOME (it's already in backup)
+        // Handle read-only files by temporarily changing permissions
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let metadata = fs::metadata(&source_path)
+                .with_context(|| format!("Failed to get metadata for {}", source_path.display()))?;
+            let permissions = metadata.permissions();
+
+            // If file is read-only, make it writable temporarily
+            if permissions.readonly() {
+                let mut new_perms = permissions.clone();
+                new_perms.set_mode(new_perms.mode() | 0o200); // Add owner write permission
+                fs::set_permissions(&source_path, new_perms)
+                    .with_context(|| format!("Failed to make {} writable", source_path.display()))?;
+                info!("Made {} writable for removal", file_entry.path.display());
+            }
+        }
+
+        // Use fs::remove_file for both regular files and symlinks
+        fs::remove_file(&source_path)
+            .with_context(|| format!(
+                "Failed to remove {} from HOME after backup",
+                file_entry.path.display()
+            ))?;
+
+        info!("Moved {} to backup (removed from HOME)", file_entry.path.display());
+        moved_count += 1;
+    }
+
+    Ok(moved_count)
+}
+
 /// Convert FrameworkInfo to DetectedFramework for manifest
 fn framework_info_to_detected(info: &FrameworkInfo) -> DetectedFramework {
     DetectedFramework {
@@ -349,5 +433,138 @@ mod tests {
         let metadata = fs::metadata(&backup_dir).unwrap();
         let mode = metadata.permissions().mode();
         assert_eq!(mode & 0o777, 0o700);
+    }
+
+    // Story 3.2: Move configs to backup tests
+    #[test]
+    fn test_move_configs_to_backup() {
+        let temp_dir = TempDir::new().unwrap();
+        let home_dir = temp_dir.path().join("home");
+        let backup_dir = temp_dir.path().join("backups/pre-zprof");
+
+        fs::create_dir_all(&home_dir).unwrap();
+        fs::write(home_dir.join(".zshrc"), "# zshrc\n").unwrap();
+        fs::write(home_dir.join(".zshenv"), "# zshenv\n").unwrap();
+
+        let manifest = create_backup(&home_dir, &backup_dir).unwrap();
+        assert_eq!(manifest.files.len(), 2);
+
+        // Verify files exist in both HOME and backup before move
+        assert!(home_dir.join(".zshrc").exists());
+        assert!(home_dir.join(".zshenv").exists());
+        assert!(backup_dir.join(".zshrc").exists());
+        assert!(backup_dir.join(".zshenv").exists());
+
+        // Move configs
+        let moved_count = move_configs_to_backup(&home_dir, &manifest.files).unwrap();
+        assert_eq!(moved_count, 2);
+
+        // Verify files removed from HOME
+        assert!(!home_dir.join(".zshrc").exists());
+        assert!(!home_dir.join(".zshenv").exists());
+
+        // Verify files still in backup
+        assert!(backup_dir.join(".zshrc").exists());
+        assert!(backup_dir.join(".zshenv").exists());
+    }
+
+    #[test]
+    fn test_move_configs_skips_missing_files() {
+        let temp_dir = TempDir::new().unwrap();
+        let home_dir = temp_dir.path().join("home");
+        let backup_dir = temp_dir.path().join("backups/pre-zprof");
+
+        fs::create_dir_all(&home_dir).unwrap();
+        fs::write(home_dir.join(".zshrc"), "# zshrc\n").unwrap();
+
+        let manifest = create_backup(&home_dir, &backup_dir).unwrap();
+        assert_eq!(manifest.files.len(), 1);
+
+        // Manually remove file from HOME before move
+        fs::remove_file(home_dir.join(".zshrc")).unwrap();
+
+        // Move should succeed but skip the missing file
+        let moved_count = move_configs_to_backup(&home_dir, &manifest.files).unwrap();
+        assert_eq!(moved_count, 0);
+
+        // Backup file should still exist
+        assert!(backup_dir.join(".zshrc").exists());
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn test_move_configs_handles_readonly_files() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let temp_dir = TempDir::new().unwrap();
+        let home_dir = temp_dir.path().join("home");
+        let backup_dir = temp_dir.path().join("backups/pre-zprof");
+
+        fs::create_dir_all(&home_dir).unwrap();
+        fs::write(home_dir.join(".zshrc"), "# zshrc\n").unwrap();
+
+        // Make file read-only
+        let permissions = fs::Permissions::from_mode(0o400);
+        fs::set_permissions(home_dir.join(".zshrc"), permissions).unwrap();
+
+        let manifest = create_backup(&home_dir, &backup_dir).unwrap();
+
+        // Move should succeed even with read-only file
+        let moved_count = move_configs_to_backup(&home_dir, &manifest.files).unwrap();
+        assert_eq!(moved_count, 1);
+
+        // Verify file removed from HOME
+        assert!(!home_dir.join(".zshrc").exists());
+
+        // Verify file still in backup
+        assert!(backup_dir.join(".zshrc").exists());
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn test_move_configs_handles_symlinks() {
+        use std::os::unix::fs;
+
+        let temp_dir = TempDir::new().unwrap();
+        let home_dir = temp_dir.path().join("home");
+        let backup_dir = temp_dir.path().join("backups/pre-zprof");
+
+        std::fs::create_dir_all(&home_dir).unwrap();
+
+        // Create target file and symlink
+        let target_file = home_dir.join("real_zshrc");
+        std::fs::write(&target_file, "# real zshrc\n").unwrap();
+        fs::symlink(&target_file, home_dir.join(".zshrc")).unwrap();
+
+        let manifest = create_backup(&home_dir, &backup_dir).unwrap();
+
+        // Move should handle symlink
+        let moved_count = move_configs_to_backup(&home_dir, &manifest.files).unwrap();
+        assert_eq!(moved_count, 1);
+
+        // Verify symlink removed from HOME
+        assert!(!home_dir.join(".zshrc").exists());
+
+        // Verify file still in backup
+        assert!(backup_dir.join(".zshrc").exists());
+
+        // Verify original target still exists
+        assert!(target_file.exists());
+    }
+
+    #[test]
+    fn test_move_configs_with_no_files() {
+        let temp_dir = TempDir::new().unwrap();
+        let home_dir = temp_dir.path().join("home");
+        let backup_dir = temp_dir.path().join("backups/pre-zprof");
+
+        std::fs::create_dir_all(&home_dir).unwrap();
+
+        let manifest = create_backup(&home_dir, &backup_dir).unwrap();
+        assert_eq!(manifest.files.len(), 0);
+
+        // Move with empty file list should succeed
+        let moved_count = move_configs_to_backup(&home_dir, &manifest.files).unwrap();
+        assert_eq!(moved_count, 0);
     }
 }

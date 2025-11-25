@@ -74,6 +74,20 @@ pub fn execute_with_input(_args: InitArgs, input: &dyn UserInput) -> Result<()> 
             } else {
                 println!("✓ Backed up your existing shell config to {}", backup_dir.display());
                 println!("  {} file(s) preserved", manifest.files.len());
+
+                // Move backed-up configs from HOME to backup directory (Story 3.2)
+                match pre_zprof::move_configs_to_backup(&home_dir, &manifest.files) {
+                    Ok(moved_count) => {
+                        println!("✓ Moved root config files to backup location");
+                        println!("  {} file(s) removed from HOME", moved_count);
+                        println!("  Your original setup is safely preserved and can be restored at any time");
+                    }
+                    Err(e) => {
+                        warn!("Failed to move configs to backup: {}", e);
+                        println!("⚠ Warning: Could not move all configs to backup");
+                        println!("  Your files are still backed up, but may remain in HOME directory");
+                    }
+                }
             }
         }
         Err(e) => {

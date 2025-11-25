@@ -261,13 +261,18 @@ fn test_zshrc_preserved_during_import() {
     // This test verifies the framework is detected
     let _output = env.run_init();
 
-    // Verify original .zshrc still exists and hasn't been modified
-    assert!(env.home_dir.join(".zshrc").exists(),
-            "Original .zshrc must still exist (NFR002)");
+    // Story 3.2: Verify original .zshrc was moved to backup (not in HOME anymore)
+    assert!(!env.home_dir.join(".zshrc").exists(),
+            "Original .zshrc should be moved to backup (Story 3.2)");
 
-    let current_zshrc_content = std::fs::read_to_string(env.home_dir.join(".zshrc")).unwrap();
-    assert_eq!(original_zshrc_content, current_zshrc_content,
-               "Original .zshrc content must be unchanged (NFR002)");
+    // Verify original .zshrc is preserved in backup directory
+    let backup_dir = env.home_dir.join(".zsh-profiles/backups/pre-zprof");
+    assert!(backup_dir.join(".zshrc").exists(),
+            "Original .zshrc must be preserved in backup (NFR002)");
+
+    let backed_up_zshrc_content = std::fs::read_to_string(backup_dir.join(".zshrc")).unwrap();
+    assert_eq!(original_zshrc_content, backed_up_zshrc_content,
+               "Backed-up .zshrc content must match original (NFR002)");
 }
 
 // Unit tests for zdotdir module
