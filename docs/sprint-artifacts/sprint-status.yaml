@@ -61,7 +61,7 @@ development_status:
   epic-2-story-4: done # ✅ APPROVED - Preset selection TUI complete, integrated, 246/246 tests passing, clippy clean
   epic-2-story-5: done # ✅ APPROVED - Review fixes implemented (prompt engine support + integration tests)
   epic-2-story-6: done # ✅ APPROVED - Preset preview complete, 247/247 tests passing, excellent code quality
-  epic-2-story-7: ready-for-dev
+  epic-2-story-7: done # ✅ APPROVED - Non-interactive preset flag, 257/257 tests passing, all review issues resolved
   epic-2-story-8: ready-for-dev
   epic-2-retrospective: optional
 

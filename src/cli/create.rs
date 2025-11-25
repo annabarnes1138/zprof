@@ -24,6 +24,13 @@ pub struct CreateArgs {
     /// Name of the profile to create
     #[arg(value_name = "NAME")]
     pub name: String,
+
+    /// Create profile from a preset (minimal, performance, fancy, developer)
+    ///
+    /// Skip the interactive wizard and use a pre-configured preset.
+    /// Example: zprof create work --preset performance
+    #[arg(long, value_name = "PRESET_NAME")]
+    pub preset: Option<String>,
 }
 
 /// Execute the create command
@@ -47,7 +54,44 @@ pub fn execute(args: CreateArgs) -> Result<()> {
         );
     }
 
-    // 2. Detect existing framework
+    // 2. If --preset flag provided, skip TUI and create from preset
+    if let Some(preset_name) = &args.preset {
+        use crate::presets::find_preset_by_id;
+
+        // Look up preset (case-insensitive)
+        let preset = find_preset_by_id(preset_name).ok_or_else(|| {
+            // Build helpful error message with available presets
+            let available: Vec<&str> = crate::presets::PRESET_REGISTRY
+                .iter()
+                .map(|p| p.id)
+                .collect();
+
+            anyhow::anyhow!(
+                "✗ Error: Preset '{}' not found\n  → Available presets: {}\n  → Use 'zprof create {}' for interactive wizard",
+                preset_name,
+                available.join(", "),
+                args.name
+            )
+        })?;
+
+        // Create profile from preset (non-interactive)
+        crate::cli::create_from_preset::create_from_preset(&args.name, preset, false)?;
+
+        // Show summary message
+        println!("\n✓ Profile '{}' created using {} preset", args.name, preset.name);
+        println!("  → Framework: {}", preset.config.framework.name());
+        if let Some(engine) = preset.config.prompt_engine {
+            println!("  → Prompt Engine: {}", engine);
+        } else if let Some(theme) = preset.config.framework_theme {
+            println!("  → Theme: {}", theme);
+        }
+        println!("  → Plugins: {} configured", preset.config.plugins.len());
+        println!("\n  Use 'zprof use {}' to activate this profile", args.name);
+
+        return Ok(());
+    }
+
+    // 3. Detect existing framework
     let detected_framework = detect_existing_framework();
 
     // 3. Determine framework (from detection or TUI wizard)

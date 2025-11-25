@@ -1,7 +1,10 @@
 use anyhow::Result;
+use serial_test::serial;
 use std::env;
 use tempfile::TempDir;
+use zprof::cli::create::{execute, CreateArgs};
 use zprof::cli::create_from_preset::create_from_preset;
+use zprof::core::filesystem::create_zprof_structure;
 use zprof::core::manifest::Manifest;
 use zprof::presets::PRESET_REGISTRY;
 
@@ -53,14 +56,18 @@ fn test_manifest_from_preset_logic() {
 }
 
 #[test]
+#[serial]
 fn test_create_from_preset_integration() -> Result<()> {
     run_with_isolated_home(|home_path| {
+        // Initialize zprof structure in the test home directory
+        create_zprof_structure()?;
+
         // 1. Select the "Minimal" preset which uses Pure prompt
         // We need to find the Minimal preset specifically
         let preset = PRESET_REGISTRY.iter()
             .find(|p| p.name == "Minimal")
             .expect("Minimal preset not found");
-            
+
         // 2. Run create_from_preset
         create_from_preset("test-minimal", preset, false)?;
         
@@ -92,13 +99,17 @@ fn test_create_from_preset_integration() -> Result<()> {
 }
 
 #[test]
+#[serial]
 fn test_create_from_preset_performance_starship() -> Result<()> {
     run_with_isolated_home(|home_path| {
+        // Initialize zprof structure in the test home directory
+        create_zprof_structure()?;
+
         // 1. Select the "Performance" preset which uses Starship
         let preset = PRESET_REGISTRY.iter()
             .find(|p| p.name == "Performance")
             .expect("Performance preset not found");
-            
+
         // 2. Run create_from_preset
         create_from_preset("test-perf", preset, false)?;
         
@@ -111,7 +122,86 @@ fn test_create_from_preset_performance_starship() -> Result<()> {
         // 4. Verify Starship placeholder
         // Our implementation for Starship creates a .config directory
         assert!(profile_dir.join(".config").exists(), "Starship config directory should be created");
-        
+
         Ok(())
     })
+}
+
+// --- Tests for --preset CLI flag (Story 2.7) ---
+
+fn setup_test_env() -> TempDir {
+    let temp_dir = TempDir::new().unwrap();
+    let home = temp_dir.path().to_path_buf();
+    env::set_var("HOME", &home);
+    temp_dir
+}
+
+#[test]
+fn test_cli_preset_arg_structure() {
+    // Test that CreateArgs can be constructed with preset field
+    let args = CreateArgs {
+        name: "test".to_string(),
+        preset: Some("minimal".to_string()),
+    };
+    assert_eq!(args.preset.unwrap(), "minimal");
+
+    let args_none = CreateArgs {
+        name: "test".to_string(),
+        preset: None,
+    };
+    assert!(args_none.preset.is_none());
+}
+
+#[test]
+fn test_preset_lookup_case_insensitive() {
+    use zprof::presets::find_preset_by_id;
+
+    // Verify case-insensitive lookups work for CLI usage
+    assert!(find_preset_by_id("minimal").is_some());
+    assert!(find_preset_by_id("MINIMAL").is_some());
+    assert!(find_preset_by_id("Minimal").is_some());
+    assert!(find_preset_by_id("performance").is_some());
+    assert!(find_preset_by_id("PERFORMANCE").is_some());
+}
+
+#[test]
+#[serial]
+fn test_cli_preset_flag_invalid() {
+    let _temp = setup_test_env();
+    create_zprof_structure().unwrap();
+
+    let args = CreateArgs {
+        name: "cli-invalid".to_string(),
+        preset: Some("nonexistent".to_string()),
+    };
+
+    let result = execute(args);
+    assert!(result.is_err(), "CLI with invalid --preset should fail");
+
+    let err_msg = result.unwrap_err().to_string();
+    assert!(err_msg.contains("not found"), "Error should mention preset not found");
+    assert!(err_msg.contains("minimal"), "Error should list available presets");
+    assert!(err_msg.contains("performance"), "Error should list available presets");
+}
+
+#[test]
+fn test_preset_not_found_error_message() {
+    use zprof::presets::find_preset_by_id;
+
+    // Test that looking up an invalid preset returns None
+    assert!(find_preset_by_id("nonexistent").is_none());
+    assert!(find_preset_by_id("invalid").is_none());
+    assert!(find_preset_by_id("").is_none());
+}
+
+#[test]
+fn test_preset_configurations_accessible() {
+    use zprof::presets::{find_preset_by_id, PRESET_REGISTRY};
+
+    // Verify all presets are accessible by ID
+    for preset in PRESET_REGISTRY {
+        let found = find_preset_by_id(preset.id);
+        assert!(found.is_some(), "Preset {} should be findable", preset.id);
+        assert_eq!(found.unwrap().id, preset.id);
+    }
 }

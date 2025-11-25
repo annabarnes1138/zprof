@@ -291,12 +291,13 @@ mod tests {
     use tempfile::TempDir;
 
     #[test]
+    #[ignore = "Slow test: clones real repositories including Prezto with submodules (~60s)"]
     fn test_install_framework_placeholder_types() {
         let temp_dir = TempDir::new().unwrap();
         let profile_path = temp_dir.path();
 
         // Test frameworks with real git installations (now implemented)
-        // Note: These tests still run without network by checking directory creation
+        // Note: This test performs actual git clones including Prezto with 8 submodules
         let placeholder_frameworks = vec![
             (FrameworkType::Zimfw, ".zim"),
             (FrameworkType::Prezto, ".zprezto"),

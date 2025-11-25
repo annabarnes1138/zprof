@@ -55,6 +55,7 @@ fn test_create_profile_name_validation() {
     for name in invalid_names {
         let args = CreateArgs {
             name: name.to_string(),
+            preset: None,
         };
         let result = execute(args);
         assert!(result.is_err(), "Name '{name}' should be invalid");
@@ -75,6 +76,7 @@ fn test_create_profile_no_framework_detected() {
     // No framework installed - will attempt to launch TUI wizard
     let args = CreateArgs {
         name: "test-profile".to_string(),
+        preset: None,
     };
 
     let result = execute(args);
@@ -107,6 +109,7 @@ fn test_create_profile_already_exists() {
 
     let _args = CreateArgs {
         name: "existing".to_string(),
+        preset: None,
     };
 
     // Note: Can't test execute() directly since it uses interactive dialoguer

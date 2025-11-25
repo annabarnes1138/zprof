@@ -67,6 +67,29 @@ impl PresetConfig {
     }
 }
 
+/// Find a preset by its ID (case-insensitive)
+///
+/// Returns the matching preset if found, or None if no preset with that ID exists.
+///
+/// # Examples
+///
+/// ```
+/// use zprof::presets::find_preset_by_id;
+///
+/// let preset = find_preset_by_id("minimal").expect("Minimal preset should exist");
+/// assert_eq!(preset.id, "minimal");
+///
+/// // Case-insensitive lookup
+/// let preset = find_preset_by_id("PERFORMANCE").expect("Performance preset should exist");
+/// assert_eq!(preset.id, "performance");
+///
+/// // Not found
+/// assert!(find_preset_by_id("nonexistent").is_none());
+/// ```
+pub fn find_preset_by_id(id: &str) -> Option<&'static Preset> {
+    PRESET_REGISTRY.iter().find(|preset| preset.id.eq_ignore_ascii_case(id))
+}
+
 /// Registry of all available presets
 ///
 /// This constant array contains all preset definitions. Adding a new preset
@@ -433,5 +456,54 @@ mod tests {
             .find(|p| p.id == "developer")
             .expect("Developer preset should exist");
         assert_eq!(developer.config.plugins.len(), 8);
+    }
+
+    #[test]
+    fn test_find_preset_by_id_exact_match() {
+        let preset = find_preset_by_id("minimal");
+        assert!(preset.is_some());
+        assert_eq!(preset.unwrap().id, "minimal");
+
+        let preset = find_preset_by_id("performance");
+        assert!(preset.is_some());
+        assert_eq!(preset.unwrap().id, "performance");
+
+        let preset = find_preset_by_id("developer");
+        assert!(preset.is_some());
+        assert_eq!(preset.unwrap().id, "developer");
+
+        let preset = find_preset_by_id("fancy");
+        assert!(preset.is_some());
+        assert_eq!(preset.unwrap().id, "fancy");
+    }
+
+    #[test]
+    fn test_find_preset_by_id_case_insensitive() {
+        // Uppercase
+        let preset = find_preset_by_id("MINIMAL");
+        assert!(preset.is_some());
+        assert_eq!(preset.unwrap().id, "minimal");
+
+        // Mixed case
+        let preset = find_preset_by_id("Performance");
+        assert!(preset.is_some());
+        assert_eq!(preset.unwrap().id, "performance");
+
+        // All caps
+        let preset = find_preset_by_id("DEVELOPER");
+        assert!(preset.is_some());
+        assert_eq!(preset.unwrap().id, "developer");
+    }
+
+    #[test]
+    fn test_find_preset_by_id_not_found() {
+        let preset = find_preset_by_id("nonexistent");
+        assert!(preset.is_none());
+
+        let preset = find_preset_by_id("invalid");
+        assert!(preset.is_none());
+
+        let preset = find_preset_by_id("");
+        assert!(preset.is_none());
     }
 }

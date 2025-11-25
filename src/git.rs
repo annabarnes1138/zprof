@@ -39,18 +39,29 @@ pub fn clone_repository(
     if std::env::var("ZPROF_TEST_MODE").is_ok() {
         log::info!("Test mode: Simulating clone of {} to {}", url, destination.display());
         std::fs::create_dir_all(destination)?;
-        
+
         // Initialize a dummy git repo so Repository::open succeeds
         let repo = Repository::init(destination)?;
-        
-        // Create a dummy file to simulate content
-        // For Zap, we need zap.zsh
+
+        // Create framework-specific files to simulate realistic installations
         if url.contains("zap") {
-            std::fs::write(destination.join("zap.zsh"), "# Dummy zap.zsh")?;
+            std::fs::write(destination.join("zap.zsh"), "# Dummy zap.zsh for test mode")?;
+        } else if url.contains("pure") {
+            std::fs::write(destination.join("pure.zsh"), "# Dummy pure.zsh for test mode")?;
+        } else if url.contains("zinit") {
+            std::fs::write(destination.join("zinit.zsh"), "# Dummy zinit.zsh for test mode")?;
+        } else if url.contains("oh-my-zsh") || url.contains("ohmyzsh") {
+            std::fs::write(destination.join("oh-my-zsh.sh"), "# Dummy oh-my-zsh.sh for test mode")?;
+            std::fs::create_dir_all(destination.join("plugins"))?;
+            std::fs::create_dir_all(destination.join("themes"))?;
+        } else if url.contains("zimfw") {
+            std::fs::write(destination.join("zimfw.zsh"), "# Dummy zimfw.zsh for test mode")?;
+            std::fs::create_dir_all(destination.join("modules"))?;
+        } else if url.contains("prezto") {
+            std::fs::write(destination.join("init.zsh"), "# Dummy init.zsh for test mode")?;
+            std::fs::create_dir_all(destination.join("modules"))?;
         }
-        // For Pure, we need pure.zsh or similar? Pure is usually just a prompt.
-        // The installer checks for existence of directory mostly.
-        
+
         return Ok(repo);
     }
 

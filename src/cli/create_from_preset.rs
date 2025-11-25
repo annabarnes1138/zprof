@@ -36,8 +36,6 @@ pub fn create_from_preset(profile_name: &str, preset: &Preset, interactive: bool
         );
     }
 
-    println!("Creating profile '{}' using '{}' preset...", profile_name, preset.name);
-
     // 2. Create profile directory and ensure shared history exists
     fs::create_dir_all(&profile_dir).with_context(|| {
         format!(
