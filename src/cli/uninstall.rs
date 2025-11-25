@@ -12,6 +12,7 @@ use log::info;
 use std::path::Path;
 
 use crate::backup::{pre_zprof, snapshot, SafetySummary};
+use crate::cleanup::{self, CleanupConfig};
 use crate::core::{config, profile};
 use crate::tui::uninstall_select;
 
@@ -29,6 +30,10 @@ pub struct UninstallArgs {
     /// Skip creating safety backup before uninstall
     #[arg(long)]
     pub no_backup: bool,
+
+    /// Keep backups directory when removing profiles
+    #[arg(long)]
+    pub keep_backups: bool,
 }
 
 /// CLI representation of restoration options
@@ -131,8 +136,20 @@ pub fn execute(args: UninstallArgs) -> Result<()> {
         }
     }
 
-    // Step 6: Remove zprof files
-    remove_zprof_files(&home_dir)?;
+    // Step 6: Execute cleanup
+    let cleanup_config = CleanupConfig {
+        profiles_dir: profiles_dir.clone(),
+        home_dir: home_dir.clone(),
+        keep_backups: args.keep_backups,
+    };
+
+    println!();
+    println!("🗑️  Removing zprof files...");
+    let cleanup_report = cleanup::cleanup_all(&cleanup_config)?;
+
+    if !cleanup_report.is_successful() {
+        eprintln!("\n⚠ Some files could not be removed. You may need to remove them manually.");
+    }
 
     // Step 7: Display success message
     display_success_message(&restore_option, safety_backup_summary.as_ref())?;
@@ -287,36 +304,6 @@ fn promote_profile(home_dir: &Path, profiles_dir: &Path, profile_name: &str) -> 
     Ok(())
 }
 
-/// Remove zprof files and directories
-fn remove_zprof_files(home_dir: &Path) -> Result<()> {
-    println!("\n🗑️  Removing zprof files...");
-
-    let zprof_dir = home_dir.join(".zsh-profiles");
-
-    // Remove zprof-generated .zshenv
-    let zshenv = home_dir.join(".zshenv");
-    if zshenv.exists() {
-        // Check if this is zprof's .zshenv by looking for ZDOTDIR
-        if let Ok(content) = std::fs::read_to_string(&zshenv) {
-            if content.contains("ZDOTDIR") && content.contains(".zsh-profiles") {
-                std::fs::remove_file(&zshenv)
-                    .context("Failed to remove zprof-generated .zshenv")?;
-                println!("  ✓ Removed .zshenv");
-            } else {
-                println!("  ⓘ Preserved .zshenv (not created by zprof)");
-            }
-        }
-    }
-
-    // Remove ~/.zsh-profiles directory
-    if zprof_dir.exists() {
-        std::fs::remove_dir_all(&zprof_dir)
-            .context("Failed to remove ~/.zsh-profiles directory")?;
-        println!("  ✓ Removed ~/.zsh-profiles/");
-    }
-
-    Ok(())
-}
 
 /// Display success message
 fn display_success_message(restore_option: &RestoreOption, safety_backup: Option<&SafetySummary>) -> Result<()> {

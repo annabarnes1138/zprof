@@ -5,6 +5,7 @@
 
 pub mod archive;
 pub mod backup;
+pub mod cleanup;
 pub mod cli;
 pub mod core;
 pub mod frameworks;

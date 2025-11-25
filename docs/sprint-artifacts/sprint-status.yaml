@@ -70,7 +70,7 @@ development_status:
   epic-3-story-2: done # ✅ APPROVED - Move configs complete, 5/5 ACs verified, 268+ tests passing, zero regressions
   epic-3-story-3: done # ✅ APPROVED - Uninstall command complete, 6/6 ACs verified, 278+ tests passing, zero issues
   epic-3-story-4: done # ✅ APPROVED - Safety backup complete, 5/5 ACs verified, SafetySummary properly implemented, 281/281 tests passing, zero issues
-  epic-3-story-5: ready-for-dev
+  epic-3-story-5: done # ✅ APPROVED - Cleanup logic complete, 6/6 ACs verified, 289/289 tests passing, zero issues, production-ready quality
   epic-3-story-6: ready-for-dev
   epic-3-story-7: ready-for-dev
   epic-3-story-8: ready-for-dev
