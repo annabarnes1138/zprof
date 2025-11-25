@@ -20,17 +20,60 @@ Press Enter to accept the defaults. Your existing setup is now a zprof profile!
 
 ## Step 2: Create a New Profile
 
-Let's create a second profile for experimentation:
+Let's create a second profile for experimentation. zprof offers two ways to create profiles:
+
+### Option A: Quick Setup with Presets (Recommended for Beginners)
+
+The fastest way to get started is using a preset configuration:
+
+```bash
+zprof create experimental --preset minimal
+```
+
+Or use the interactive preset selector:
 
 ```bash
 zprof create experimental
 ```
 
-This launches an interactive wizard:
+This will first ask you to choose between **Quick Setup** or **Custom Setup**:
+
+```
+How would you like to set up your profile?
+
+  > Quick Setup (recommended presets)
+    Custom Setup (choose your own components)
+```
+
+With Quick Setup, you'll see curated preset options:
+
+```
+┌────────────────────────────────────────────────┐
+│ ✨ Minimal                                      │
+│ Fast startup, clean prompt, essential plugins  │
+│                                                 │
+│ Framework: Zap                                 │
+│ Prompt: Pure                                   │
+│ Plugins: 3 (autosuggestions, syntax, git)     │
+│ Target: Beginners who want simplicity          │
+└────────────────────────────────────────────────┘
+```
+
+**Available Presets:**
+- **Minimal** - Simple, fast, beginner-friendly
+- **Performance** - Optimized for speed with async features
+- **Fancy** - Feature-rich with beautiful prompts
+- **Developer** - Tools for professional development
+
+See the [Presets Guide](presets.md) for detailed information about each preset.
+
+### Option B: Custom Setup (For Advanced Users)
+
+For full control over your configuration, choose Custom Setup which launches the full wizard:
 
 1. **Choose a framework**: oh-my-zsh, zimfw, prezto, zinit, or zap
-2. **Select plugins**: Browse and select from hundreds of available plugins
-3. **Pick a theme**: Choose a prompt theme or use a standalone engine like Starship
+2. **Select prompt mode**: Standalone engine or framework theme
+3. **Pick plugins**: Browse and select from hundreds of available plugins
 4. **Confirm**: Review your selections
 
 The wizard looks like this:

@@ -43,15 +43,28 @@ zprof create <profile-name>
 
 **Examples:**
 ```bash
+# Interactive mode with setup choice (Quick or Custom)
 zprof create work
-zprof create personal
-zprof create experimental
+
+# Create from a preset (skip wizard entirely)
+zprof create work --preset minimal
+zprof create dev-env --preset developer
+zprof create fancy-term --preset fancy
+
+# Custom setup with pre-selected options
+zprof create personal --framework zimfw
 ```
 
-**Interactive Wizard:**
+**Setup Modes:**
+
+When run without `--preset`, the wizard first asks you to choose:
+- **Quick Setup:** Select from curated presets (Minimal, Performance, Fancy, Developer)
+- **Custom Setup:** Full wizard with granular control
+
+**Interactive Wizard (Custom Setup):**
 1. Choose framework (oh-my-zsh, zimfw, prezto, zinit, zap)
-2. Select plugins (multi-select browser)
-3. Pick theme or prompt engine
+2. Select prompt mode (standalone engine or framework theme)
+3. Pick plugins (multi-select browser)
 4. Review and confirm
 
 **What it creates:**
@@ -61,9 +74,21 @@ zprof create experimental
 - Framework installation (if selected)
 
 **Options:**
-- `--framework <name>` - Pre-select framework (skips wizard step)
-- `--theme <name>` - Pre-select theme
-- `--plugins <list>` - Comma-separated plugin list
+- `--preset <name>` - Create from preset, skipping all wizard steps
+  - Available presets: `minimal`, `performance`, `fancy`, `developer`
+  - See [Presets Guide](presets.md) for detailed preset information
+- `--framework <name>` - Pre-select framework (skips wizard step in Custom mode)
+- `--theme <name>` - Pre-select theme (Custom mode only)
+- `--plugins <list>` - Comma-separated plugin list (Custom mode only)
+
+**Preset Details:**
+
+| Preset | Framework | Prompt | Plugins | Best For |
+|--------|-----------|--------|---------|----------|
+| `minimal` | Zap | Pure | 3 | Beginners, speed |
+| `performance` | Zinit | Starship | 5 | Fast startup, async features |
+| `fancy` | Oh-My-Zsh | Powerlevel10k | 12 | Feature-rich, beautiful |
+| `developer` | Zimfw | Starship | 8 | Professional dev work |
 
 ---
 
