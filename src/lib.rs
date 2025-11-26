@@ -8,6 +8,7 @@ pub mod backup;
 pub mod cleanup;
 pub mod cli;
 pub mod core;
+pub mod fonts;
 pub mod frameworks;
 pub mod git;
 pub mod presets;
