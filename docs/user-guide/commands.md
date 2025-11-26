@@ -346,6 +346,110 @@ rm -rf ~/.zsh-profiles/
 
 ---
 
+### `zprof uninstall`
+
+Safely remove zprof with flexible restoration options.
+
+```bash
+zprof uninstall [OPTIONS]
+```
+
+**What it does:**
+- Creates a safety backup of your entire setup before making changes
+- Offers three restoration options:
+  1. Restore your original pre-zprof configuration
+  2. Promote one of your profiles to become your root config
+  3. Clean removal without restoration
+- Removes all zprof files and directories
+- Provides detailed confirmation summary before proceeding
+
+**Restoration Options:**
+
+| Option | Description | When to Use |
+|--------|-------------|-------------|
+| **Restore Original** | Restore pre-zprof backup | Want to go back to exactly how things were before zprof |
+| **Promote Profile** | Make a profile your new root config | Want to keep one of your zprof profiles as your permanent setup |
+| **Clean Removal** | Remove everything, no restoration | Starting fresh or switching to a different tool |
+
+**Options:**
+- `-y, --yes` - Skip confirmation prompts (for automation/scripts)
+- `--restore <option>` - Specify restoration choice directly (values: `original`, `promote`, `clean`)
+- `--no-backup` - Skip creating safety backup (not recommended!)
+- `--keep-backups` - Preserve the backups directory when removing zprof
+
+**Interactive Mode (default):**
+
+When run without arguments, `zprof uninstall` guides you through an interactive process:
+
+1. **Select Restoration Option** - Choose how to handle your shell config
+2. **Choose Profile** (if promoting) - Select which profile to promote
+3. **Review Summary** - See detailed preview of what will happen
+4. **Confirm** - Approve or cancel the operation
+
+**Examples:**
+
+```bash
+# Interactive mode with full TUI guidance
+zprof uninstall
+
+# Restore original config automatically (non-interactive)
+zprof uninstall --restore original --yes
+
+# Promote a specific profile (still asks which profile interactively)
+zprof uninstall --restore promote
+
+# Clean removal without restoration or confirmation
+zprof uninstall --restore clean --yes
+
+# Keep the backups directory for reference
+zprof uninstall --keep-backups
+```
+
+**Safety Features:**
+- **Safety Backup**: Creates a timestamped tarball (`.tar.gz`) of your entire `~/.zsh-profiles/` directory before making any changes
+- **Validation**: Checks for potential issues before starting
+- **Rollback**: If restoration fails, you can manually recover from the safety backup
+- **Confirmation Summary**: Shows exactly what will be restored/removed before proceeding
+
+**What Gets Removed:**
+- `~/.zsh-profiles/` directory (all profiles, configs, shared files)
+- Zprof-generated `~/.zshenv` file
+- ZDOTDIR references
+
+**What's Preserved:**
+- Safety backup tarball (unless you later manually delete it)
+- Backups directory (if `--keep-backups` is used)
+- Your restored configuration (original or promoted profile)
+
+**After Uninstall:**
+
+You must restart your shell for changes to take effect:
+```bash
+exec zsh
+```
+
+**Recovery:**
+
+If something goes wrong, you can manually extract the safety backup:
+
+```bash
+# Find your safety backup
+ls -lh ~/.zsh-profiles/backups/final-snapshot-*.tar.gz
+
+# Extract to a temporary location
+mkdir ~/zprof-recovery
+tar -xzf ~/.zsh-profiles/backups/final-snapshot-20251124-143000.tar.gz -C ~/zprof-recovery
+
+# Manually copy files as needed
+cp ~/zprof-recovery/.zsh-profiles/profiles/work/.zshrc ~/
+```
+
+**See Also:**
+- [Uninstalling Guide](uninstalling.md) - Step-by-step uninstall scenarios
+- [FAQ](faq.md) - Common questions about uninstalling
+
+---
+
 ## Environment Variables
 
 zprof respects these environment variables:

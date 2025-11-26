@@ -73,7 +73,7 @@ development_status:
   epic-3-story-5: done # ✅ APPROVED - Cleanup logic complete, 6/6 ACs verified, 289/289 tests passing, zero issues, production-ready quality
   epic-3-story-6: done # ✅ APPROVED - Confirmation screen complete, 5/5 ACs verified, comprehensive summary display, 300+ tests passing, zero regressions
   epic-3-story-7: done # ✅ APPROVED - Edge case handling complete, 5/5 ACs verified, validation/rollback/conflict resolution, 334 tests passing, production-ready
-  epic-3-story-8: ready-for-dev
+  epic-3-story-8: done # ✅ APPROVED - Documentation complete, 4/4 ACs verified, 605-line uninstalling guide, all flags documented, comprehensive cross-referencing, zero issues
   epic-3-retrospective: optional
 
   epic-4: contexted

@@ -2,6 +2,8 @@
 
 This guide covers installing zprof on your system.
 
+**Note:** zprof can be completely removed at any time with the `zprof uninstall` command, which safely restores your original shell configuration. See the [Uninstalling Guide](uninstalling.md) for details.
+
 ## Prerequisites
 
 - **Zsh**: zprof requires zsh to be installed
@@ -109,3 +111,32 @@ source ~/.zshrc
 If you already have a `~/.zsh-profiles/` directory from a previous installation, `zprof init` will skip initialization to preserve your data. This is safe and expected.
 
 For more help, see the [Troubleshooting Guide](troubleshooting.md).
+
+## Removing zprof
+
+zprof can be safely removed at any time without losing your shell configuration.
+
+The `zprof uninstall` command provides three options:
+
+1. **Restore Original** - Restore your pre-zprof shell configuration from backup
+2. **Promote Profile** - Make one of your zprof profiles your permanent setup
+3. **Clean Removal** - Remove everything and start fresh
+
+**Safety Features:**
+- Creates a complete backup of your entire setup before making any changes
+- Shows a detailed confirmation summary before proceeding
+- Can be recovered manually if something goes wrong
+
+**Quick example:**
+
+```bash
+# Interactive mode (recommended)
+zprof uninstall
+
+# Restore original config automatically
+zprof uninstall --restore original --yes
+```
+
+**For detailed instructions and all options, see the [Uninstalling Guide](uninstalling.md).**
+
+This safety net means you can experiment with zprof risk-free, knowing you can always return to your original setup.

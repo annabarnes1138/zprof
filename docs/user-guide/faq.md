@@ -239,16 +239,119 @@ See [Troubleshooting Guide](troubleshooting.md) for more.
 
 ### How do I completely uninstall zprof?
 
+Use the `zprof uninstall` command for safe, complete removal:
+
 ```bash
-# Restore original config
-zprof rollback
+# Interactive mode (recommended) - walks you through options
+zprof uninstall
 
-# Remove zprof directory
-rm -rf ~/.zsh-profiles/
+# Restore your original pre-zprof config automatically
+zprof uninstall --restore original --yes
 
-# Remove from PATH (if installed via cargo)
-cargo uninstall zprof
+# Promote one of your profiles to become your permanent setup
+zprof uninstall --restore promote
+
+# Clean removal (removes everything, no restoration)
+zprof uninstall --restore clean --yes
 ```
+
+See the [Uninstalling Guide](uninstalling.md) for detailed instructions and all options.
+
+### Can I remove zprof and go back to my old setup?
+
+Yes! Use `zprof uninstall` with the "Restore original" option:
+
+```bash
+zprof uninstall --restore original
+```
+
+This restores your shell configuration from the pre-zprof backup that was created during `zprof init`. Your command history, configs, and everything else will be restored to exactly how they were before you installed zprof.
+
+**Safety:** A complete backup of your zprof setup is created before making any changes, so you can recover if needed.
+
+### What happens to my command history when I uninstall?
+
+It depends on which restoration option you choose:
+
+| Option | What Happens to History |
+|--------|--------------------------|
+| **Restore Original** | Your pre-zprof command history is restored from backup |
+| **Promote Profile** | The selected profile's history becomes your new `.zsh_history` |
+| **Clean Removal** | No history file is restored (but it's saved in the safety backup) |
+
+**Example:** If you have 15,000 command history entries from before zprof, and you choose "Restore Original," those 15,000 entries will be restored to `~/.zsh_history`.
+
+### Where are my backups stored?
+
+Backups are stored in `~/.zsh-profiles/backups/`:
+
+```
+~/.zsh-profiles/backups/
+├── pre-zprof/              # Your original config from before zprof init
+│   ├── backup-manifest.toml
+│   ├── .zshrc
+│   ├── .zshenv
+│   └── .zsh_history
+└── final-snapshot-*.tar.gz  # Safety backup created during uninstall
+```
+
+- **Pre-zprof backup**: Created automatically during `zprof init`, contains your original shell config
+- **Final snapshot**: Created automatically during `zprof uninstall`, contains your entire zprof setup
+
+### What if something goes wrong during uninstall?
+
+zprof creates a safety backup before making any changes. If something fails:
+
+1. The safety backup is at `~/.zsh-profiles/backups/final-snapshot-*.tar.gz`
+2. Extract it to recover your data:
+   ```bash
+   mkdir ~/recovery
+   tar -xzf ~/.zsh-profiles/backups/final-snapshot-*.tar.gz -C ~/recovery
+   ```
+3. Copy files you need:
+   ```bash
+   cp ~/recovery/.zsh-profiles/backups/pre-zprof/.zshrc ~/
+   ```
+
+See the [Uninstalling Guide - Troubleshooting](uninstalling.md#troubleshooting) for detailed recovery instructions.
+
+### Can I keep some profiles after uninstall?
+
+The `zprof uninstall` command removes all profiles, but you have options:
+
+**Option 1 - Export before uninstalling:**
+```bash
+# Export profiles you want to keep
+zprof export work --output ~/work-profile.zprof
+zprof export personal --output ~/personal-profile.zprof
+
+# Uninstall
+zprof uninstall
+
+# Later, if you reinstall zprof:
+zprof init
+zprof import ~/work-profile.zprof
+```
+
+**Option 2 - Promote one profile:**
+```bash
+# Make one profile your permanent root config
+zprof uninstall --restore promote
+# Then select the profile you want to keep
+```
+
+### Will uninstalling break my active shell sessions?
+
+Active shell sessions will continue working temporarily, but they may show errors when trying to access removed zprof files.
+
+**Solution:** Restart all shell sessions after uninstalling:
+```bash
+exec zsh
+```
+
+Or just close and reopen your terminal.
+
+**Tip:** The uninstall confirmation screen warns you about this.
 
 ---
 
