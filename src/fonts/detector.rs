@@ -4,6 +4,7 @@
 //! caches results for performance, and provides a simple API for checking
 //! if fonts are already installed before prompting the user to download them.
 
+use log::warn;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
@@ -71,7 +72,7 @@ static DETECTION_CACHE: OnceLock<DetectionResult> = OnceLock::new();
 /// ```
 pub fn detect_nerd_fonts() -> DetectionResult {
     DETECTION_CACHE
-        .get_or_init(|| detect_nerd_fonts_uncached())
+        .get_or_init(detect_nerd_fonts_uncached)
         .clone()
 }
 
@@ -89,16 +90,25 @@ fn detect_nerd_fonts_uncached() -> DetectionResult {
     let mut found_fonts = Vec::new();
 
     for dir in search_dirs {
-        if let Ok(entries) = std::fs::read_dir(&dir) {
-            for entry in entries.filter_map(Result::ok) {
-                let path = entry.path();
+        match std::fs::read_dir(&dir) {
+            Ok(entries) => {
+                for entry in entries.filter_map(Result::ok) {
+                    let path = entry.path();
 
-                // Recursively search subdirectories
-                if path.is_dir() {
-                    found_fonts.extend(scan_directory_recursive(&path));
-                } else if is_nerd_font_file(&path) {
-                    found_fonts.push(path);
+                    // Recursively search subdirectories
+                    if path.is_dir() {
+                        found_fonts.extend(scan_directory_recursive(&path));
+                    } else if is_nerd_font_file(&path) {
+                        found_fonts.push(path);
+                    }
                 }
+            }
+            Err(e) => {
+                warn!(
+                    "Could not read font directory {}: {}",
+                    dir.display(),
+                    e
+                );
             }
         }
     }
@@ -140,22 +150,54 @@ fn get_font_directories() -> Vec<PathBuf> {
 
 /// Recursively scan a directory for Nerd Font files
 fn scan_directory_recursive(dir: &Path) -> Vec<PathBuf> {
+    scan_directory_recursive_impl(dir, 0)
+}
+
+/// Internal recursive implementation with depth limiting
+///
+/// Limits recursion depth to prevent stack overflow from symlink loops
+/// or excessively nested directory structures.
+fn scan_directory_recursive_impl(dir: &Path, depth: usize) -> Vec<PathBuf> {
+    const MAX_DEPTH: usize = 10;
+
+    if depth >= MAX_DEPTH {
+        return vec![];
+    }
+
     let mut fonts = Vec::new();
 
-    if let Ok(entries) = std::fs::read_dir(dir) {
-        for entry in entries.filter_map(Result::ok) {
-            let path = entry.path();
+    match std::fs::read_dir(dir) {
+        Ok(entries) => {
+            for entry in entries.filter_map(Result::ok) {
+                let path = entry.path();
 
-            if path.is_dir() {
-                // Recursively scan subdirectories
-                fonts.extend(scan_directory_recursive(&path));
-            } else if is_nerd_font_file(&path) {
-                fonts.push(path);
+                if path.is_dir() {
+                    // Skip symlinks to prevent infinite loops
+                    if !is_symlink(&path) {
+                        fonts.extend(scan_directory_recursive_impl(&path, depth + 1));
+                    }
+                } else if is_nerd_font_file(&path) {
+                    fonts.push(path);
+                }
             }
+        }
+        Err(e) => {
+            warn!(
+                "Could not read subdirectory {}: {}",
+                dir.display(),
+                e
+            );
         }
     }
 
     fonts
+}
+
+/// Check if a path is a symbolic link
+fn is_symlink(path: &Path) -> bool {
+    path.symlink_metadata()
+        .map(|m| m.file_type().is_symlink())
+        .unwrap_or(false)
 }
 
 /// Check if a file is a Nerd Font based on filename pattern

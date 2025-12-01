@@ -5,3 +5,6 @@
 
 pub mod detector;
 pub mod nerd_fonts;
+
+// Re-export main detector API for convenient access
+pub use detector::{detect_nerd_fonts, DetectionResult};

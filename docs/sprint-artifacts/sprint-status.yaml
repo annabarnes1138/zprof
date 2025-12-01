@@ -78,8 +78,8 @@ development_status:
 
   epic-4: contexted
   epic-4-story-1: done # ✅ APPROVED - Nerd Font registry complete, 5/5 ACs verified, 9/9 tests passing, zero issues
-  epic-4-story-2: ready-for-dev
-  epic-4-story-3: ready-for-dev
+  epic-4-story-2: done # ✅ APPROVED - Font requirements detection complete, 5/5 ACs verified, 13/13 tests passing (already implemented in story 1)
+  epic-4-story-3: done # ✅ APPROVED - Font detection complete, 6/6 ACs verified, 21/21 tests passing (12 unit + 9 integration), zero regressions
   epic-4-story-4: ready-for-dev
   epic-4-story-5: ready-for-dev
   epic-4-story-6: ready-for-dev
